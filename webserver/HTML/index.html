@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Helper Bot</title>
+        <link rel="shortcut icon" href="/images/icon.webp"/>
+        <link rel="stylesheet" href="/css/index.css">
+        <meta name="viewport" content="width=device-width">
+        <meta name="viewport" content="initial-scale=0.36">
+
+        <meta name="description" content="Helper Bot, your next multipurpose discord bot">
+        <meta name="keywords" content="discord, bot, helper, multipurpose, moderation, fun, music, upcoming">
+
+        <meta property="og:type" content="website">
+        <meta property="og:title" content="Helper Bot" />
+        <meta property="og:description" content="Helper Bot - Your next multipurpose Discord Bot." />
+        <meta property="og:image" content="/images/avatar.webp" />
+        <meta name="theme-color" content="#FF8700">
+    </head>
+    <body>
+        <div style="color:white;position:fixed;top:-50px;height:50px;filter:hue-rotate(100deg) grayscale(1);z-index:100;background-color:black;width:100%;background: rgb(196,0,0);background: radial-gradient(circle, rgba(196,0,0,1) 45%, rgba(242,89,0,1) 100%);" id="navBar">
+            <span id="topBar1" class="vertical-center topBarItem" style="left:200px;" onclick="linkTo('/')">Home</span>
+            <span id="topBar2" class="vertical-center topBarItem" style="left:400px;" onclick="linkTo('/dashboard')">Dashboard</span>
+            <span id="topBar3" class="vertical-center topBarItem" style="left:600px;">Status</span>
+        </div>
+        <div style="height:80px;width:250px;background: rgb(196,0,0);color:white;font-size:25px;border-radius:25px;
+        background: linear-gradient(0deg, rgba(196,0,0,1) 0%, rgba(242,89,0,1) 100%);position:absolute;top:-100px;right:20px;z-index:1000;transition:top 0.5s
+        " id="loading">
+            <span class="all-center">Loading...</span>
+        </div>
+        
+        <div style="height:99%;width:100%;" id="dataBody">
+            <div style="z-index:3;position:absolute;font-size:50px;top:25%;color:white;text-shadow: 0 0 15px #000;" class="horizontal-center">Helper Bot</div>
+            <div style="z-index:3;position:absolute;font-size:25px;top:calc(25% + 100px);color:white;text-shadow: 0 0 9px #000;" class="horizontal-center">Your next multipurpose discord bot.</div>
+
+            <div style="z-index:3;position:absolute;width:750px" class="all-center">
+                <div onmousedown="if (event.which == 2) {window.open('/about')};if (event.which == 1) {linkTo('/about')}" class="buttonClick" style="
+                    position:absolute;left:0;">
+                    <span class="noselect" style="display:table-cell;vertical-align:middle;">About</span>
+                </div>
+                <div onmousedown="if (event.which == 2) {window.open('/dashboard')};if (event.which == 1) {linkTo('/dashboard')}" class="buttonClick" style="
+                    position:absolute;left:calc(50% - 100px);">
+                    <span class="noselect" style="display:table-cell;vertical-align:middle;">Dashboard</span>
+                </div>
+                <div onmousedown="if (event.which == 2) {window.open('/status')};if (event.which == 1) {linkTo('/status')}" class="buttonClick" style="
+                    position:absolute;right:0;">
+                    <span class="noselect" style="display:table-cell;vertical-align:middle;">Status</span>
+                </div>
+            </div>
+
+            <div style="position:absolute;z-index:2;height:99%;width:100%;transition:background-size 0.8s, filter 0.8s;background-image:url('/images/avatar.webp');background-size: 100%;background-position:50%;filter:blur(50px)" id="bg"></div>
+        </div>
+    </body>
+    <script src="/js/functions.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        laggyPages = []
+
+        function checkVisible(elm) {
+            var rect = elm.getBoundingClientRect();
+            var viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
+            return !(rect.bottom < 0 || rect.top - viewHeight >= 0);
+        }
+
+        
+
+        function unfade(element) {
+            var op = 0.1;  // initial opacity
+            element.style.display = 'block';
+            var timer = setInterval(function () {
+                if (op >= 1){
+                    clearInterval(timer);
+                }
+                element.style.opacity = op;
+                //element.style.filter = 'alpha(opacity=' + op * 100 + ")";
+                op += op * 0.1;
+            }, 7);
+        }
+
+        var windows = [];
+
+        if (location.hash) linkTo("/" + location.hash.replace("#", ""));window.location.href.split('#')[0]
+        history.replaceState(null, null, ' ')
+
+        function linkTo(where) {
+            
+            if (where == "/dashboard" && !getCookie("user")) return window.open(where, '_self')
+
+
+            var iframe = document.createElement("iframe");
+            iframe.src = where
+            iframe.setAttribute("style", `z-index:${10 + window.length + 1};`)
+            iframe.setAttribute("class", "window")
+            iframe.setAttribute("frameborder", "0")
+
+            if (OSName == "Mobile") iframe.style.width == "100%";iframe.style.height == "100%"
+
+            iframe.id = "nextPage" + (windows.length + 1)
+
+            document.body.appendChild(iframe)
+
+            iframe.title = where.replace("/", "").charAt(0).toUpperCase() + where.replace("/", "").slice(1)
+
+            windows.push(iframe)
+            document.title = "Helper Bot - " + windows[windows.length - 1].title
+
+            if (OSName != "Mobile" && !laggyPages.includes(windows[windows.length - 1].title)) {
+                document.getElementById("bg").style.backgroundSize = `${100 + (windows.length * 15)}%`
+                document.getElementById("bg").style.filter = `blur(${50 + (windows.length * 15)}px)`
+            }
+            
+            if (OSName != "Mobile") {unfade(iframe, 1000)} else {iframe.style.opacity = "100%"}
+
+            iframe.onload = function() {
+                var doc = iframe;
+                var ifrDoc = doc.contentDocument;
+                try{ifrDoc.getElementById("navBar").innerHTML = "";ifrDoc.getElementById("navBar").style.cursor = "move"}catch{}
+                
+                
+                var exit = ifrDoc.createElement("div");
+                exit.setAttribute("style", "text-align:center;position:fixed;width:50px;height:50px;top:0;left:0;background-color:red;z-index:1000;cursor:pointer")
+                exit.innerHTML = `<i class="fa fa-times-circle" aria-hidden="true" style="font-size:50px"></i>`
+                exit.setAttribute("aria-Label", "Close Window");exit.setAttribute("data-balloon-pos", "down-left")
+                exit.onclick = function() {
+                    windows.splice(windows.indexOf(iframe), 1);
+                    document.getElementById("bg").style.backgroundSize = `${100 + (windows.length * 15)}%`
+                    document.getElementById("bg").style.filter = `blur(${50 + (windows.length * 15)}px)`
+                    if (windows.length == 0) {
+                        document.title = "Helper Bot"
+                    } else document.title = "Helper Bot - " + windows[windows.length - 1].title
+                    
+                    doc.remove()
+                }
+                
+                ifrDoc.onmousedown=function(){
+                    windows.push(windows.splice(windows.indexOf(iframe), 1)[0]);
+
+                    for (item of windows) {
+                        item.style.zIndex = 10 + windows.indexOf(item) + 1
+                    }
+                    document.title = "Helper Bot - " + windows[windows.length - 1].title
+                }
+
+                var external = ifrDoc.createElement("div");
+                external.setAttribute("style", "text-align:center;position:fixed;width:50px;height:50px;top:0;left:50px;background-color:lightblue;z-index:1000;cursor:pointer")
+                external.innerHTML = `<i class="fa fa-external-link" aria-hidden="true" style="font-size:50px"></i>`
+                external.setAttribute("aria-Label", "Open window externally (fullscreen)");external.setAttribute("data-balloon-pos", "right")
+                external.onclick = function() {window.open(where, '_self')}
+                
+                ifrDoc.body.appendChild(exit);
+                ifrDoc.body.appendChild(external);
+
+                if (OSName != "Mobile") dragElement(ifrDoc, iframe, "navBar");
+                
+            }
+            
+        }
+
+        function dragElement(doc, elmnt, dragName) {
+
+var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+if (doc.getElementById(dragName)) {
+    doc.getElementById(dragName).onmousedown = dragMouseDown;
+} else {
+    elmnt.onmousedown = dragMouseDown;
+}
+
+function dragMouseDown(e) {
+    e = e || window.event;
+
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    doc.onmouseup = closeDragElement;
+    doc.onmousemove = elementDrag;
+}
+
+function elementDrag(e) {
+    e = e || window.event;
+
+    pos1 = pos3 - e.clientX;
+    pos2 = pos4 - e.clientY;
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    
+    elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+    elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+    e.preventDefault();
+}
+
+function closeDragElement() {
+    doc.onmouseup = null;
+    doc.onmousemove = null;
+}
+}
+
+    </script>
+</html>

@@ -1,0 +1,299 @@
+@import url('./font.css');
+
+body {
+    font-family:'Manrope' ;
+    font-size: 22px;
+    background-color:#2D3033;
+    margin:0;
+    overflow:hidden
+}
+
+.vertical-center {
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    -ms-transform: translateY(-50%);
+    transform: translateY(-50%);
+}
+
+.all-center {
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  -ms-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+}
+
+.horizontal-center {
+    margin: 0;
+    position: absolute;
+    left: 50%;
+    -ms-transform: translate(-50%, 0);
+    transform: translate(-50%, 0);
+}
+
+.topBarItem {
+    padding:15px 50px 15px 50px;
+    opacity:0%;
+    font-size:0px;
+    width:100px;
+    transition:all .5s;
+    text-align:center;
+    cursor:pointer;
+}
+
+.notransition {
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -o-transition: none !important;
+    transition: none !important;
+}
+
+.topBarItem:hover {
+    background-color:#FFFFFF50
+}
+
+.serverList {
+    width: 300px;
+    padding:1px 25px 25px 25px;
+    position:relative;
+    background-color:#3b3f44;
+    transition:display 1s, opacity 1s;
+    opacity: 0%;
+}
+
+
+
+.serverPicker {
+    position:relative;
+    transition:border 1s, height 1s;
+    width:300px;
+    height:200px;
+    border: 2px solid #F25900;
+    border-image:linear-gradient(0deg, rgba(196,0,0,1) 0%, rgba(242,89,0,1) 100%);
+    border-image-slice: 1;
+    cursor:pointer;
+    margin-top:10px;
+    color:white;
+}
+
+.stop-scrolling {
+    height: 100%;
+    overflow: hidden;
+  }
+
+.serverPicker:hover {
+    border: 5px solid #F25900;
+}
+
+.serverPickerImage {
+    position:relative;
+    width:300px;
+    height:150px;
+    background-position-y:-75px;
+    background-size:300px
+}
+
+#serverSettings-prefix {
+    background-color:#3b3f44;
+    width:25%;
+    height:200px;
+    transition:opacity .5s;
+    opacity:0%;
+    padding:0px 25px 25px 25px
+}
+
+#serverSettings-joinleave {
+    background-color:#3b3f44;
+    width:25%;
+    height:600px;
+    transition:opacity .5s;
+    opacity:0%;
+    padding:0px 25px 25px 25px
+}
+
+#serverSettings-joinleave-join-select {
+    width:100%
+}
+
+#serverSettings-joinleave-leave-select {
+    width:100%
+}
+
+#serverSettings-warns {
+    background-color:#3b3f44;
+    width:25%;
+    height:550px;
+    transition:opacity .5s;
+    opacity:0%;
+    padding:25px
+}
+
+#serverSettings-events {
+    background-color:#3b3f44;
+    width:25%;
+    height:550px;
+    transition:opacity .5s;
+    opacity:0%;
+    padding:25px
+}
+
+#serverSettings-warns-table {
+    width:100%;
+    font-size:15px;
+}
+
+#serverSettings-warns-table-wrapper {
+    overflow-y:auto;
+    position:relative;
+    height:calc(100% - 55px);
+    margin-top:25px
+}
+
+.serverSettings-style-sectionTitle {
+    color:white;
+    font-size:30px;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+#serverSettings-warns-table-row {
+    border-bottom:1px solid;
+    color:rgb(168, 168, 168);
+    width:100%;
+    height:50px
+}
+
+#serverSettings-warns-table-row-item {
+    width:calc(25% - 12px);
+    color:white
+}
+
+#serverSettings-warns-table-row-item-delete {
+    font-size:20px;
+    background:linear-gradient(0deg, rgba(196,0,0,1) 0%, rgb(242, 77, 0) 100%);
+    border-radius:5px;
+    padding:7px;
+    cursor:pointer;
+}
+
+#serverSettings-warns-table-row-item-delete-missingperms {
+    font-size:20px;
+    background-color:rgb(255, 146, 146);
+    border-radius:5px;
+    padding:7px;
+    cursor:not-allowed
+}
+
+#serverSettings-warns-table-row-item-delete:hover {
+    background:linear-gradient(0deg, rgb(189, 63, 63) 0%, rgb(245, 120, 63) 100%);
+}
+
+.input {
+    border: 1px solid #F25900;
+    border-image:linear-gradient(0deg, rgba(196,0,0,1) 0%, rgba(242,89,0,1) 100%);
+    border-image-slice: 1;
+    background-color:#36393b;
+    padding:10px;
+    color:white
+}
+
+.button {
+    background:linear-gradient(0deg, rgba(196,0,0,1) 0%, rgba(242,89,0,1) 100%);
+    padding:10px;
+    color:white;
+    border:1px solid white;
+    cursor:pointer
+}
+
+.buttondisabled {
+    background:linear-gradient(0deg, rgb(255, 120, 120) 0%, rgb(255, 188, 149) 100%);
+    padding:10px;
+    color:white;
+    border:1px solid white;
+    cursor:not-allowed
+}
+
+.inputdisabled {
+    border: 1px solid #F25900;
+    border-image:linear-gradient(0deg, rgb(255, 120, 120) 0%, rgb(255, 188, 149) 100%);
+    border-image-slice: 1;
+    background-color:#5f5f5f;
+    padding:10px;
+    color:white;
+    cursor:not-allowed
+}
+
+#serverSettings-events-table {
+    width:100%;
+    font-size:15px;
+}
+
+#serverSettings-events-table-wrapper {
+    overflow-y:auto;
+    position:relative;
+    height:calc(100% - 55px);
+    margin-top:25px
+}
+
+#serverSettings-events-table-row {
+    border-bottom:1px solid;
+    color:rgb(168, 168, 168);
+    width:100%;
+    height:50px
+}
+
+#serverSettings-warns-events-row-item {
+    width:calc(25% - 12px);
+    color:white
+}
+
+#serverSettings-events-table-row-delete {
+    font-size:20px;
+    background:linear-gradient(0deg, rgba(196,0,0,1) 0%, rgb(242, 77, 0) 100%);
+    border-radius:5px;
+    padding:7px;
+    cursor:pointer;
+    color:white
+}
+
+#serverSettings-events-table-row-delete-missingperms {
+    font-size:20px;
+    background-color:rgb(255, 146, 146);
+    border-radius:5px;
+    padding:7px;
+    cursor:not-allowed;
+    color:white
+}
+
+#serverSettings-events-table-row-delete:hover {
+    background:linear-gradient(0deg, rgb(189, 63, 63) 0%, rgb(245, 120, 63) 100%);
+}
+
+
+
+#postMessage {
+    position:fixed;
+    float:bottom;
+    bottom:-50px;
+    height:40px;
+    width:100%;
+    z-index:100;
+    transition:bottom 1s;
+    background: rgb(196,0,0);
+    color:white;
+    padding-top:10px;
+    background: linear-gradient(0deg, rgba(196,0,0,1) 0%, rgba(242,89,0,1) 100%);
+}
+
+textarea:focus, input:focus, select:focus{
+    outline: none;
+}
+
+::-webkit-scrollbar {width: 15px;}
+::-webkit-scrollbar-track {background-color:#00000000;border-radius: 10px;}
+::-webkit-scrollbar-thumb {background: linear-gradient(0deg, rgba(196,0,0,1) 0%, rgba(242,89,0,1) 100%);border-radius: 10px;}
+::-webkit-scrollbar-thumb:hover {background: linear-gradient(0deg, rgb(255, 68, 68) 0%, rgb(255, 131, 60) 100%);}

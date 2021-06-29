@@ -1,0 +1,753 @@
+<html>
+    <head>
+        <title>Helper Bot</title>
+        <link rel="stylesheet" href="/css/dashboard.css">
+        <link rel=stylesheet href=https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css>
+        <link rel="stylesheet" href="https://unpkg.com/balloon-css/balloon.min.css">
+        <meta name="viewport" content="width=device-width">
+        <meta name="viewport" content="initial-scale=0.36">
+    </head>
+    <body>
+        <div style="color:white;position:fixed;height:50px;filter:hue-rotate(100deg) grayscale(1);z-index:100;background-color:black;width:100%;background: rgb(196,0,0);background: radial-gradient(circle, rgba(196,0,0,1) 45%, rgba(242,89,0,1) 100%);transition:top 0.5s" id="navBar">
+            <span id="topBar1" class="vertical-center topBarItem" style="left:200px;" onclick="linkTo('/')">Home</span>
+            <span id="topBar2" class="vertical-center topBarItem" style="left:400px;" onclick="linkTo('/dashboard')">Dashboard</span>
+            <span id="topBar3" class="vertical-center topBarItem" style="left:600px;">Status</span>
+        </div>
+        <div style="white-space:nowrap;height:250px;width:100%;background: rgb(196,0,0);color:white;font-size:50px;top:50px;letter-spacing: 150px;transition: letter-spacing 1s, top 1s;
+        background: linear-gradient(0deg, rgba(196,0,0,1) 0%, rgba(242,89,0,1) 100%);position:relative;text-align:center;
+        " id="gradient">
+            <span class="all-center" style="white-space: nowrap;opacity:0%;transition: opacity 1s" id="gradient-text">Helper Bot</span>
+            <span class="horizontal-center" style="white-space: nowrap;transition: opacity 1s;top:55%;padding:50px;opacity:0%;font-size:20px;letter-spacing:normal" id="gradient-description">Web Dashboard</span>
+        </div>
+        <div style="height:80px;width:250px;background: rgb(196,0,0);color:white;font-size:25px;border-radius:25px;
+        background: linear-gradient(0deg, rgba(196,0,0,1) 0%, rgba(242,89,0,1) 100%);position:absolute;top:-100px;right:20px;z-index:1000;transition:top 1s
+        " id="loading">
+            <span class="all-center">Loading...</span>
+        </div>
+        <div id="postMessage">
+            <span style="display:table;margin:0 auto;" id="postMessage-box"></span>
+        </div>
+        <div style="overscroll-behavior: none;position: relative;height:calc(100% - 350px);padding-top:50px;top:50px;width:100%;overflow-x:auto;overflow-y:auto;transition:top 0.8s, height 0.8s" id="dashboardDiv">
+            <div style="position:absolute;left:500px" id="serverSettings-prefix">
+                <div class="serverSettings-style-sectionTitle" style="padding:25px 0px 25px 0px">Server Prefix</div>
+                <input id="serverSettings-prefix-input" placeholder="Prefix input" class="input">
+                <button class="button" id="serverSettings-prefix-button" onclick="postData('/dashboard/post/setPrefix', {prefix:document.getElementById('serverSettings-prefix-input').value})">Submit prefix</button>
+            </div>
+            <div style="position:absolute;left:500px;margin-top:400px" id="serverSettings-joinleave">
+                <div class="serverSettings-style-sectionTitle" style="padding:25px 0px 25px 0px">Server Join/Leave events</div>
+                <div style="color:#a3a3a3;font-size:20px;padding-left:5px;padding-bottom:5px">Join Message</div>
+                <select id="serverSettings-joinleave-join-select" class="input"></select>
+                <span>
+                    <input id="serverSettings-joinleave-join-input" placeholder="Type join message here" class="input" style="width:64%">
+                    <button class="button" style="width:35%" id="serverSettings-joinleave-join-button" 
+                    onclick="postData('/dashboard/post/setMessage', {type:'join',channel:document.getElementById('serverSettings-joinleave-join-select').value,message:document.getElementById('serverSettings-joinleave-join-input').value})">Set join message</button>
+                </span>
+                <div style="padding-top:15px"></div>
+                <div style="color:#a3a3a3;font-size:20px;padding-left:5px;padding-bottom:5px">Leave Message</div>
+                <select id="serverSettings-joinleave-leave-select" class="input"></select>
+                <span>
+                    <input id="serverSettings-joinleave-leave-input" placeholder="Type leave message here" class="input" style="width:64%">
+                    <button class="button" style="width:35%" id="serverSettings-joinleave-leave-button" 
+                    onclick="postData('/dashboard/post/setMessage', {type:'leave',channel:document.getElementById('serverSettings-joinleave-leave-select').value,message:document.getElementById('serverSettings-joinleave-leave-input').value})">Set leave message</button>
+                </span>
+                <div style="padding-top:15px"></div>
+                <div style="color:#a3a3a3;font-size:20px;padding-left:5px;padding-bottom:5px">Join Autorole</div>
+                <select id="serverSettings-joinleave-autorole-select" class="input"></select>
+                <button class="button" style="width:35%" id="serverSettings-joinleave-autorole-button" 
+                onclick="postData('/dashboard/post/setAutorole', {role:document.getElementById('serverSettings-joinleave-autorole-select').value})">Set Autorole Role</button>
+                <div style="font-size:20px;margin-top:15px">    
+                    <li style="color:#a3a3a3" aria-label="Example: Welcome, {@user}! Please read the rules!" data-balloon-pos="up"><span style="color:white">{@user}</span> - Mention the user</li>
+                    <li style="color:#a3a3a3" aria-label="Example: Welcome, {user}!" data-balloon-pos="up"><span style="color:white">{user}</span> - User's name</li>
+                    <li style="color:#a3a3a3" aria-label="Example: Welcome to {server}!" data-balloon-pos="up"><span style="color:white">{server}</span> - The server that the user joined</li>
+                </div>
+            </div>
+
+            <div style="position:absolute;left:500px;margin-top:1200px" id="serverSettings-customcommands">
+                <div class="serverSettings-style-sectionTitle" style="padding:25px 0px 25px 0px">Custom Commands</div>
+                <div style="height:490px;overflow-y:scroll">
+                    <div style="background-color:rgb(82, 82, 82);border:1px solid white;">
+                        <table id="serverSettings-customcommands-table">
+                            <thead><tr style="width:100%" id="serverSettings-customcommands-table-row"><th width="10%">Name</th><th>Response</th><th width="10%">Del.</th></tr></thead>
+                            <tbody>
+                                    <button id="serverSettings-customcommands-table-row-button"  class="button" style="width:100%;height:50px;" onclick="newCommand();">Add new command</button>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <button class="button" id="serverSettings-customcommands-save" style="bottom:300px;width:100%;" onclick="updateCustomCommands()">Save Commands</button>
+                <div style="font-size:15px;bottom:0px;padding-top:15px">    
+                    <li style="color:#a3a3a3" aria-label="Example: Argument 1 is {args/1}!" data-balloon-pos="up"><span style="color:white">{args/argNo}</span> - Get argument (eg {args/1})</li>
+                    <li style="color:#a3a3a3" aria-label="Example: Argument 1 and further is {args/1:}!" data-balloon-pos="up"><span style="color:white">{args/argNo:}</span> - Get argument and everything after (eg {args/1:})</li>
+                    <li style="color:#a3a3a3" aria-label="Example: Welcome, {user}!" data-balloon-pos="up"><span style="color:white">{randomChoice/choice1/choice2...}</span> - Random choice (eg {randomChoice/yes/no})</li>
+                </div>
+            </div>
+
+            <div style="position:absolute;left:500px;top:350px" id="serverSettings-warns">
+                <span class="serverSettings-style-sectionTitle">Server Warns</span>
+                <div id="serverSettings-warns-table-wrapper"><table id="serverSettings-warns-table">
+                    <thead><tr style="width:100%" id="serverSettings-warns-table-row"><th>Member</th><th>Warn ID</th><th>Reason</th><th>Mod</th><th>D.</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+                </div>
+            </div>
+            <div style="position:absolute;left:500px;top:2000px" id="serverSettings-events">
+                <div class="serverSettings-style-sectionTitle" style="padding:25px 0px 25px 0px">Server Events</div>
+                <div style="background-color:rgb(82, 82, 82);border:1px solid white">
+                    <table id="serverSettings-events-table">
+                        <thead><tr style="width:100%" id="serverSettings-events-table-row"><th>How many</th><th>What</th><th> = </th><th>Do What</th><th>Del.</th></tr></thead>
+                        <tbody>
+                            <tr id="serverSettings-events-table-row">
+                                <button id="serverSettings-events-table-row-button"  class="button" style="width:100%;height:50px;" onclick="newEvent();">Add new event</button>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div style="position:absolute;left:500px;top:3000px;" style="opacity:0%;">&nbsp;</div>
+            <div class="serverList" id="servers"></div>
+        </div>
+    </body>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        
+
+
+        var OSName = "Unknown";
+        function getOS() {
+            if (window.navigator.userAgent.indexOf("Windows NT 10.0") != -1) return "Windows";
+            if (window.navigator.userAgent.indexOf("Windows NT 6.2") != -1) return "Windows";
+            if (window.navigator.userAgent.indexOf("Windows NT 6.1") != -1) return "Windows";
+            if (window.navigator.userAgent.indexOf("Windows NT 6.0") != -1) return "Windows";
+            if (window.navigator.userAgent.indexOf("Windows NT 5.1") != -1) return "Windows XP";
+            if (window.navigator.userAgent.indexOf("Windows NT 5.0") != -1) return "Windows 2000";
+            if (window.navigator.userAgent.indexOf("Mac") != -1) {
+                if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+                    return "Mobile"
+                };
+                return "Mac"
+            };
+            if (window.navigator.userAgent.indexOf("X11") != -1) return "UNIX";
+            if (window.navigator.userAgent.indexOf("Linux") != -1) return "Linux";
+        };
+        OSName = getOS()
+
+        
+        
+        async function get(theUrl) {
+
+            const settings = {
+                method: 'GET',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                }
+            };
+            const fetchResponse = await fetch(theUrl, settings);
+            const data = await fetchResponse.json();
+            return data; 
+            
+        }
+        var guilds = [] 
+        var guildDatas = {}
+       
+        serverHTML = ``
+        counter = 0
+
+        address = location.origin
+        items = ["prefix"]
+        itemsOnly = ["warns", "joinleave", "events", "customcommands"]
+
+        itemsLeft = ["prefix", "joinleave", "customcommands"]
+        itemsRight = [["warns", 2350, 50], ["events", 3100, 800]]
+
+        allItems = items.concat(itemsOnly)
+        currentGuild = null
+
+        scrollDIV = document.getElementById("dashboardDiv")
+
+        scrollDIV.onscroll = function () {
+            if (OSName != "Mobile") {
+                if (scrollDIV.scrollTop > 10) {
+                    document.getElementById("gradient").style.top = "-300px"
+                    dashboardDiv.style.top = "-200px"
+                    dashboardDiv.style.height = "calc(100% - 100px)"
+                    
+                } else {
+                    document.getElementById("gradient").style.top = "50px"
+                    dashboardDiv.style.top = "50px"
+                    dashboardDiv.style.height = "calc(100% - 350px)"
+                    
+                } 
+            }
+        }
+
+        window.onresize = sizeCheck
+
+        clip = 1610
+        val = 3.59
+        
+        function sizeCheck() {
+            defLeft = "1045px"
+            
+            if (window.innerWidth > 580) {
+                if (window.innerWidth > clip) left = 400
+                else left = window.innerWidth / 2.7
+
+                if (window.innerWidth < 965) width = 500
+                else if (window.innerWidth > clip) width = 500
+                else width = window.innerWidth / 1.93
+
+
+                for(itemRight of itemsRight) {
+                    if (window.innerWidth < clip) {
+                        element = document.getElementById(`serverSettings-${itemRight[0]}`)
+                        element.style.left = left + "px"
+                        element.style.top = itemRight[1] + "px"
+                        element.style.width = width + "px"
+                    } else {
+                        element = document.getElementById(`serverSettings-${itemRight[0]}`)
+                        element.style.left = defLeft
+                        element.style.top = itemRight[2] + "px"
+                        element.style.width = 500 + "px"
+                    }    
+                }
+
+                for(itemLeft of itemsLeft) {
+                    element = document.getElementById(`serverSettings-${itemLeft}`)
+                    
+                    element.style.left = left + "px"
+                    element.style.width = width + "px"                    
+                }
+
+                servers = document.getElementById("servers")
+
+                if (window.innerWidth < 1077) {
+                    servers.style.width = window.innerWidth / val + "px"
+                    for (server of servers.getElementsByTagName('div')) {
+                        server.style.width = (window.innerWidth / val) - 11 + "px"
+                        for (div of server.getElementsByTagName('div')) {
+                            div.style.width = (window.innerWidth / val) - 11 + "px"
+                            div.style.fontSize = 10 + (window.innerWidth / 65) + "px"
+                        }
+                    }
+                } else {
+                    servers.style.width = "300px"
+                    for (server of servers.getElementsByTagName('div')) {
+                        server.style.width = "290px"
+                        for (div of server.getElementsByTagName('div')) {
+                            div.style.width = "290px"
+                            div.style.fontSize = "25px"
+                        }
+                    }
+                }
+            }
+        }
+
+        async function getGuildData(guildID) {
+            
+            
+            guildStr = ``
+            if (guildID) {
+                guildStr = `?guild=${guildID}`
+            }
+            data = await get(location.origin + `/dashboard/serverDatabase` + guildStr)
+            
+            return data
+        }
+
+
+        function updateTable(data) {
+            console.log(data)
+            data = guildDatas[currentGuild.id]
+            console.log(data)
+            var table = document.getElementById('serverSettings-events-table').getElementsByTagName('tbody')[0];
+            final = []
+            if (table.rows.length == 10 || !data.has_permissions.manage_guild) {
+                document.getElementById("serverSettings-events-table-row-button").setAttribute("class", "buttondisabled");document.getElementById("serverSettings-events-table-row-button").setAttribute("disabled", "disabled")
+            } else {
+                document.getElementById("serverSettings-events-table-row-button").setAttribute("class", "button");document.getElementById("serverSettings-events-table-row-button").removeAttribute("disabled")
+            }
+            for (row of table.rows) {
+                final.push({
+                    amount:document.getElementById(row.id.split(" ")[1] + "-amount").value,
+                    what:document.getElementById(row.id.split(" ")[1] + "-what").value,
+                    action:document.getElementById(row.id.split(" ")[1] + "-action").value
+                })
+            }
+            postData('/dashboard/post/setEvents', {"events":final})
+        }
+        
+        function debounce(callback, wait) {
+            let timeout;
+            return (...args) => {
+                clearTimeout(timeout);
+                timeout = setTimeout(function () { callback.apply(this, args); }, wait);
+            };
+        }
+
+        function updateCustomCommands(noPost) {
+            data = guildDatas[currentGuild.id]
+
+            var table = document.getElementById('serverSettings-customcommands-table').getElementsByTagName('tbody')[0];
+
+            if (table.rows.length == 10 || !guildData.has_permissions.manage_guild) {
+                document.getElementById("serverSettings-customcommands-save").setAttribute("class", "buttondisabled");document.getElementById("serverSettings-customcommands-save").setAttribute("disabled", "disabled")
+                document.getElementById("serverSettings-customcommands-table-row-button").setAttribute("class", "buttondisabled");document.getElementById("serverSettings-customcommands-table-row-button").setAttribute("disabled", "disabled")
+            } else {
+                document.getElementById("serverSettings-customcommands-save").setAttribute("class", "button");document.getElementById("serverSettings-customcommands-table-row-button").removeAttribute("disabled")
+                document.getElementById("serverSettings-customcommands-table-row-button").setAttribute("class", "button");document.getElementById("serverSettings-customcommands-save").removeAttribute("disabled")
+            }
+
+            
+            final = {}
+            
+            for (row of table.rows) {
+                final[document.getElementById(row.id.split(" ")[1] + "-name").value] = document.getElementById(row.id.split(" ")[1] + "-response").value
+            }
+
+            if (!noPost) postData('/dashboard/post/setCustomCommands', {"commands":final})
+            
+        }
+
+        function newEvent() {
+            guildData = guildDatas[currentGuild.id]
+
+            var table = document.getElementById('serverSettings-events-table').getElementsByTagName('tbody')[0];
+
+            newRow = table.insertRow(table.rows.length);
+            newRow.id = `serverSettings-events-table-row serverSettings-events-table-row-${table.rows.length}`
+
+            numbers = ``
+
+            for (number of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) {
+                numbers = numbers + `<option value="${number}">${number}</option>`
+            }
+
+            newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><select oninput="updateTable()" id="serverSettings-events-table-row-${table.rows.length}-amount" class="input">${numbers}</select></th>`
+            newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><select oninput="updateTable()" id="serverSettings-events-table-row-${table.rows.length}-what" class="input"><option value="warns">Warn(s)</option></select></th>`
+            newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"> = </th>`
+            newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><select oninput="updateTable()" id="serverSettings-events-table-row-${table.rows.length}-action" class="input"><option value="1hMute">1h Mute</option><option value="3hMute">3h Mute</option><option value="6hMute">6h Mute</option><option value="12hMute">12h Mute</option><option value="24hMute">24h Mute</option><option value="kick">Kick</option><option value="ban">Ban</option></select></th>`
+            newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><i onclick="table=document.getElementById('serverSettings-events-table').getElementsByTagName('tbody')[0];try{table.deleteRow(${table.rows.length-1})}catch{table.deleteRow(0)};updateTable()" id="serverSettings-events-table-row-delete" class="fa fa-times" aria-hidden="true"></i></th>`
+            updateTable(guildData)
+        }
+
+        function newCommand() {
+            guildData = guildDatas[currentGuild.id]
+
+            var table = document.getElementById('serverSettings-customcommands-table').getElementsByTagName('tbody')[0];
+
+            newRow = table.insertRow(table.rows.length);
+            newRow.id = `serverSettings-customcommands-table-row serverSettings-customcommands-table-row-${table.rows.length}`
+
+            newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-customcommands-table-row-item"><input class="input" id="serverSettings-customcommands-table-row-${table.rows.length}-name" type="text" placeholder="Command name" size="10" maxlength="20"></th>`
+            newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-customcommands-table-row-item"><textarea class="input" id="serverSettings-customcommands-table-row-${table.rows.length}-response" rows="3" cols="25" placeholder="Command response" maxlength="2000"></textarea></th>`
+            newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-customcommands-table-row-item"><i onclick="table=document.getElementById('serverSettings-customcommands-table').getElementsByTagName('tbody')[0];try{table.deleteRow(${table.rows.length-1})}catch{table.deleteRow(0)};updateCustomCommands(noPost=true)" id="serverSettings-events-table-row-delete" class="fa fa-times" aria-hidden="true"></i></th>`
+
+            elemName = document.getElementById(`serverSettings-customcommands-table-row-${table.rows.length}-name`)
+            elemResponse = document.getElementById(`serverSettings-customcommands-table-row-${table.rows.length}-response`)
+
+            if (table.rows.length == 10 || !guildData.has_permissions.manage_guild) {
+                document.getElementById("serverSettings-customcommands-save").setAttribute("class", "buttondisabled");document.getElementById("serverSettings-customcommands-save").setAttribute("disabled", "disabled")
+                document.getElementById("serverSettings-customcommands-table-row-button").setAttribute("class", "buttondisabled");document.getElementById("serverSettings-customcommands-table-row-button").setAttribute("disabled", "disabled")
+            } else {
+                document.getElementById("serverSettings-customcommands-save").setAttribute("class", "button");document.getElementById("serverSettings-customcommands-table-row-button").removeAttribute("disabled")
+                document.getElementById("serverSettings-customcommands-table-row-button").setAttribute("class", "button");document.getElementById("serverSettings-customcommands-save").removeAttribute("disabled")
+            }
+            
+        }
+
+        
+        function setguild(setTo, noRedirect) {
+            for (guild in guilds) {
+                guild = guilds[guild]
+                if (guild.id == setTo) {
+                    document.getElementById(`serverPicker-guild-${guild.id}`).style.backgroundImage = "linear-gradient(0deg, rgba(196,0,0,1) 0%, rgba(242,89,0,1) 100%)"
+                    currentGuild = guild
+                } else document.getElementById(`serverPicker-guild-${guild.id}`).style.backgroundImage = ``
+            }
+            if (!noRedirect) window.history.pushState('', '', `${address}/dashboard/${setTo}`);
+            doGuild()
+            
+        }
+
+        loading = document.getElementById("loading")
+
+        loading.startLoading = function() {loading.style.transition = "top 0.25s";document.getElementById("loading").style.top = "25px"}
+        loading.endLoading = function() {loading.style.transition = "top 0.45s";document.getElementById("loading").style.top = "-100px"}
+
+        loading.startLoading()
+        
+        async function doGuild() {
+            loading.startLoading()
+            
+            await getGuildData(currentGuild.id)
+                .then(data => {
+                    guildDatas = data
+                    guildData = guildDatas[currentGuild.id]
+
+                    for (item of items) {
+                        document.getElementById("serverSettings-" + item + "-input").value = `${guildData[item]}`
+                        document.getElementById("serverSettings-" + item).style.opacity = `100%`
+                    }
+                    for (item of itemsOnly) document.getElementById("serverSettings-" + item).style.opacity = `100%`
+                    
+                    
+                    getWarns(guildData)
+                    getJoinLeave(guildData)
+                    doPrefix(guildData)
+                    doEvents(guildData)
+                    doCustomCommands(guildData)
+
+                    loading.endLoading()
+                })
+        }
+
+        function doEvents(guildData) {
+            var table = document.getElementById('serverSettings-events-table').getElementsByTagName('tbody')[0];
+            table.innerHTML = ``
+            
+            for (event of guildData.events) {
+                newRow = table.insertRow(table.rows.length);
+                newRow.id = `serverSettings-events-table-row serverSettings-events-table-row-${table.rows.length}`
+
+                numbers = ``
+
+                for (number of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) {
+                    numbers = numbers + `<option value="${number}">${number}</option>`
+                }
+                
+                if (guildData.has_permissions.manage_guild) {
+                    newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><select oninput="updateTable()" id="serverSettings-events-table-row-${table.rows.length}-amount" class="input">${numbers}</select></th>`
+                    newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><select oninput="updateTable()" id="serverSettings-events-table-row-${table.rows.length}-what" class="input"><option value="warns">Warn(s)</option></select></th>`
+                    newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"> = </th>`
+                    newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><select oninput="updateTable()" id="serverSettings-events-table-row-${table.rows.length}-action" class="input"><option value="1hMute">1h Mute</option><option value="3hMute">3h Mute</option><option value="6hMute">6h Mute</option><option value="12hMute">12h Mute</option><option value="24hMute">24h Mute</option><option value="kick">Kick</option><option value="ban">Ban</option></select></th>`
+                    newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><i onclick="table=document.getElementById('serverSettings-events-table').getElementsByTagName('tbody')[0];try{table.deleteRow(${table.rows.length-1})}catch{table.deleteRow(0)};updateTable()" id="serverSettings-events-table-row-delete" class="fa fa-times" aria-hidden="true"></i></th>`
+                } else {
+                    newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><select id="serverSettings-events-table-row-${table.rows.length}-amount" class="inputdisabled" disabled>${numbers}</select></th>`
+                    newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><select id="serverSettings-events-table-row-${table.rows.length}-what" class="inputdisabled" disabled><option value="warns">Warn(s)</option></select></th>`
+                    newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"> = </th>`
+                    newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><select id="serverSettings-events-table-row-${table.rows.length}-action" class="inputdisabled" disabled><option value="1hMute">1h Mute</option><option value="3hMute">3h Mute</option><option value="6hMute">6h Mute</option><option value="12hMute">12h Mute</option><option value="24hMute">24h Mute</option><option value="kick">Kick</option><option value="ban">Ban</option></select></th>`
+                    newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><i id="serverSettings-events-table-row-delete-missingperms" class="fa fa-times" aria-hidden="true"></i></th>`
+                }
+                
+
+                document.getElementById(`serverSettings-events-table-row-${table.rows.length}-amount`).value = event.amount
+                document.getElementById(`serverSettings-events-table-row-${table.rows.length}-what`).value = event.what
+                document.getElementById(`serverSettings-events-table-row-${table.rows.length}-action`).value = event.action
+            }
+
+            if (table.rows.length == 10 || !guildData.has_permissions.manage_guild) {
+                document.getElementById("serverSettings-events-table-row-button").setAttribute("class", "buttondisabled");document.getElementById("serverSettings-events-table-row-button").setAttribute("disabled", "disabled")
+            } else {
+                document.getElementById("serverSettings-events-table-row-button").setAttribute("class", "button");document.getElementById("serverSettings-events-table-row-button").removeAttribute("disabled")
+            }
+            
+        }
+
+        function doCustomCommands(guildData) {
+            var table = document.getElementById('serverSettings-customcommands-table').getElementsByTagName('tbody')[0];
+            table.innerHTML = ``
+            
+            for (command in guildData.commands) {
+                newRow = table.insertRow(table.rows.length);
+                newRow.id = `serverSettings-customcommands-table-row serverSettings-customcommands-table-row-${table.rows.length}`
+                
+                if (guildData.has_permissions.manage_guild) {
+                    newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-customcommands-table-row-item"><input class="input" id="serverSettings-customcommands-table-row-${table.rows.length}-name" type="text" placeholder="Command name" size="10" maxlength="20"></th>`
+                    newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-customcommands-table-row-item"><textarea class="input" id="serverSettings-customcommands-table-row-${table.rows.length}-response" rows="3" cols="25" placeholder="Command response" maxlength="2000"></textarea></th>`
+                    newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-customcommands-table-row-item"><i onclick="table=document.getElementById('serverSettings-customcommands-table').getElementsByTagName('tbody')[0];try{table.deleteRow(${table.rows.length-1})}catch{table.deleteRow(0)};updateCustomCommands(noPost=true)" id="serverSettings-customcommands-table-row-delete" class="fa fa-times" aria-hidden="true"></i></th>`
+                } else {
+                    newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-customcommands-table-row-item"><input class="inputdisabled" id="serverSettings-customcommands-table-row-${table.rows.length}-name" type="text" placeholder="Command name" size="10" maxlength="20" disabled></th>`
+                    newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-customcommands-table-row-item"><textarea class="inputdisabled" id="serverSettings-customcommands-table-row-${table.rows.length}-response" rows="3" cols="25" placeholder="Command response" maxlength="2000" disabled></textarea></th>`
+                    newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-customcommands-table-row-item"><i id="serverSettings-customcommands-table-row-delete-missingperms" class="fa fa-times" aria-hidden="true"></i></th>`
+                }
+                
+                document.getElementById(`serverSettings-customcommands-table-row-${table.rows.length}-name`).value = command
+                document.getElementById(`serverSettings-customcommands-table-row-${table.rows.length}-response`).value = guildData.commands[command]
+            }
+
+            if (table.rows.length == 10 || !guildData.has_permissions.manage_guild) {
+                document.getElementById("serverSettings-customcommands-save").setAttribute("class", "buttondisabled");document.getElementById("serverSettings-customcommands-save").setAttribute("disabled", "disabled")
+                document.getElementById("serverSettings-customcommands-table-row-button").setAttribute("class", "buttondisabled");document.getElementById("serverSettings-customcommands-table-row-button").setAttribute("disabled", "disabled")
+            } else {
+                document.getElementById("serverSettings-customcommands-save").setAttribute("class", "button");document.getElementById("serverSettings-customcommands-table-row-button").removeAttribute("disabled")
+                document.getElementById("serverSettings-customcommands-table-row-button").setAttribute("class", "button");document.getElementById("serverSettings-customcommands-save").removeAttribute("disabled")
+            }
+            
+        }
+
+        function doPrefix(guildData) {
+            if (!guildData.has_permissions.manage_guild) {
+                document.getElementById("serverSettings-prefix-button").removeAttribute(`onclick`) 
+                document.getElementById("serverSettings-prefix-button").setAttribute(`class`, `buttondisabled`)
+                document.getElementById("serverSettings-prefix-button").setAttribute(`disabled`, `disabled`)
+                document.getElementById("serverSettings-prefix-input").setAttribute(`class`, `inputdisabled`)
+                document.getElementById("serverSettings-prefix-input").setAttribute(`disabled`, `disabled`)
+            } else {
+                document.getElementById("serverSettings-prefix-button").setAttribute(`onclick`, `postData('/dashboard/post/setPrefix', {prefix:document.getElementById('serverSettings-prefix-input').value})`)
+                document.getElementById("serverSettings-prefix-button").setAttribute(`class`, `button`)
+                document.getElementById("serverSettings-prefix-button").removeAttribute(`disabled`)
+                document.getElementById("serverSettings-prefix-input").setAttribute(`class`, `input`)
+                document.getElementById("serverSettings-prefix-input").removeAttribute(`disabled`)
+            }
+        }
+
+        function getWarns(guildData) {
+            var tableRef = document.getElementById('serverSettings-warns-table').getElementsByTagName('tbody')[0];
+            tableRef.innerHTML = ``
+            for (warnMember in guildData.warns) {
+                for (warn in guildData.warns[warnMember]) {
+                    warnSelect = guildData.warns[warnMember][warn]
+                    warnMemberName = "Unknown"
+                    for (member of guildData.members) {if (member.id == warnSelect.mod) {warnModName = member.tag};if (member.id == warnMember) {warnMemberName = member.tag}}
+                    var newRow = tableRef.insertRow(tableRef.rows.length);
+                    newRow.id = `serverSettings-warns-table-row`
+                    newRow.innerHTML = `<th id="serverSettings-warns-table-row-item">${warnMemberName}</th>`
+                    newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-warns-table-row-item">${warn}</th>`
+                    newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-warns-table-row-item">${warnSelect.reason}</th>`
+                    newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-warns-table-row-item">${warnModName}</th>`;
+                    if (guildData.has_permissions.manage_messages) newRow.innerHTML = newRow.innerHTML + `<th style="width:50px;color:white"><i onclick="postData('/dashboard/post/delWarn', {member:'${warnMember}',id:'${warn}'})" id="serverSettings-warns-table-row-item-delete" class="fa fa-times" aria-hidden="true"></i></th>`;
+                    else newRow.innerHTML = newRow.innerHTML + `<th style="width:50px;color:white"><i id="serverSettings-warns-table-row-item-delete-missingperms" class="fa fa-times" aria-hidden="true"></i></th>`;
+                    
+                }
+                
+            }
+        }
+
+        function getJoinLeave(guildData) {
+            joinSelect = document.getElementById("serverSettings-joinleave-join-select")
+            joinInput = document.getElementById("serverSettings-joinleave-join-input")
+            autoroleSelect = document.getElementById("serverSettings-joinleave-autorole-select")
+            joinSelect.innerHTML = ``
+            autoroleSelect.innerHTML = ``
+                
+            for (channel of guildData.text_channels) {
+                if (channel.permissions.send_messages) {
+                    joinSelect.innerHTML = joinSelect.innerHTML + `<option value="${channel.id}">#${channel.name}</option>`
+                }
+            }
+
+            for (role of guildData.roles) {
+                if (role.color == "#000000") role.color = "#FFFFFF"
+                if (role.name == "@everyone") {role = {name:"None",id:"None",color:"#000000;font-size:50px"}}
+                autoroleSelect.innerHTML = autoroleSelect.innerHTML + `<option value="${role.id}" style="color:${role.color}">${role.name}</option>`
+            }
+
+            leaveSelect = document.getElementById("serverSettings-joinleave-leave-select")
+            leaveInput = document.getElementById("serverSettings-joinleave-leave-input")
+            leaveSelect.innerHTML = ``
+                
+            for (channel of guildData.text_channels) {
+                if (channel.permissions.send_messages) {
+                    leaveSelect.innerHTML = leaveSelect.innerHTML + `<option value="${channel.id}">#${channel.name}</option>`
+                }
+            }
+
+            if (guildData.joinleave.join) {
+                joinInput.value = guildData.joinleave.join.message
+                joinSelect.value = guildData.joinleave.join.channel
+            } else {joinInput.value = ``}
+            if (guildData.joinleave.leave) {
+                leaveInput.value = guildData.joinleave.leave.message
+                leaveSelect.value = guildData.joinleave.leave.channel
+            } else {leaveInput.value = ``}
+
+            if (guildData.joinleave.autorole) autoroleSelect.value = guildData.joinleave.autorole
+
+            if (!guildData.has_permissions.manage_guild) {
+                for (item of ["leave-input", "leave-select", "join-input", "join-select", "autorole-select"]) {
+                    document.getElementById("serverSettings-joinleave-" + item).setAttribute(`class`, `inputdisabled`)
+                    document.getElementById("serverSettings-joinleave-" + item).setAttribute(`disabled`, `disabled`)
+                }
+                for (item of ["leave-button", "join-button", "autorole-button"]) {
+                    document.getElementById("serverSettings-joinleave-" + item).removeAttribute(`onclick`) 
+                    document.getElementById("serverSettings-joinleave-" + item).setAttribute(`disabled`, `disabled`) 
+                    document.getElementById("serverSettings-joinleave-" + item).setAttribute(`class`, `buttondisabled`)
+                }
+            } else {
+                for (item of ["leave-input", "leave-select", "join-input", "join-select", "autorole-select"]) {
+                    document.getElementById("serverSettings-joinleave-" + item).setAttribute(`class`, `input`)
+                    document.getElementById("serverSettings-joinleave-" + item).removeAttribute(`disabled`)
+                }
+                for (item of ["leave-button", "join-button", "autorole-button"]) {
+                    document.getElementById("serverSettings-joinleave-" + item).setAttribute(`class`, `button`)
+                    document.getElementById("serverSettings-joinleave-" + item).removeAttribute(`disabled`)
+                }
+                document.getElementById("serverSettings-joinleave-leave-button").setAttribute(`onclick`, `postData('/dashboard/post/setMessage', {type:'leave',channel:document.getElementById('serverSettings-joinleave-leave-select').value,message:document.getElementById('serverSettings-joinleave-leave-input').value})`)
+                document.getElementById("serverSettings-joinleave-join-button").setAttribute(`onclick`, `postData('/dashboard/post/setMessage', {type:'join',channel:document.getElementById('serverSettings-joinleave-join-select').value,message:document.getElementById('serverSettings-joinleave-join-input').value})`)
+                document.getElementById("serverSettings-joinleave-autorole-button").setAttribute(`onclick`, `postData('/dashboard/post/setAutorole', {role:document.getElementById('serverSettings-joinleave-autorole-select').value})`)
+            }
+        }
+
+        async function postData(where, what) {
+            what.guild = currentGuild.id.toString()
+
+            var settings = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body:JSON.stringify(what)
+            };
+            await fetch(address + where, settings)
+                .then(response => {
+                    response.json()
+                        .then(msg => {
+                            if (msg.error) {
+                                document.getElementById("postMessage-box").innerHTML = `Error: ${msg.error}`
+                            } else {
+                                if (msg.returnMessage.length > 100) {
+                                    msg.returnMessage = msg.returnMessage.substring(0, msg.returnMessage.length - (msg.returnMessage.length - 100)) + `...`
+                                }
+                                document.getElementById("postMessage-box").innerHTML = `Success: ${msg.returnMessage}`
+                            }
+
+                            document.getElementById("postMessage").style.bottom = "0px"
+                            if (!msg.error && where == '/dashboard/post/delWarn') {guildDatas[currentGuild.id].warns = msg[currentGuild.id];getWarns(guildDatas[currentGuild.id])}
+                            if (!msg.error && where == '/dashboard/post/setPrefix') {document.getElementById("serverSettings-prefix-input").value = msg.prefix}
+                            if (where == '/dashboard/post/setCustomCommands') {guildDatas[currentGuild.id].commands = msg.commands;doCustomCommands(guildDatas[currentGuild.id])}
+                            setTimeout(function() {
+                                document.getElementById("postMessage").style.bottom = "-50px"
+                            }, 5000 + (document.getElementById("postMessage-box").innerHTML.length * 20 ))
+                        })
+                })
+        }
+
+        var _speedconstant = 1.15600e-8;
+        var d = new Date();
+        var amount = 150000000;
+        for (var i = amount; i > 0; i--) {}
+        var newd = new Date();
+        var accnewd = Number(String(newd.getSeconds()) + "." + String(newd.getMilliseconds()));
+        var accd = Number(String(d.getSeconds()) + "." + String(d.getMilliseconds()));
+        var di = accnewd - accd;
+        if (d.getMinutes() != newd.getMinutes()) {di = (60 * (newd.getMinutes() - d.getMinutes())) + di}
+        spd = ((_speedconstant * amount) / di);
+        GHz = Math.round(spd * 1000) / 1000
+
+        function checkVisible(elm) {
+            var rect = elm.getBoundingClientRect();
+            var viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
+            return !(rect.bottom < 0 || rect.top - viewHeight >= 0);
+        }
+
+        
+
+        async function loadServers() {
+            
+            await getGuildData()
+                .then(guildDatas => {
+
+                    loading.endLoading()
+                    guilds = guildDatas
+                    
+                    for (guild in guilds) {
+                        guild = guilds[guild]
+                        counter++;
+                        if (guild.name.length > 15) {title = guild.name.substring(0, guild.name.length - (guild.name.length - 15)) + `...`} else {title = guild.name}
+                        serverHTML = serverHTML + `<div onclick="setguild('${guild.id}')" id="serverPicker-guild-${guild.id}" class="serverPicker"><div class="serverPickerImage" style="background-image:url('https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.webp?size=512')" onerror="this.style.backgroundImage=''"></div><div style="font-size:25px;text-align:center">${title}</div></div>`
+                    }
+
+                    document.getElementById("servers").innerHTML = serverHTML
+                    document.getElementById("servers").style.opacity = "100%"
+                    sizeCheck()
+                    
+                    if (window.location.href.split('/')[window.location.href.split('/').length - 1].length == 18) {
+                        setguild(window.location.href.split('/')[window.location.href.split('/').length - 1], true)}
+            })
+        }
+
+        window.onload = async function () {
+            timer = 500
+            /*if (document.referrer.replace(address, "") == "/" && document.referrer.includes(address)) {
+                document.getElementById("gradient").style.transition = "height 1s, top 1s"
+            }*/
+            //document.getElementById("gradient").style.height = "250px"
+            gradient = document.getElementById("gradient")
+            document.getElementById("gradient-text").style.opacity = "100%"
+            gradient.style.letterSpacing = "5px"
+            
+            setTimeout(function() {
+
+                document.getElementById("gradient-text").style.transition = "top 1s"
+                document.getElementById("gradient-text").style.top = "45%"
+                setTimeout(function() {
+                    document.getElementById("gradient-description").style.transition = "opacity 1s, padding 1s"
+                    document.getElementById("gradient-description").style.opacity = "100%"
+                    document.getElementById("gradient-description").style.padding = "10px"
+                }, timer)
+                
+            }, timer * 2)
+
+            for (let i = 1; i < 10; i++) {
+                try{setTimeout(function timer() {
+                    document.getElementById("topBar" + i).style.opacity = "100%"
+                    document.getElementById("topBar" + i).style.fontSize = "15px"
+                }, i * (timer / 10))}catch{}
+            }
+            await loadServers()
+            
+        }
+
+        if (GHz > 2.5) {
+            window.onscroll = function () {
+                if (checkVisible(document.getElementById("gradient"))) {document.getElementById("navBar").style.filter = `hue-rotate(${(window.scrollY/2)}deg) grayscale(1)`}
+                if (checkVisible(document.getElementById("gradient"))) {
+                    document.getElementById("gradient").style.background = `linear-gradient(${window.scrollY/2.5}deg, rgba(196,0,0,1) 0%, rgba(242,89,0,1) 100%)`
+                }
+            }
+        }
+
+        function linkTo(where) {
+            if (where == "/dashboard") document.getElementById("loading").style.top = "20px"
+            if (where == "/") {
+                document.getElementById("gradient").style.transition = "height 0.75s, top 1s"
+                document.getElementById("gradient").style.height = "500px"
+            }
+            for (let i = 1; i < 10; i++) {
+                try{setTimeout(function timer() {
+                    document.getElementById("topBar" + i).style.opacity = "0%"
+                    document.getElementById("topBar" + i).style.fontSize = "0px"
+                    document.getElementById("topBar" + i).style.padding = "25px"
+                }, i * 50)}catch{}
+            }
+            document.getElementById("servers").style.opacity = "0%"
+            document.getElementById("gradient-description").style.transition = "opacity .5s, padding .5s"
+            document.getElementById("gradient-description").style.opacity = "0%"
+            document.getElementById("gradient-description").style.padding = "100px"
+            document.getElementById("gradient-text").style.transition = "opacity .5s"
+            document.getElementById("gradient-text").style.opacity = "0%"
+            for (item of items) document.getElementById("serverSettings-" + item).style.opacity = `0%`
+            for (item of itemsOnly) document.getElementById("serverSettings-" + item).style.opacity = `0%`
+            setTimeout(() => {
+                window.open(where, '_self')
+            }, 700);
+            
+        }
+
+    $.fn.followTo = function (pos) {
+        var $this = this,
+            $window = $(window);
+
+        $window.scroll(function (e) {
+            if ($window.scrollTop() > pos) {
+                $this.css({
+                    position: 'absolute',
+                    top: pos
+                });
+            } else {
+                $this.css({
+                    position: 'fixed',
+                    top: 0
+                });
+            }
+        });
+    };
+
+
+    $('#navBar').followTo(250);
+    
+        
+    </script>
+</html>
