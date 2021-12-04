@@ -8,7 +8,7 @@
         <meta name="viewport" content="initial-scale=0.36">
     </head>
     <body>
-        <div style="color:white;position:fixed;height:50px;filter:hue-rotate(100deg) grayscale(1);z-index:100;background-color:black;width:100%;background: rgb(196,0,0);background: radial-gradient(circle, rgba(196,0,0,1) 45%, rgba(242,89,0,1) 100%);transition:top 0.5s" id="navBar">
+        <div style="z-index:10;color:white;position:fixed;height:50px;filter:hue-rotate(100deg) grayscale(1);z-index:100;background-color:black;width:100%;background: rgb(196,0,0);background: radial-gradient(circle, rgba(196,0,0,1) 45%, rgba(242,89,0,1) 100%);transition:top 0.5s" id="navBar">
             <span id="topBar1" class="vertical-center topBarItem" style="left:200px;" onclick="linkTo('/')">Home</span>
             <span id="topBar2" class="vertical-center topBarItem" style="left:400px;" onclick="linkTo('/dashboard')">Dashboard</span>
             <span id="topBar3" class="vertical-center topBarItem" style="left:600px;">Status</span>
@@ -59,6 +59,7 @@
                     <li style="color:#a3a3a3" aria-label="Example: Welcome, {@user}! Please read the rules!" data-balloon-pos="up"><span style="color:white">{@user}</span> - Mention the user</li>
                     <li style="color:#a3a3a3" aria-label="Example: Welcome, {user}!" data-balloon-pos="up"><span style="color:white">{user}</span> - User's name</li>
                     <li style="color:#a3a3a3" aria-label="Example: Welcome to {server}!" data-balloon-pos="up"><span style="color:white">{server}</span> - The server that the user joined</li>
+                    <li style="color:#a3a3a3" aria-label="Example: We're now at {serverMembers} members!" data-balloon-pos="up"><span style="color:white">{serverMembers}</span> - The amount of server members</li>
                 </div>
             </div>
 
@@ -77,9 +78,10 @@
                 </div>
                 <button class="button" id="serverSettings-customcommands-save" style="bottom:300px;width:100%;" onclick="updateCustomCommands()">Save Commands</button>
                 <div style="font-size:15px;bottom:0px;padding-top:15px">    
-                    <li style="color:#a3a3a3" aria-label="Example: Argument 1 is {args/1}!" data-balloon-pos="up"><span style="color:white">{args/argNo}</span> - Get argument (eg {args/1})</li>
-                    <li style="color:#a3a3a3" aria-label="Example: Argument 1 and further is {args/1:}!" data-balloon-pos="up"><span style="color:white">{args/argNo:}</span> - Get argument and everything after (eg {args/1:})</li>
-                    <li style="color:#a3a3a3" aria-label="Example: Welcome, {user}!" data-balloon-pos="up"><span style="color:white">{randomChoice/choice1/choice2...}</span> - Random choice (eg {randomChoice/yes/no})</li>
+                    <li style="color:#a3a3a3" ><span style="color:white">{args/argNo}</span> - Get argument (eg {args/1})</li>
+                    <li style="color:#a3a3a3" ><span style="color:white">{args/argNo:}</span> - Get argument and everything after (eg {args/1:})</li>
+                    <li style="color:#a3a3a3" ><span style="color:white">{randomChoice/choice1/choice2...}</span> - Random choice (eg {randomChoice/yes/no})</li>
+                    <li style="color:#a3a3a3" ><span style="color:white">{member} {@member} {nickname} {server}</span> - Names for commands</li>
                 </div>
             </div>
 
@@ -103,6 +105,27 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+            <div style="position:absolute;left:500px;top:2500px" id="serverSettings-logging">
+                <div class="serverSettings-style-sectionTitle" style="padding:25px 0px 25px 0px">Server Logging</div>
+                <div style="color:#a3a3a3;font-size:20px;padding-left:5px;padding-bottom:5px">Logging Channel</div>
+                <select id="serverSettings-logging-channel" class="input" style="width:200px"></select>
+
+                <br><input type="checkbox" id="serverSettings-logging-messageDelete" oninput="saveLogging()" checked>
+                <label for="serverSettings-logging-messageDelete" style="color:white"> Message delete</label>
+                <br><input type="checkbox" id="serverSettings-logging-messageEdit" oninput="saveLogging()" checked>
+                <label for="serverSettings-logging-messageEdit" style="color:white"> Message edit</label>
+
+                <br><input type="checkbox" id="serverSettings-logging-channelCreate" oninput="saveLogging()" checked>
+                <label for="serverSettings-logging-channelCreate" style="color:white"> Channel Create</label>
+                <br><input type="checkbox" id="serverSettings-logging-channelDelete" oninput="saveLogging()" checked>
+                <label for="serverSettings-logging-channelDelete" style="color:white"> Channel Delete</label>
+
+                <br><input type="checkbox" id="serverSettings-logging-roleCreate" oninput="saveLogging()" checked>
+                <label for="serverSettings-logging-roleCreate" style="color:white"> Role Create</label>
+                <br><input type="checkbox" id="serverSettings-logging-roleDelete" oninput="saveLogging()" checked>
+                <label for="serverSettings-logging-roleDelete" style="color:white"> Role Delete</label>
+
             </div>
             <div style="position:absolute;left:500px;top:3000px;" style="opacity:0%;">&nbsp;</div>
             <div class="serverList" id="servers"></div>
@@ -156,10 +179,10 @@
 
         address = location.origin
         items = ["prefix"]
-        itemsOnly = ["warns", "joinleave", "events", "customcommands"]
+        itemsOnly = ["warns", "joinleave", "events", "customcommands", "logging"]
 
         itemsLeft = ["prefix", "joinleave", "customcommands"]
-        itemsRight = [["warns", 2350, 50], ["events", 3100, 800]]
+        itemsRight = [["warns", 2350, 50], ["events", 3100, 800], ["logging", 3850, 1550]]
 
         allItems = items.concat(itemsOnly)
         currentGuild = null
@@ -348,7 +371,7 @@
             elemResponse = document.getElementById(`serverSettings-customcommands-table-row-${table.rows.length}-response`)
 
             if (table.rows.length == 10 || !guildData.has_permissions.manage_guild) {
-                document.getElementById("serverSettings-customcommands-save").setAttribute("class", "buttondisabled");document.getElementById("serverSettings-customcommands-save").setAttribute("disabled", "disabled")
+                if (!guildData.has_permissions.manage_guild) document.getElementById("serverSettings-customcommands-save").setAttribute("class", "buttondisabled");document.getElementById("serverSettings-customcommands-save").setAttribute("disabled", "disabled")
                 document.getElementById("serverSettings-customcommands-table-row-button").setAttribute("class", "buttondisabled");document.getElementById("serverSettings-customcommands-table-row-button").setAttribute("disabled", "disabled")
             } else {
                 document.getElementById("serverSettings-customcommands-save").setAttribute("class", "button");document.getElementById("serverSettings-customcommands-table-row-button").removeAttribute("disabled")
@@ -398,9 +421,71 @@
                     doPrefix(guildData)
                     doEvents(guildData)
                     doCustomCommands(guildData)
+                    doLogging(guildData)
 
                     loading.endLoading()
                 })
+        }
+
+        loggingOptions = ["messageDelete", "messageEdit", "channelCreate", "channelDelete", "roleCreate", "roleDelete"]
+
+        async function saveLogging() {
+            loggingChannel = document.getElementById("serverSettings-logging-channel")
+
+            
+
+            ignore = []
+
+            for (option of loggingOptions) {
+                element = document.getElementById("serverSettings-logging-" + option)
+
+                checked = element.checked
+
+                if (!checked) {
+                    ignore.push(option)
+                }
+            }
+
+            data = {"logging":{"channel":loggingChannel.value}}
+
+            if (ignore != []) {
+                data["logging"]["ignore"] = ignore
+            }
+
+            await postData("/dashboard/post/setLogging", data)
+        }
+
+        function doLogging(guildData) {
+            loggingChannel = document.getElementById("serverSettings-logging-channel")
+            loggingChannel.oninput = saveLogging
+            loggingChannel.innerHTML = `<option value="0" style="color:red;height:30px">None</option>`
+                
+            for (channel of guildData.text_channels) {
+                if (channel.permissions.send_messages) {
+                    loggingChannel.innerHTML = loggingChannel.innerHTML + `<option value="${channel.id}">#${channel.name}</option>`
+                }
+            }
+
+            if (guildData.logging) {
+                if (guildData.logging.channel) {
+                    loggingChannel.value = guildData.logging.channel
+                }
+                if (guildData.logging.ignore) {
+                    for (option of loggingOptions) {
+                        element = document.getElementById("serverSettings-logging-" + option)
+
+                        if (guildData.logging.ignore.includes(option)) {
+                            element.checked = false
+                        } else element.checked = true
+                    }
+                } else {
+                    for (option of loggingOptions) {
+                        element = document.getElementById("serverSettings-logging-" + option)
+                        element.checked = true
+                    }
+                }
+            }
+
         }
 
         function doEvents(guildData) {
@@ -431,7 +516,6 @@
                     newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><i id="serverSettings-events-table-row-delete-missingperms" class="fa fa-times" aria-hidden="true"></i></th>`
                 }
                 
-
                 document.getElementById(`serverSettings-events-table-row-${table.rows.length}-amount`).value = event.amount
                 document.getElementById(`serverSettings-events-table-row-${table.rows.length}-what`).value = event.what
                 document.getElementById(`serverSettings-events-table-row-${table.rows.length}-action`).value = event.action
@@ -467,8 +551,8 @@
                 document.getElementById(`serverSettings-customcommands-table-row-${table.rows.length}-response`).value = guildData.commands[command]
             }
 
-            if (table.rows.length == 10 || !guildData.has_permissions.manage_guild) {
-                document.getElementById("serverSettings-customcommands-save").setAttribute("class", "buttondisabled");document.getElementById("serverSettings-customcommands-save").setAttribute("disabled", "disabled")
+            if (table.rows.length >= 10 || !guildData.has_permissions.manage_guild) {
+                if (!guildData.has_permissions.manage_guild) document.getElementById("serverSettings-customcommands-save").setAttribute("class", "buttondisabled");document.getElementById("serverSettings-customcommands-save").setAttribute("disabled", "disabled")
                 document.getElementById("serverSettings-customcommands-table-row-button").setAttribute("class", "buttondisabled");document.getElementById("serverSettings-customcommands-table-row-button").setAttribute("disabled", "disabled")
             } else {
                 document.getElementById("serverSettings-customcommands-save").setAttribute("class", "button");document.getElementById("serverSettings-customcommands-table-row-button").removeAttribute("disabled")
@@ -660,10 +744,6 @@
 
         window.onload = async function () {
             timer = 500
-            /*if (document.referrer.replace(address, "") == "/" && document.referrer.includes(address)) {
-                document.getElementById("gradient").style.transition = "height 1s, top 1s"
-            }*/
-            //document.getElementById("gradient").style.height = "250px"
             gradient = document.getElementById("gradient")
             document.getElementById("gradient-text").style.opacity = "100%"
             gradient.style.letterSpacing = "5px"
@@ -688,15 +768,6 @@
             }
             await loadServers()
             
-        }
-
-        if (GHz > 2.5) {
-            window.onscroll = function () {
-                if (checkVisible(document.getElementById("gradient"))) {document.getElementById("navBar").style.filter = `hue-rotate(${(window.scrollY/2)}deg) grayscale(1)`}
-                if (checkVisible(document.getElementById("gradient"))) {
-                    document.getElementById("gradient").style.background = `linear-gradient(${window.scrollY/2.5}deg, rgba(196,0,0,1) 0%, rgba(242,89,0,1) 100%)`
-                }
-            }
         }
 
         function linkTo(where) {

@@ -7,7 +7,9 @@ from flask_minify import minify
 from functions import functions, encryption
 from gevent.pywsgi import WSGIServer
 from gevent import monkey
-from functions import functions
+from functions import functions, customCommands
+import asyncio
+import nest_asyncio
 
 encryptionKey = os.environ.get("encryptionKey")
 
@@ -43,6 +45,13 @@ def home():
 def about():
     return render_template('about.html', last_updated=dir_last_updated('/static'))
 
+@app.route('/invited')
+def invited():
+    if request.args.get("guild_id") == None:
+        return redirect("/")
+    guildName = bot.get_guild(int(request.args['guild_id'])) if bot.get_guild(int(request.args['guild_id'])) else "None"
+    return render_template('invited.html', last_updated=dir_last_updated('/static'), guild_name=guildName)
+
 @app.route("/login", methods=["GET"])  
 def admin():
     try:
@@ -56,6 +65,7 @@ def admin():
         print(e)
         return redirect(var.login)
     try:
+        
         id = user_json["id"]
         user = bot.get_user(int(id))
         resp = make_response(redirect("/#dashboard"))
@@ -76,7 +86,9 @@ def dashboard():
         id = encryption.decode(user[1], encryptionKey)
         name = encryption.decode(user[2], encryptionKey)
     except:
-        return redirect("/login")
+        resp = make_response(redirect("/login"))
+        resp.set_cookie('user', '', expires=0)
+        return resp
     return render_template('dashboard.html', last_updated=dir_last_updated('/static'))
 
 @app.route('/dashboard/<server>')
@@ -109,11 +121,13 @@ def serverData():
         return redirect("/login")
     warns = functions.read_data_sync('databases/warns.json')
     warnsString = json.dumps(warns)
-    joinleaveData = functions.read_data_sync("databases/joinleave.json")
     events = functions.read_data_sync("databases/events.json")
     
     with open("databases/commands.json") as f:
         commands = json.load(f)
+    
+    with open("databases/joinleave.json") as f:
+        joinleaveData = json.load(f)
 
     if "guild" in args:
         if bot.get_guild(int(args["guild"])) != None:
@@ -123,7 +137,7 @@ def serverData():
             value[str(guild.id)] = {
                 "name":guild.name,
                 "id":str(guild.id),
-                "icon":guild.icon,
+                "icon":guild.icon.key if guild.icon else "undefined",
                 "has_permissions":{"manage_messages":member.guild_permissions.manage_messages, "manage_guild":member.guild_permissions.manage_guild},
                 "prefix":functions.prefix(guild),
                 "joinleave":joinleaveData[str(guild.id)] if str(guild.id) in joinleaveData else {},
@@ -133,7 +147,8 @@ def serverData():
                 "events":events[str(guild.id)] if str(guild.id) in events else [],
                 "members":[{"id":str(member.id),"tag":str(member)} for member in guild.members if str(member.id) in warnsString] if str(guild.id) in warns else {},
                 "text_channels":[{"name":channel.name,"id":str(channel.id), "permissions":{"send_messages":True if channel.permissions_for(bot_member).send_messages else False}} for channel in guild.text_channels],
-                "commands":commands[str(guild.id)] if str(guild.id) in commands else {}
+                "commands":commands[str(guild.id)] if str(guild.id) in commands else {},
+                "logging":joinleaveData[str(guild.id)]["logging"] if str(guild.id) in joinleaveData and "logging" in joinleaveData[str(guild.id)] else {}
             }
     else:
         for guild in bot.guilds:
@@ -143,7 +158,7 @@ def serverData():
                 value[str(guild.id)] = {
                     "name":guild.name,
                     "id":str(guild.id),
-                    "icon":guild.icon
+                    "icon":guild.icon.key if guild.icon else "undefined"
                     
                 }
     if "b" in args:
@@ -158,7 +173,10 @@ def setAutorole():
         user_name = encryption.decode(user[2], encryptionKey)
     except:
         return redirect("/login")
-    joinleave = functions.read_data_sync("databases/joinleave.json")
+
+    with open("databases/joinleave.json") as f:
+        joinleave = json.load(f)
+
     data = request.json
     guild = bot.get_guild(int(data['guild']))
     member = guild.get_member(int(user_id))
@@ -181,8 +199,46 @@ def setAutorole():
             what = "set"
             joinleave[str(guild.id)]["autorole"] = str(role)
         functions.save_data_sync("databases/joinleave.json", joinleave)
+        functions.read_load_sync("databases/joinleave.json", joinleave)
             
         return jsonify({"data":joinleave[str(guild.id)], "returnMessage":f"Successfully {what} autorole role"})
+    else:
+        return jsonify({"error":"Missing perms"})
+
+@app.route('/dashboard/post/setLogging', methods=['POST'])
+def setLogging():
+    try:
+        user = request.cookies.get('user').split(";;;;")
+        user_id = encryption.decode(user[1], encryptionKey)
+        user_name = encryption.decode(user[2], encryptionKey)
+    except:
+        return redirect("/login")
+
+    with open("databases/joinleave.json") as f:
+        joinleave = json.load(f)
+
+    data = request.json
+    guild = bot.get_guild(int(data['guild']))
+    member = guild.get_member(int(user_id))
+
+    try:
+        loggingData = data["logging"]
+    except:
+        return jsonify({"error":"Invalid role"})
+    
+    if "channel" in loggingData:
+        if loggingData["channel"] == "0":
+            del loggingData["channel"]
+    
+    if member.guild_permissions.manage_guild:
+        if str(guild.id) not in joinleave:
+            joinleave[str(guild.id)] = {}
+
+        joinleave[str(guild.id)]["logging"] = loggingData
+        functions.save_data_sync("databases/joinleave.json", joinleave)
+        functions.read_load_sync("databases/joinleave.json", joinleave)
+            
+        return jsonify({"data":joinleave[str(guild.id)], "returnMessage":f"Successfully set logging settings"})
     else:
         return jsonify({"error":"Missing perms"})
 
@@ -194,7 +250,10 @@ def setMessage():
         user_name = encryption.decode(user[2], encryptionKey)
     except:
         return redirect("/login")
-    joinleave = functions.read_data_sync("databases/joinleave.json")
+    
+    with open("databases/joinleave.json") as f:
+        joinleave = json.load(f)
+
     data = request.json
     guild = bot.get_guild(int(data['guild']))
     member = guild.get_member(int(user_id))
@@ -219,7 +278,10 @@ def setMessage():
             if choice not in joinleave[str(guild.id)]:
                 joinleave[str(guild.id)][choice] = {}
             joinleave[str(guild.id)][choice] = {"channel":str(channel),"message":message}
+
         functions.save_data_sync("databases/joinleave.json", joinleave)
+        functions.read_load_sync("databases/joinleave.json", joinleave)
+
         return jsonify({"data":joinleave[str(guild.id)], "returnMessage":f"Successfully set {choice} message to '{data['message']}'"})
     else:
         return jsonify({"error":"Missing perms"})
@@ -295,15 +357,18 @@ def setCustomCommands():
 
     if member.guild_permissions.manage_guild:
         if len(data["commands"]) > 10:
-            return jsonify({"error":"You have hit the maximum amount of events for the server (10)!"})
+            return jsonify({"error":"You have hit the maximum amount of custom commands for the server (10)!"})
         
         did = False
         did2 = False
         delList = []
 
         for cmd in data["commands"]:
+            # SlashCommand
             for command in bot.commands:
-                if cmd == command.name or cmd in command.aliases:
+                if cmd == command.name and command.guild_ids == [guild.id] and "Custom Command" in command.description:
+                    pass
+                elif cmd == command.name:
                     delList.append(cmd)
                     did = True
             if cmd in var.musicCommands:
@@ -314,8 +379,6 @@ def setCustomCommands():
                 delList.append(cmd)
                 did2 = True
         
-        print(data)
-        
         for item in delList:
             del data["commands"][item]
 
@@ -324,12 +387,19 @@ def setCustomCommands():
         functions.save_data_sync("databases/commands.json", commands)
         functions.read_load_sync("databases/commands.json", commands)
 
+        cmds = customCommands.loadCustomCommands(bot, returnList=True)
+        """for cmd in cmds:
+            print(cmd.to_dict())
+            bot.add_application_command(cmd)"""
+
+        bot.loop.create_task(bot.http.bulk_upsert_guild_commands(bot.user.id, guild.id, cmds))
+
         if did == True:
             return jsonify({"error":"One or more of your custom commands already exist! Removed them.", "commands":commands[str(guild.id)]})
         if did2 == True:
             return jsonify({"error":"One or more of your custom commands were empty! Removed them.", "commands":commands[str(guild.id)]})
 
-        return jsonify({"returnMessage":"Successfully set commands", "commands":commands[str(guild.id)]})
+        return jsonify({"returnMessage":"Successfully set commands. This may take up to a minute to refresh.", "commands":commands[str(guild.id)]})
     else:
         return jsonify({"error":"Missing perms", "commands":commands[str(guild.id)]})
 

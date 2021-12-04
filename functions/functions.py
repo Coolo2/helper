@@ -1,8 +1,12 @@
+from discord.ext import commands 
+import discord
+
 import json, os
 from setup import var
-import discord, asyncio, aiohttp, requests
+import asyncio, aiohttp, requests
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
+from difflib import SequenceMatcher
 
 def get_bot_users(bot):
     servers = list(bot.guilds)
@@ -191,25 +195,27 @@ async def is_url_image(image_url, image_formats):
     except:
         return False
 
-async def imageFromArg(message, args, imgTuple, imgList):
+async def imageFromArg(ctx, args, imgTuple, imgList):
     imgURL = ""
-    if message.attachments != [] and message.attachments[0].url.split(".")[-1].lower() in imgList:
-        imgURL = message.attachments[0].url 
-    elif args != None and await is_url_image(args, imgTuple):
+    
+    if args != None and await is_url_image(args, imgTuple):
         imgURL = args
     elif args != None and True in [True if member.name.lower() == args.lower() 
         or member.display_name.lower() == args.lower() 
         or str(member.id) == args 
-        or member.mention == args else False for member in message.guild.members]:
+        or member.mention == args else False for member in ctx.guild.members]:
 
-        for member in message.guild.members:
+        for member in ctx.guild.members:
             if member.name.lower() == args.lower() or member.display_name.lower() == args.lower() or str(member.id) == args or member.mention == args:
-                imgURL = member.avatar_url
+                imgURL = member.avatar.url
     else:
-        imgURL = message.author.avatar_url
+        imgURL = ctx.author.avatar.url
     if imgURL == "":
         return False
     return imgURL
+
+    """elif message.attachments != [] and message.attachments[0].url.split(".")[-1].lower() in imgList:
+        imgURL = message.attachments[0].url """
 
 def replaceMessage(member, message):
     message = message.replace("{user}", member.name)
@@ -220,6 +226,9 @@ def replaceMessage(member, message):
 
     message = message.replace("{guild}", member.guild.name)
     message = message.replace("{server}", member.guild.name)
+
+    message = message.replace("{guildMembers}", str(len(member.guild.members)))
+    message = message.replace("{serverMembers}", str(len(member.guild.members)))
     return message
 
 async def read_data(fileName):
@@ -296,3 +305,22 @@ def calculateTime(argument):
 def changelog():
     with open("resources/changelog.txt") as f:
         return f.read()
+
+def fuzzy_search(search_key, text, strictness):
+    lines = text.split("\n")
+    for i, line in enumerate(lines):
+        words = line.split()
+        for word in words:
+            similarity = SequenceMatcher(None, word, search_key)
+            if similarity.ratio() > strictness:
+                return "*h"
+
+def checkList(iterable, check):
+    for command in iterable:
+        det = fuzzy_search(str(command), check, 0.8)
+        if det != None:
+            try:
+                return command.name
+            except:
+                return command
+    return None

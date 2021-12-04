@@ -5,3 +5,6 @@ class CustomErr(Exception):
 
 class MildErr(Exception):
     pass
+
+class CooldownError(Exception):
+    pass

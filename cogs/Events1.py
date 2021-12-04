@@ -1,8 +1,6 @@
-import discord, random, os, json
 from discord.ext import commands
 from functions import customerror, functions
 from setup import var
-from datetime import datetime, timedelta
 
 class Handling(commands.Cog):
     def __init__(self, bot):
@@ -11,6 +9,7 @@ class Handling(commands.Cog):
     @commands.Cog.listener()
     async def on_member_join(self, member):
         data = await functions.read_data("databases/mutes.json")
+        
         for guild in data:
             for memberJ in data[guild]:
                 if memberJ == str(member.id):
@@ -32,8 +31,8 @@ class Handling(commands.Cog):
             if "autorole" in data[str(member.guild.id)]:
                 try:
                     await member.add_roles(member.guild.get_role(int(data[str(member.guild.id)]["autorole"])))
-                except:
-                    pass    
+                except Exception as e:
+                    print(e)   
     
     @commands.Cog.listener()
     async def on_member_remove(self, member):
@@ -42,8 +41,8 @@ class Handling(commands.Cog):
             if "leave" in data[str(member.guild.id)]:
                 try:
                     await self.bot.get_channel(int(data[str(member.guild.id)]["leave"]["channel"])).send(functions.replaceMessage(member,data[str(member.guild.id)]["leave"]["message"]))
-                except:
-                    pass
+                except Exception as e:
+                    print(e)
 
 def setup(bot):
     bot.add_cog(Handling(bot))

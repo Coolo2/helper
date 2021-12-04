@@ -139,6 +139,15 @@ body {
     padding:25px
 }
 
+#serverSettings-logging {
+    background-color:#3b3f44;
+    width:25%;
+    height:550px;
+    transition:opacity .5s;
+    opacity:0%;
+    padding:25px
+}
+
 #serverSettings-events {
     background-color:#3b3f44;
     width:25%;
@@ -221,6 +230,24 @@ table {
 
 .button:hover {
     background:linear-gradient(0deg, rgb(245, 80, 80) 0%, rgb(255, 137, 68) 100%)
+}
+
+.buttonClick {
+    min-width:200px;
+    display:table;
+    min-height:50px;
+    text-align:center;
+    background-color:#FFFFFF50;
+    border-radius:30px;
+    border:2px solid white;
+    cursor:pointer;
+    transition: background-color 0.5s, color 0.5s;
+    color:white
+}
+
+.buttonClick:hover {
+    background-color:#FFFFFF85;
+    color:rgb(92, 92, 92)
 }
 
 .buttondisabled {

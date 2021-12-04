@@ -1,5 +1,9 @@
-import discord, random, os, json
-from discord.ext import commands
+from discord.ext import commands 
+import discord
+
+from discord.commands import slash_command, Option
+
+import random, os, json
 from setup import var
 from functions import customerror
 from functions import functions
@@ -9,10 +13,15 @@ class Warns(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
-    @commands.command(name="warn", description="[member] *[reason]|Warn a member", aliases=["strike"])
+    @slash_command(name="warn", description="Warn a member", aliases=["strike"])
     @commands.guild_only()
     @commands.has_permissions(manage_messages=True)
-    async def warn(self, ctx, member: discord.Member, *, reason = "None"):
+    async def warn(
+        self, 
+        ctx, 
+        member: Option(discord.Member, description="The member to warn"), 
+        reason : Option(str, description="The reason to show for the warn", required=False) = "None"
+    ):
         data = await functions.read_data("databases/warns.json")
 
         thedate = str(datetime.now())
@@ -34,11 +43,6 @@ class Warns(commands.Cog):
             }
         
         data = await functions.save_data("databases/warns.json", data)
-
-        try:
-            await ctx.message.delete()
-        except:
-            pass
 
         what = await functions.check_events(self.bot, data, ctx.guild, member)
         noArg = f"\n\n__Top tip!__ Add a warn reason with `{functions.prefix(ctx.guild)}warn [user] [reason]`!"
@@ -64,11 +68,11 @@ class Warns(commands.Cog):
         embed.add_field(name="Warn ID", value=len(data[str(ctx.guild.id)][str(member.id)]))
         embed.add_field(name="Moderator", value=str(ctx.author))
         embed.set_footer(text=f"{member.display_name} now has {len(data[str(ctx.guild.id)][str(member.id)])} warn(s)")
-        await ctx.send(embed=embed)
+        await ctx.respond(embed=embed)
     
-    @commands.command(name="warns", description="*[member]|Check a users warns", aliases=['viewwarns', 'viewwarn', 'mywarns', 'mywarn'])
+    @slash_command(name="warns", description="Check a users warns", aliases=['viewwarns', 'viewwarn', 'mywarns', 'mywarn'])
     @commands.guild_only()
-    async def warns(self, ctx, member: discord.Member = None):
+    async def warns(self, ctx, member: Option(discord.Member, description="Optional member to get warns for", required=False) = None):
         if member == None:
             member = ctx.author
         data = await functions.read_data("databases/warns.json")
@@ -78,15 +82,17 @@ class Warns(commands.Cog):
             colour=var.embed
         )
         if str(ctx.guild.id) not in data:
-            return await ctx.send(embed=embedNone)
+            return await ctx.respond(embed=embedNone)
         elif str(member.id) not in data[str(ctx.guild.id)]:
-            return await ctx.send(embed=embedNone)
-        for warn in data[str(ctx.guild.id)][str(member.id)]:
-            embed = discord.Embed(
+            return await ctx.respond(embed=embedNone)
+        
+        embed = discord.Embed(
                 title=random.choice([f"Found warns for {member.display_name}", f"{member.display_name}'s warns"]),
                 description=f"Here {'is' if len(data[str(ctx.guild.id)][str(member.id)]) == 1 else 'are'} the **{len(data[str(ctx.guild.id)][str(member.id)])}** warn{'' if len(data[str(ctx.guild.id)][str(member.id)]) == 1 else 's'} I found for **{member.display_name}**", 
                 colour=var.embed
-            )
+        )
+
+        for warn in data[str(ctx.guild.id)][str(member.id)]:
 
             f_date = datetime.strptime(data[str(ctx.guild.id)][str(member.id)][warn]['time'], '%Y-%m-%d %H:%M:%S.%f')
             l_date = datetime.now()
@@ -97,13 +103,18 @@ class Warns(commands.Cog):
                 value=data[str(ctx.guild.id)][str(member.id)][warn]["reason"], 
                 inline=False
             )
-        return await ctx.send(embed=embed)
+        return await ctx.respond(embed=embed)
     
-    @commands.command(name="delwarn", description="[member] [warnID/all]|Check a users warns", aliases=['del-warn', 'deletewarn', 'del-warns', 'deletewarns', 
+    @slash_command(name="delwarn", description="[member] [warnID/all]|Check a users warns", aliases=['del-warn', 'deletewarn', 'del-warns', 'deletewarns', 
         'delete-warns', 'delete-warn', 'delwarns', 'remove-warn', 'remove-warns', 'removewarn', 'removewarns'])
     @commands.guild_only()
     @commands.has_permissions(manage_messages=True)
-    async def delwarn(self, ctx, member: discord.Member, *, warnid):
+    async def delwarn(
+        self, 
+        ctx, 
+        member: Option(discord.Member, description="The member to delete a warn for"),
+        warnid : Option(str, description="The warn ID (or all) to remove")
+    ):
         data = await functions.read_data("databases/warns.json")
         embedNone = discord.Embed(
             title=random.choice([f"Found no warns for {member.display_name}", f"{member.display_name} has no warns"]),
@@ -126,21 +137,21 @@ class Warns(commands.Cog):
             colour=var.embedSuccess
         )
         if str(ctx.guild.id) not in data:
-            return await ctx.send(embed=embedNone)
+            return await ctx.respond(embed=embedNone)
         elif str(member.id) not in data[str(ctx.guild.id)]:
-            return await ctx.send(embed=embedNone)
+            return await ctx.respond(embed=embedNone)
         elif warnid == "all":
             wrns = []
             for warn in data[str(ctx.guild.id)][str(member.id)]:
                 wrns.append(warn)
             for warn in wrns:
                 del data[str(ctx.guild.id)][str(member.id)][warn]
-            await ctx.send(embed=embedAll)
+            await ctx.respond(embed=embedAll)
         elif warnid not in data[str(ctx.guild.id)][str(member.id)]:
-            return await ctx.send(embed=embedNo)
+            return await ctx.respond(embed=embedNo)
         else:
             del data[str(ctx.guild.id)][str(member.id)][warnid]
-            await ctx.send(embed=embed)
+            await ctx.respond(embed=embed)
 
         if len(data[str(ctx.guild.id)][str(member.id)]) == 0:
             del data[str(ctx.guild.id)][str(member.id)]
