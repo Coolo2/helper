@@ -21,7 +21,7 @@ class Handling(commands.Cog):
                     for guildRole in member.guild.roles:
                         if guildRole.name == "Muted":
                             await member.add_roles(guildRole)
-        data = await functions.read_data("databases/joinleave.json")
+        data = await functions.read_data("databases/setup.json")
         if str(member.guild.id) in data:
             if "join" in data[str(member.guild.id)]:
                 try:
@@ -36,7 +36,7 @@ class Handling(commands.Cog):
     
     @commands.Cog.listener()
     async def on_member_remove(self, member):
-        data = await functions.read_data("databases/joinleave.json")
+        data = await functions.read_data("databases/setup.json")
         if str(member.guild.id) in data:
             if "leave" in data[str(member.guild.id)]:
                 try:

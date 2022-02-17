@@ -55,7 +55,7 @@ body {
 }
 
 .serverList {
-    width: 300px;
+    width: 250px;
     padding:1px 25px 25px 25px;
     position:relative;
     background-color:#3b3f44;
@@ -68,7 +68,7 @@ body {
 .serverPicker {
     position:relative;
     transition:border 1s, height 1s;
-    width:300px;
+    width:250px;
     height:200px;
     border: 2px solid #F25900;
     border-image:linear-gradient(0deg, rgba(196,0,0,1) 0%, rgba(242,89,0,1) 100%);
@@ -89,8 +89,9 @@ body {
 
 .serverPickerImage {
     position:relative;
-    width:300px;
+    width:250px;
     height:150px;
+    background-position-x:-25px;
     background-position-y:-75px;
     background-size:300px
 }
@@ -99,6 +100,15 @@ body {
     background-color:#3b3f44;
     width:25%;
     height:200px;
+    transition:opacity .5s;
+    opacity:0%;
+    padding:0px 25px 25px 25px
+}
+
+#serverSettings-music {
+    background-color:#3b3f44;
+    width:25%;
+    height:700px;
     transition:opacity .5s;
     opacity:0%;
     padding:0px 25px 25px 25px

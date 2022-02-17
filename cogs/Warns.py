@@ -69,6 +69,15 @@ class Warns(commands.Cog):
         embed.add_field(name="Moderator", value=str(ctx.author))
         embed.set_footer(text=f"{member.display_name} now has {len(data[str(ctx.guild.id)][str(member.id)])} warn(s)")
         await ctx.respond(embed=embed)
+
+        # Log update if available
+        embed = discord.Embed(title="User warned", color=var.embed, timestamp=datetime.now())
+        embed.add_field(name="User:", value=str(member), inline=False)
+        embed.add_field(name="Reason:", value=str(reason), inline=False)
+        embed.add_field(name="Moderator", value=str(ctx.author))
+        embed.set_author(name=f"User: {member}", icon_url=member.avatar.url)
+
+        await functions.log(self.bot, "warns", ctx.guild, embed)
     
     @slash_command(name="warns", description="Check a users warns", aliases=['viewwarns', 'viewwarn', 'mywarns', 'mywarn'])
     @commands.guild_only()
@@ -105,7 +114,7 @@ class Warns(commands.Cog):
             )
         return await ctx.respond(embed=embed)
     
-    @slash_command(name="delwarn", description="[member] [warnID/all]|Check a users warns", aliases=['del-warn', 'deletewarn', 'del-warns', 'deletewarns', 
+    @slash_command(name="delwarn", description="Delete a warn from a user", aliases=['del-warn', 'deletewarn', 'del-warns', 'deletewarns', 
         'delete-warns', 'delete-warn', 'delwarns', 'remove-warn', 'remove-warns', 'removewarn', 'removewarns'])
     @commands.guild_only()
     @commands.has_permissions(manage_messages=True)
@@ -159,6 +168,16 @@ class Warns(commands.Cog):
             del data[str(ctx.guild.id)]
 
         await functions.save_data("databases/warns.json", data)
+
+        # Log update if available
+        embed = discord.Embed(title="Warn deleted", color=var.embedFail, timestamp=datetime.now())
+        embed.add_field(name="User:", value=str(member), inline=False)
+        embed.add_field(name="Moderator", value=str(ctx.author))
+        embed.set_author(name=f"User: {member}", icon_url=member.avatar.url)
+
+        await functions.log(self.bot, "warns", ctx.guild, embed)
+    
+    
 
 def setup(bot):
     bot.add_cog(Warns(bot))

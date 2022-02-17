@@ -71,7 +71,7 @@ class Economy1(commands.Cog):
         await ctx.respond(embed=embed)
         await functions.save_data("databases/economy.json", balances)
     
-    @slash_command(name='roll', description="[1-6]|Predict a dice roll correctly and you get credits! Otherwise...", aliases=['dice'])
+    @slash_command(name='roll', description="Predict a dice roll correctly and you get credits! Otherwise...", aliases=['dice'])
     async def roll(self, ctx, guess : Option(int, description="Your guess from 1-6", min_value=1, max_value=6)):
 
         if guess.isdigit() != True or int(guess) > 7 or int(guess) < 1:

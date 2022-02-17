@@ -1,17 +1,18 @@
 <html>
     <head>
         <title>Helper Bot</title>
-        <link rel="stylesheet" href="/css/dashboard.css">
-        <link rel=stylesheet href=https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css>
+        <link rel="stylesheet" href="/static/css/dashboard.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
         <link rel="stylesheet" href="https://unpkg.com/balloon-css/balloon.min.css">
         <meta name="viewport" content="width=device-width">
         <meta name="viewport" content="initial-scale=0.36">
     </head>
     <body>
         <div style="z-index:10;color:white;position:fixed;height:50px;filter:hue-rotate(100deg) grayscale(1);z-index:100;background-color:black;width:100%;background: rgb(196,0,0);background: radial-gradient(circle, rgba(196,0,0,1) 45%, rgba(242,89,0,1) 100%);transition:top 0.5s" id="navBar">
-            <span id="topBar1" class="vertical-center topBarItem" style="left:200px;" onclick="linkTo('/')">Home</span>
-            <span id="topBar2" class="vertical-center topBarItem" style="left:400px;" onclick="linkTo('/dashboard')">Dashboard</span>
-            <span id="topBar3" class="vertical-center topBarItem" style="left:600px;">Status</span>
+            <image src="/static/images/logoFull.png" id="tobBar1" style="height:50px;cursor:pointer" onclick="linkTo('/')"></image>
+            <span id="topBar2" class="vertical-center topBarItem" style="left:200px;" onclick="linkTo('/')">Home</span>
+            <span id="topBar3" class="vertical-center topBarItem" style="left:400px;" onclick="linkTo('/dashboard')">Dashboard</span>
+            <span id="topBar4" class="vertical-center topBarItem" style="left:600px;" onclick="linkTo('/changelogs')">Changelogs</span>
         </div>
         <div style="white-space:nowrap;height:250px;width:100%;background: rgb(196,0,0);color:white;font-size:50px;top:50px;letter-spacing: 150px;transition: letter-spacing 1s, top 1s;
         background: linear-gradient(0deg, rgba(196,0,0,1) 0%, rgba(242,89,0,1) 100%);position:relative;text-align:center;
@@ -28,19 +29,31 @@
             <span style="display:table;margin:0 auto;" id="postMessage-box"></span>
         </div>
         <div style="overscroll-behavior: none;position: relative;height:calc(100% - 350px);padding-top:50px;top:50px;width:100%;overflow-x:auto;overflow-y:auto;transition:top 0.8s, height 0.8s" id="dashboardDiv">
-            <div style="position:absolute;left:500px" id="serverSettings-prefix">
+            <!--<div style="position:absolute;left:500px" id="serverSettings-prefix">
                 <div class="serverSettings-style-sectionTitle" style="padding:25px 0px 25px 0px">Server Prefix</div>
                 <input id="serverSettings-prefix-input" placeholder="Prefix input" class="input">
-                <button class="button" id="serverSettings-prefix-button" onclick="postData('/dashboard/post/setPrefix', {prefix:document.getElementById('serverSettings-prefix-input').value})">Submit prefix</button>
+                <button class="button" id="serverSettings-prefix-button" onclick="postData('/api/dashboard/setPrefix', {prefix:document.getElementById('serverSettings-prefix-input').value})">Submit prefix</button>
+            </div>-->
+            <div style="position:absolute;left:500px" id="serverSettings-music">
+                <div class="serverSettings-style-sectionTitle" style="padding:25px 0px 25px 0px">Music Permissions and Voting</div>
+                <span style="color:white">Permissions</span>
+                <button class="button" style="top:75px;right:10px;position:absolute" onclick="setMusicDefault()">Reset to default</button>
+                <span>
+                    <select class="input" oninput="submitMusic()" id="serverSettings-music-permissions">
+                    </select>
+                </span>
+                <br>
+                <div id ="serverSettings-music-commands-left" style="top:150px;width:230px;position:absolute"></div>
+                <div id ="serverSettings-music-commands-right" style="left:260px;top:150px;width:300px;position:absolute"></div>
             </div>
-            <div style="position:absolute;left:500px;margin-top:400px" id="serverSettings-joinleave">
+            <div style="position:absolute;left:500px;margin-top:800px" id="serverSettings-joinleave">
                 <div class="serverSettings-style-sectionTitle" style="padding:25px 0px 25px 0px">Server Join/Leave events</div>
                 <div style="color:#a3a3a3;font-size:20px;padding-left:5px;padding-bottom:5px">Join Message</div>
                 <select id="serverSettings-joinleave-join-select" class="input"></select>
                 <span>
                     <input id="serverSettings-joinleave-join-input" placeholder="Type join message here" class="input" style="width:64%">
                     <button class="button" style="width:35%" id="serverSettings-joinleave-join-button" 
-                    onclick="postData('/dashboard/post/setMessage', {type:'join',channel:document.getElementById('serverSettings-joinleave-join-select').value,message:document.getElementById('serverSettings-joinleave-join-input').value})">Set join message</button>
+                    onclick="postData('/api/dashboard/setMessage', {type:'join',channel:document.getElementById('serverSettings-joinleave-join-select').value,message:document.getElementById('serverSettings-joinleave-join-input').value})">Set join message</button>
                 </span>
                 <div style="padding-top:15px"></div>
                 <div style="color:#a3a3a3;font-size:20px;padding-left:5px;padding-bottom:5px">Leave Message</div>
@@ -48,13 +61,13 @@
                 <span>
                     <input id="serverSettings-joinleave-leave-input" placeholder="Type leave message here" class="input" style="width:64%">
                     <button class="button" style="width:35%" id="serverSettings-joinleave-leave-button" 
-                    onclick="postData('/dashboard/post/setMessage', {type:'leave',channel:document.getElementById('serverSettings-joinleave-leave-select').value,message:document.getElementById('serverSettings-joinleave-leave-input').value})">Set leave message</button>
+                    onclick="postData('/api/dashboard/setMessage', {type:'leave',channel:document.getElementById('serverSettings-joinleave-leave-select').value,message:document.getElementById('serverSettings-joinleave-leave-input').value})">Set leave message</button>
                 </span>
                 <div style="padding-top:15px"></div>
                 <div style="color:#a3a3a3;font-size:20px;padding-left:5px;padding-bottom:5px">Join Autorole</div>
                 <select id="serverSettings-joinleave-autorole-select" class="input"></select>
                 <button class="button" style="width:35%" id="serverSettings-joinleave-autorole-button" 
-                onclick="postData('/dashboard/post/setAutorole', {role:document.getElementById('serverSettings-joinleave-autorole-select').value})">Set Autorole Role</button>
+                onclick="postData('/api/dashboard/setAutorole', {role:document.getElementById('serverSettings-joinleave-autorole-select').value})">Set Autorole Role</button>
                 <div style="font-size:20px;margin-top:15px">    
                     <li style="color:#a3a3a3" aria-label="Example: Welcome, {@user}! Please read the rules!" data-balloon-pos="up"><span style="color:white">{@user}</span> - Mention the user</li>
                     <li style="color:#a3a3a3" aria-label="Example: Welcome, {user}!" data-balloon-pos="up"><span style="color:white">{user}</span> - User's name</li>
@@ -63,7 +76,7 @@
                 </div>
             </div>
 
-            <div style="position:absolute;left:500px;margin-top:1200px" id="serverSettings-customcommands">
+            <div style="position:absolute;left:500px;margin-top:1500px" id="serverSettings-customcommands">
                 <div class="serverSettings-style-sectionTitle" style="padding:25px 0px 25px 0px">Custom Commands</div>
                 <div style="height:490px;overflow-y:scroll">
                     <div style="background-color:rgb(82, 82, 82);border:1px solid white;">
@@ -79,7 +92,6 @@
                 <button class="button" id="serverSettings-customcommands-save" style="bottom:300px;width:100%;" onclick="updateCustomCommands()">Save Commands</button>
                 <div style="font-size:15px;bottom:0px;padding-top:15px">    
                     <li style="color:#a3a3a3" ><span style="color:white">{args/argNo}</span> - Get argument (eg {args/1})</li>
-                    <li style="color:#a3a3a3" ><span style="color:white">{args/argNo:}</span> - Get argument and everything after (eg {args/1:})</li>
                     <li style="color:#a3a3a3" ><span style="color:white">{randomChoice/choice1/choice2...}</span> - Random choice (eg {randomChoice/yes/no})</li>
                     <li style="color:#a3a3a3" ><span style="color:white">{member} {@member} {nickname} {server}</span> - Names for commands</li>
                 </div>
@@ -111,10 +123,10 @@
                 <div style="color:#a3a3a3;font-size:20px;padding-left:5px;padding-bottom:5px">Logging Channel</div>
                 <select id="serverSettings-logging-channel" class="input" style="width:200px"></select>
 
-                <br><input type="checkbox" id="serverSettings-logging-messageDelete" oninput="saveLogging()" checked>
-                <label for="serverSettings-logging-messageDelete" style="color:white"> Message delete</label>
-                <br><input type="checkbox" id="serverSettings-logging-messageEdit" oninput="saveLogging()" checked>
-                <label for="serverSettings-logging-messageEdit" style="color:white"> Message edit</label>
+                <br><input type="checkbox" id="serverSettings-logging-messageDelete" disabled>
+                <label for="serverSettings-logging-messageDelete" data-balloon-length="medium" aria-label="Message delete and message edit logging have been disabled due to discord blocking bot permissions to read messages outside of slash commands" data-balloon-pos="left" style="color:grey"> Message delete</label>
+                <br><input type="checkbox" id="serverSettings-logging-messageEdit" disabled>
+                <label for="serverSettings-logging-messageEdit" data-balloon-length="medium" aria-label="Message delete and message edit logging have been disabled due to discord blocking bot permissions to read messages outside of slash commands" data-balloon-pos="left" style="color:grey"> Message edit</label>
 
                 <br><input type="checkbox" id="serverSettings-logging-channelCreate" oninput="saveLogging()" checked>
                 <label for="serverSettings-logging-channelCreate" style="color:white"> Channel Create</label>
@@ -125,6 +137,15 @@
                 <label for="serverSettings-logging-roleCreate" style="color:white"> Role Create</label>
                 <br><input type="checkbox" id="serverSettings-logging-roleDelete" oninput="saveLogging()" checked>
                 <label for="serverSettings-logging-roleDelete" style="color:white"> Role Delete</label>
+
+                <br><input type="checkbox" id="serverSettings-logging-dashboardUse" oninput="saveLogging()" checked>
+                <label for="serverSettings-logging-dashboardUse" style="color:white"> Nickname Change </label>
+                
+                <br><input type="checkbox" id="serverSettings-logging-warns" oninput="saveLogging()" checked>
+                <label for="serverSettings-logging-warns" style="color:white"> Warns </label>
+
+                <br><input type="checkbox" id="serverSettings-logging-nicknameChange" oninput="saveLogging()" checked>
+                <label for="serverSettings-logging-nicknameChange" style="color:white"> Dashbord Use </label>
 
             </div>
             <div style="position:absolute;left:500px;top:3000px;" style="opacity:0%;">&nbsp;</div>
@@ -173,15 +194,14 @@
         }
         var guilds = [] 
         var guildDatas = {}
-       
         serverHTML = ``
         counter = 0
 
         address = location.origin
-        items = ["prefix"]
-        itemsOnly = ["warns", "joinleave", "events", "customcommands", "logging"]
+        items = []
+        itemsOnly = ["music", "warns", "joinleave", "events", "customcommands", "logging"]
 
-        itemsLeft = ["prefix", "joinleave", "customcommands"]
+        itemsLeft = ["music", "joinleave", "customcommands"]
         itemsRight = [["warns", 2350, 50], ["events", 3100, 800], ["logging", 3850, 1550]]
 
         allItems = items.concat(itemsOnly)
@@ -207,14 +227,14 @@
 
         window.onresize = sizeCheck
 
-        clip = 1610
+        clip = 1525
         val = 3.59
         
         function sizeCheck() {
-            defLeft = "1045px"
+            defLeft = "950px"
             
             if (window.innerWidth > 580) {
-                if (window.innerWidth > clip) left = 400
+                if (window.innerWidth > clip) left = 350
                 else left = window.innerWidth / 2.7
 
                 if (window.innerWidth < 965) width = 500
@@ -255,11 +275,11 @@
                         }
                     }
                 } else {
-                    servers.style.width = "300px"
+                    servers.style.width = "260px"
                     for (server of servers.getElementsByTagName('div')) {
-                        server.style.width = "290px"
+                        server.style.width = "250px"
                         for (div of server.getElementsByTagName('div')) {
-                            div.style.width = "290px"
+                            div.style.width = "250px"
                             div.style.fontSize = "25px"
                         }
                     }
@@ -274,16 +294,14 @@
             if (guildID) {
                 guildStr = `?guild=${guildID}`
             }
-            data = await get(location.origin + `/dashboard/serverDatabase` + guildStr)
+            data = await get(location.origin + `/api/dashboard/serverDatabase` + guildStr)
             
             return data
         }
 
 
         function updateTable(data) {
-            console.log(data)
             data = guildDatas[currentGuild.id]
-            console.log(data)
             var table = document.getElementById('serverSettings-events-table').getElementsByTagName('tbody')[0];
             final = []
             if (table.rows.length == 10 || !data.has_permissions.manage_guild) {
@@ -298,7 +316,7 @@
                     action:document.getElementById(row.id.split(" ")[1] + "-action").value
                 })
             }
-            postData('/dashboard/post/setEvents', {"events":final})
+            postData('/api/dashboard/setEvents', {"events":final})
         }
         
         function debounce(callback, wait) {
@@ -329,7 +347,7 @@
                 final[document.getElementById(row.id.split(" ")[1] + "-name").value] = document.getElementById(row.id.split(" ")[1] + "-response").value
             }
 
-            if (!noPost) postData('/dashboard/post/setCustomCommands', {"commands":final})
+            if (!noPost) postData('/api/dashboard/setCustomCommands', {"commands":final})
             
         }
 
@@ -355,6 +373,19 @@
             updateTable(guildData)
         }
 
+        function onInputCustomCommandName(e) {
+            e.target.value = e.target.value.toLowerCase()
+            regex = /^[\w-]{1,32}$/;
+            if (!regex.test(e.target.value)) {
+                if (e.target.value == "") {
+                    try{document.execCommand("undo", false, null)}catch{}
+                }   else {
+                    e.target.value = e.target.value.substring(0, e.target.value.length-1)
+                }
+                
+            }
+        }
+
         function newCommand() {
             guildData = guildDatas[currentGuild.id]
 
@@ -363,12 +394,14 @@
             newRow = table.insertRow(table.rows.length);
             newRow.id = `serverSettings-customcommands-table-row serverSettings-customcommands-table-row-${table.rows.length}`
 
-            newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-customcommands-table-row-item"><input class="input" id="serverSettings-customcommands-table-row-${table.rows.length}-name" type="text" placeholder="Command name" size="10" maxlength="20"></th>`
-            newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-customcommands-table-row-item"><textarea class="input" id="serverSettings-customcommands-table-row-${table.rows.length}-response" rows="3" cols="25" placeholder="Command response" maxlength="2000"></textarea></th>`
+            newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-customcommands-table-row-item"><input class="input" id="serverSettings-customcommands-table-row-${table.rows.length}-name" type="text" placeholder="Command name" size="10" maxlength="20" autocomplete="off"></th>`
+            newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-customcommands-table-row-item"><textarea class="input" id="serverSettings-customcommands-table-row-${table.rows.length}-response" rows="3" cols="25" placeholder="Command response" maxlength="2000" autocomplete="off"></textarea></th>`
             newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-customcommands-table-row-item"><i onclick="table=document.getElementById('serverSettings-customcommands-table').getElementsByTagName('tbody')[0];try{table.deleteRow(${table.rows.length-1})}catch{table.deleteRow(0)};updateCustomCommands(noPost=true)" id="serverSettings-events-table-row-delete" class="fa fa-times" aria-hidden="true"></i></th>`
 
             elemName = document.getElementById(`serverSettings-customcommands-table-row-${table.rows.length}-name`)
             elemResponse = document.getElementById(`serverSettings-customcommands-table-row-${table.rows.length}-response`)
+
+            elemName.oninput = onInputCustomCommandName
 
             if (table.rows.length == 10 || !guildData.has_permissions.manage_guild) {
                 if (!guildData.has_permissions.manage_guild) document.getElementById("serverSettings-customcommands-save").setAttribute("class", "buttondisabled");document.getElementById("serverSettings-customcommands-save").setAttribute("disabled", "disabled")
@@ -418,7 +451,8 @@
                     
                     getWarns(guildData)
                     getJoinLeave(guildData)
-                    doPrefix(guildData)
+                    //doPrefix(guildData)
+                    doMusic(guildData)
                     doEvents(guildData)
                     doCustomCommands(guildData)
                     doLogging(guildData)
@@ -427,7 +461,106 @@
                 })
         }
 
-        loggingOptions = ["messageDelete", "messageEdit", "channelCreate", "channelDelete", "roleCreate", "roleDelete"]
+        String.prototype.toProperCase = function () {
+            return this.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+        };
+
+        musicPermissions = [
+            "MOVE_MEMBERS",
+            "CREATE_INSTANT_INVITE",
+            "KICK_MEMBERS",
+            "BAN_MEMBERS",
+            "ADMINISTRATOR",
+            "MANAGE_CHANNELS",
+            "MANAGE_GUILD",
+            "ADD_REACTIONS",
+            "MENTION_EVERYONE",
+            "MUTE_MEMBERS",
+            "DEAFEN_MEMBERS",
+            "MANAGE_NICKNAMES",
+            "CHANGE_NICKNAME"
+        ]
+
+        musicCommands = {
+            "play":{types:["none", "permissions"], default:"permissions"},
+            "stop":{types:["none", "permissions", "voting"], default:"voting"},
+            "skip":{types:["none", "permissions", "voting"], default:"voting"},
+            "back":{types:["none", "permissions", "voting"], default:"voting"},
+            "volume":{types:["none", "permissions"], default:"permissions"},
+            "pause":{types:["none", "permissions", "voting"], default:"permissions"},
+            "resume":{types:["none", "permissions", "voting"], default:"permissions"},
+            "seek":{types:["none", "permissions"], default:"permissions"},
+            "restart":{types:["none", "permissions", "voting"], default:"permissions"},
+            "skipto":{types:["none", "permissions"], default:"permissions"},
+            "remove":{types:["none", "permissions"], default:"permissions"},
+            "loop":{types:["none", "permissions"], default:"permissions"}
+        }
+
+        // structure {"permissions":"MOVE_MEMBERS", "commands":["play":"none"]}
+
+        async function setMusicDefault() {
+            for (command in musicCommands) {
+                document.getElementById(`serverSettings-music-commands-${command}`).value = musicCommands[command].default
+            }
+            document.getElementById("serverSettings-music-permissions").value = "MOVE_MEMBERS"
+            await submitMusic()
+        }
+
+        async function doMusic(guildData) {
+            document.getElementById("serverSettings-music-commands-left").innerHTML = ``
+            document.getElementById("serverSettings-music-commands-right").innerHTML = ``
+            document.getElementById("serverSettings-music-permissions").innerHTML = ``
+            
+
+            counter = 0
+            for (command in musicCommands) {
+                counter += 1
+                options =""
+                for (option of musicCommands[command].types) {
+                    yes = ""
+                    if (guildData.music.commands && guildData.music.commands[command] && guildData.music.commands[command] == [option]) {
+                        yes = " selected"
+                    } 
+                    if ((!guildData.music.commands || !guildData.music.commands[command]) && option == musicCommands[command].default) {
+                        yes = " selected"
+                    }
+
+                    options += `<option value="${option}"${yes}>${option.toProperCase()}</option>`
+                }
+                
+                if (counter < (7)) {
+                    section = document.getElementById("serverSettings-music-commands-left")
+                } else {section = document.getElementById("serverSettings-music-commands-right")}
+                section.innerHTML += `<br><br><span style="color:#a3a3a3">${command.toProperCase()}</span><span>  </span><span><select oninput="submitMusic()" id="serverSettings-music-commands-${command}" class="input">${options}</select></span>`
+            }
+
+            for (permission of musicPermissions) {
+                selected = ""
+                if (guildData.music.permissions && guildData.music.permissions == permission) {
+                    selected = " selected"
+                }
+                document.getElementById("serverSettings-music-permissions").innerHTML += `<option value="${permission}"${selected}>${permission.toLowerCase().split("_").join(" ").toProperCase()}</option>`
+            }
+        } 
+
+        async function submitMusic() {
+            toSubmit = {}
+
+            for (command in musicCommands) {
+                element = document.getElementById(`serverSettings-music-commands-${command}`)
+
+                if (element.value != musicCommands[command].default) {
+                    if (!toSubmit.commands) {toSubmit.commands = {}}
+                    toSubmit.commands[command] = element.value
+                }
+            }
+
+            toSubmit.permissions = document.getElementById(`serverSettings-music-permissions`).value
+
+            await postData("/api/dashboard/setMusic", toSubmit)
+        }
+
+        loggingOptions = ["channelCreate", "channelDelete", "roleCreate", "roleDelete", "nicknameChange", "dashboardUse", "warns"]
 
         async function saveLogging() {
             loggingChannel = document.getElementById("serverSettings-logging-channel")
@@ -452,7 +585,7 @@
                 data["logging"]["ignore"] = ignore
             }
 
-            await postData("/dashboard/post/setLogging", data)
+            await postData("/api/dashboard/setLogging", data)
         }
 
         function doLogging(guildData) {
@@ -464,6 +597,11 @@
                 if (channel.permissions.send_messages) {
                     loggingChannel.innerHTML = loggingChannel.innerHTML + `<option value="${channel.id}">#${channel.name}</option>`
                 }
+            }
+            if (!guildData.has_permissions.manage_guild) {
+                loggingChannel.disabled = true 
+                loggingChannel.oninput = undefined
+                loggingChannel.setAttribute(`class`, `inputdisabled`)
             }
 
             if (guildData.logging) {
@@ -477,11 +615,20 @@
                         if (guildData.logging.ignore.includes(option)) {
                             element.checked = false
                         } else element.checked = true
+
+                        if (!guildData.has_permissions.manage_guild) {
+                            element.disabled = true 
+                            element.onclick = undefined
+                        }
                     }
                 } else {
                     for (option of loggingOptions) {
                         element = document.getElementById("serverSettings-logging-" + option)
                         element.checked = true
+                        if (!guildData.has_permissions.manage_guild) {
+                            element.disabled = true 
+                            element.onclick = undefined
+                        }
                     }
                 }
             }
@@ -538,8 +685,8 @@
                 newRow.id = `serverSettings-customcommands-table-row serverSettings-customcommands-table-row-${table.rows.length}`
                 
                 if (guildData.has_permissions.manage_guild) {
-                    newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-customcommands-table-row-item"><input class="input" id="serverSettings-customcommands-table-row-${table.rows.length}-name" type="text" placeholder="Command name" size="10" maxlength="20"></th>`
-                    newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-customcommands-table-row-item"><textarea class="input" id="serverSettings-customcommands-table-row-${table.rows.length}-response" rows="3" cols="25" placeholder="Command response" maxlength="2000"></textarea></th>`
+                    newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-customcommands-table-row-item"><input class="input" id="serverSettings-customcommands-table-row-${table.rows.length}-name" type="text" placeholder="Command name" size="10" maxlength="20" autocomplete="off"></th>`
+                    newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-customcommands-table-row-item"><textarea class="input" id="serverSettings-customcommands-table-row-${table.rows.length}-response" rows="3" cols="25" placeholder="Command response" maxlength="2000" autocomplete="off"></textarea></th>`
                     newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-customcommands-table-row-item"><i onclick="table=document.getElementById('serverSettings-customcommands-table').getElementsByTagName('tbody')[0];try{table.deleteRow(${table.rows.length-1})}catch{table.deleteRow(0)};updateCustomCommands(noPost=true)" id="serverSettings-customcommands-table-row-delete" class="fa fa-times" aria-hidden="true"></i></th>`
                 } else {
                     newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-customcommands-table-row-item"><input class="inputdisabled" id="serverSettings-customcommands-table-row-${table.rows.length}-name" type="text" placeholder="Command name" size="10" maxlength="20" disabled></th>`
@@ -549,6 +696,8 @@
                 
                 document.getElementById(`serverSettings-customcommands-table-row-${table.rows.length}-name`).value = command
                 document.getElementById(`serverSettings-customcommands-table-row-${table.rows.length}-response`).value = guildData.commands[command]
+
+                document.getElementById(`serverSettings-customcommands-table-row-${table.rows.length}-name`).oninput = onInputCustomCommandName
             }
 
             if (table.rows.length >= 10 || !guildData.has_permissions.manage_guild) {
@@ -569,7 +718,7 @@
                 document.getElementById("serverSettings-prefix-input").setAttribute(`class`, `inputdisabled`)
                 document.getElementById("serverSettings-prefix-input").setAttribute(`disabled`, `disabled`)
             } else {
-                document.getElementById("serverSettings-prefix-button").setAttribute(`onclick`, `postData('/dashboard/post/setPrefix', {prefix:document.getElementById('serverSettings-prefix-input').value})`)
+                document.getElementById("serverSettings-prefix-button").setAttribute(`onclick`, `postData('/api/dashboard/setPrefix', {prefix:document.getElementById('serverSettings-prefix-input').value})`)
                 document.getElementById("serverSettings-prefix-button").setAttribute(`class`, `button`)
                 document.getElementById("serverSettings-prefix-button").removeAttribute(`disabled`)
                 document.getElementById("serverSettings-prefix-input").setAttribute(`class`, `input`)
@@ -591,7 +740,7 @@
                     newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-warns-table-row-item">${warn}</th>`
                     newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-warns-table-row-item">${warnSelect.reason}</th>`
                     newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-warns-table-row-item">${warnModName}</th>`;
-                    if (guildData.has_permissions.manage_messages) newRow.innerHTML = newRow.innerHTML + `<th style="width:50px;color:white"><i onclick="postData('/dashboard/post/delWarn', {member:'${warnMember}',id:'${warn}'})" id="serverSettings-warns-table-row-item-delete" class="fa fa-times" aria-hidden="true"></i></th>`;
+                    if (guildData.has_permissions.manage_messages) newRow.innerHTML = newRow.innerHTML + `<th style="width:50px;color:white"><i onclick="postData('/api/dashboard/delWarn', {member:'${warnMember}',id:'${warn}'})" id="serverSettings-warns-table-row-item-delete" class="fa fa-times" aria-hidden="true"></i></th>`;
                     else newRow.innerHTML = newRow.innerHTML + `<th style="width:50px;color:white"><i id="serverSettings-warns-table-row-item-delete-missingperms" class="fa fa-times" aria-hidden="true"></i></th>`;
                     
                 }
@@ -658,9 +807,9 @@
                     document.getElementById("serverSettings-joinleave-" + item).setAttribute(`class`, `button`)
                     document.getElementById("serverSettings-joinleave-" + item).removeAttribute(`disabled`)
                 }
-                document.getElementById("serverSettings-joinleave-leave-button").setAttribute(`onclick`, `postData('/dashboard/post/setMessage', {type:'leave',channel:document.getElementById('serverSettings-joinleave-leave-select').value,message:document.getElementById('serverSettings-joinleave-leave-input').value})`)
-                document.getElementById("serverSettings-joinleave-join-button").setAttribute(`onclick`, `postData('/dashboard/post/setMessage', {type:'join',channel:document.getElementById('serverSettings-joinleave-join-select').value,message:document.getElementById('serverSettings-joinleave-join-input').value})`)
-                document.getElementById("serverSettings-joinleave-autorole-button").setAttribute(`onclick`, `postData('/dashboard/post/setAutorole', {role:document.getElementById('serverSettings-joinleave-autorole-select').value})`)
+                document.getElementById("serverSettings-joinleave-leave-button").setAttribute(`onclick`, `postData('/api/dashboard/setMessage', {type:'leave',channel:document.getElementById('serverSettings-joinleave-leave-select').value,message:document.getElementById('serverSettings-joinleave-leave-input').value})`)
+                document.getElementById("serverSettings-joinleave-join-button").setAttribute(`onclick`, `postData('/api/dashboard/setMessage', {type:'join',channel:document.getElementById('serverSettings-joinleave-join-select').value,message:document.getElementById('serverSettings-joinleave-join-input').value})`)
+                document.getElementById("serverSettings-joinleave-autorole-button").setAttribute(`onclick`, `postData('/api/dashboard/setAutorole', {role:document.getElementById('serverSettings-joinleave-autorole-select').value})`)
             }
         }
 
@@ -688,9 +837,9 @@
                             }
 
                             document.getElementById("postMessage").style.bottom = "0px"
-                            if (!msg.error && where == '/dashboard/post/delWarn') {guildDatas[currentGuild.id].warns = msg[currentGuild.id];getWarns(guildDatas[currentGuild.id])}
-                            if (!msg.error && where == '/dashboard/post/setPrefix') {document.getElementById("serverSettings-prefix-input").value = msg.prefix}
-                            if (where == '/dashboard/post/setCustomCommands') {guildDatas[currentGuild.id].commands = msg.commands;doCustomCommands(guildDatas[currentGuild.id])}
+                            if (!msg.error && where == '/api/dashboard/delWarn') {guildDatas[currentGuild.id].warns = msg[currentGuild.id];getWarns(guildDatas[currentGuild.id])}
+                            if (!msg.error && where == '/api/dashboard/setPrefix') {document.getElementById("serverSettings-prefix-input").value = msg.prefix}
+                            if (where == '/api/dashboard/setCustomCommands') {guildDatas[currentGuild.id].commands = msg.commands;doCustomCommands(guildDatas[currentGuild.id])}
                             setTimeout(function() {
                                 document.getElementById("postMessage").style.bottom = "-50px"
                             }, 5000 + (document.getElementById("postMessage-box").innerHTML.length * 20 ))
@@ -698,17 +847,6 @@
                 })
         }
 
-        var _speedconstant = 1.15600e-8;
-        var d = new Date();
-        var amount = 150000000;
-        for (var i = amount; i > 0; i--) {}
-        var newd = new Date();
-        var accnewd = Number(String(newd.getSeconds()) + "." + String(newd.getMilliseconds()));
-        var accd = Number(String(d.getSeconds()) + "." + String(d.getMilliseconds()));
-        var di = accnewd - accd;
-        if (d.getMinutes() != newd.getMinutes()) {di = (60 * (newd.getMinutes() - d.getMinutes())) + di}
-        spd = ((_speedconstant * amount) / di);
-        GHz = Math.round(spd * 1000) / 1000
 
         function checkVisible(elm) {
             var rect = elm.getBoundingClientRect();

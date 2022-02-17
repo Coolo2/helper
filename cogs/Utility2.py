@@ -25,6 +25,7 @@ class Utility2(commands.Cog):
         color : Option(str, description="The embed color (hex or text)", required=False) = None,
         image : Option(str, description="Image URL", required=False) = None
     ):
+
         prefix = functions.prefix(ctx.guild)
 
         if color == None:

@@ -34,7 +34,7 @@ class Interaction(commands.Cog):
         description = "[suggestionID]|ADMIN ONLY", 
         guild_ids=var.guilds, 
         default_permission=False, 
-        permissions=[permissions.Permission(id=userid, type=2, permission=True) for userid in var.botAdmins]
+        permissions=[permissions.CommandPermission(id=userid, type=2, permission=True) for userid in var.botAdmins]
     )
     async def verifysuggestion(self, ctx, suggestionID : Option(str, name="suggestion_id"), response : Option(str, description="The response to add", required=False)=None):
         if ctx.author.id in var.botAdmins:
@@ -60,7 +60,7 @@ class Interaction(commands.Cog):
         else:
             await ctx.respond('> This command is for bot admins only')
 
-    @slash_command(name="report", description = "[issue]|Report a bug or issue")
+    @slash_command(name="report", description = "Report a bug or issue")
     async def report(self, ctx, issue : Option(str, description="The issue to report")):
         prefix = functions.prefix(ctx.guild)
 
@@ -75,7 +75,7 @@ class Interaction(commands.Cog):
     @slash_command(name='dm', description = 'ADMIN ONLY', 
         guild_ids=var.guilds, 
         default_permission=False, 
-        permissions=[permissions.Permission(id=userid, type=2, permission=True) for userid in var.botAdmins])
+        permissions=[permissions.CommandPermission(id=userid, type=2, permission=True) for userid in var.botAdmins])
     async def dm(self, ctx, member: discord.User, message):
         if ctx.author.id in var.botAdmins:
             await member.send('[Message from bot admin {}] {}'.format(ctx.author, message))

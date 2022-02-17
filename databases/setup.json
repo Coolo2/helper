@@ -1,0 +1,17 @@
+{
+    "447702058162978827": {
+        "join": {
+            "channel": "516286590235181058",
+            "message": "Welcome, {@user}! Hi f. Now {serverMembers} members."
+        },
+        "leave": {
+            "channel": "516286590235181058",
+            "message": "Goodbye {user}! F. Now {serverMembers} members."
+        },
+        "autorole": "447702342771671060",
+        "logging": {
+            "channel": "706541719553835100",
+            "ignore": []
+        }
+    }
+}

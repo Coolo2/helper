@@ -1,0 +1,153 @@
+<html>
+    <head>
+        <title>Helper Bot</title>
+        <link rel="stylesheet" href="/static/css/dashboard.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <link rel="stylesheet" href="https://unpkg.com/balloon-css/balloon.min.css">
+        <meta name="viewport" content="width=device-width">
+        <meta name="viewport" content="initial-scale=0.36">
+    </head>
+    <body>
+        <div style="z-index:10;color:white;position:fixed;height:50px;filter:hue-rotate(100deg) grayscale(1);z-index:100;background-color:black;width:100%;background: rgb(196,0,0);background: radial-gradient(circle, rgba(196,0,0,1) 45%, rgba(242,89,0,1) 100%);transition:top 0.5s" id="navBar">
+            <image src="/static/images/logoFull.png" id="tobBar1" style="height:50px;cursor:pointer" onclick="linkTo('/')"></image>
+            <span id="topBar2" class="vertical-center topBarItem" style="left:200px;" onclick="linkTo('/')">Home</span>
+            <span id="topBar3" class="vertical-center topBarItem" style="left:400px;" onclick="linkTo('/dashboard')">Dashboard</span>
+            <span id="topBar4" class="vertical-center topBarItem" style="left:600px;" onclick="linkTo('/changelogs')">Changelogs</span>
+        </div>
+        <div style="white-space:nowrap;height:250px;width:100%;background: rgb(196,0,0);color:white;font-size:50px;top:50px;letter-spacing: 150px;transition: letter-spacing 1s, top 1s;
+        background: linear-gradient(0deg, rgba(196,0,0,1) 0%, rgba(242,89,0,1) 100%);position:relative;text-align:center;
+        " id="gradient">
+            <span class="all-center" style="white-space: nowrap;opacity:0%;transition: opacity 1s" id="gradient-text">Helper Bot</span>
+            <span class="horizontal-center" style="white-space: nowrap;transition: opacity 1s;top:55%;padding:50px;opacity:0%;font-size:20px;letter-spacing:normal" id="gradient-description">Changelogs</span>
+        </div>
+        <div style="height:80px;width:250px;background: rgb(196,0,0);color:white;font-size:25px;border-radius:25px;
+        background: linear-gradient(0deg, rgba(196,0,0,1) 0%, rgba(242,89,0,1) 100%);position:absolute;top:-100px;right:20px;z-index:1000;transition:top 1s
+        " id="loading">
+            <span class="all-center">Loading...</span>
+        </div>
+        <div style="overscroll-behavior: none;position: relative;height:calc(100% - 350px);padding-top:50px;top:50px;width:100%;overflow-x:auto;overflow-y:auto;transition:top 0.8s, height 0.8s;" id="body">
+            <div style="min-height:1000px"></div>
+        </div>
+    </body>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+
+var OSName = "Unknown";
+        function getOS() {
+            if (window.navigator.userAgent.indexOf("Windows NT 10.0") != -1) return "Windows";
+            if (window.navigator.userAgent.indexOf("Windows NT 6.2") != -1) return "Windows";
+            if (window.navigator.userAgent.indexOf("Windows NT 6.1") != -1) return "Windows";
+            if (window.navigator.userAgent.indexOf("Windows NT 6.0") != -1) return "Windows";
+            if (window.navigator.userAgent.indexOf("Windows NT 5.1") != -1) return "Windows XP";
+            if (window.navigator.userAgent.indexOf("Windows NT 5.0") != -1) return "Windows 2000";
+            if (window.navigator.userAgent.indexOf("Mac") != -1) {
+                if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+                    return "Mobile"
+                };
+                return "Mac"
+            };
+            if (window.navigator.userAgent.indexOf("X11") != -1) return "UNIX";
+            if (window.navigator.userAgent.indexOf("Linux") != -1) return "Linux";
+        };
+        OSName = getOS()
+
+    async function get(theUrl) {
+
+        const settings = {
+            method: 'GET',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            }
+        };
+        const fetchResponse = await fetch(theUrl, settings);
+        const data = await fetchResponse.json();
+        return data; 
+
+    }
+
+    document.getElementById("body").onscroll = function () {
+        if (OSName != "Mobile") {
+            if (document.getElementById("body").scrollTop > 10) {
+                document.getElementById("gradient").style.top = "-300px"
+                document.getElementById("body").style.top = "-200px"
+                document.getElementById("body").style.height = "calc(100% - 100px)"
+                
+            } else {
+                document.getElementById("gradient").style.top = "50px"
+                document.getElementById("body").style.top = "50px"
+                document.getElementById("body").style.height = "calc(100% - 350px)"
+                
+            } 
+        }
+    }
+
+    async function loadChangelogs() {
+        changelogs = await get("/api/changelogs")
+
+        body = document.getElementById("body")
+
+        for (changelog in changelogs) {
+            text = changelogs[changelog].split("\n").join("<br>")
+            title = text.split('<br>')[0]
+            text = text.split('<br>').slice(1).join("<br>")
+
+            body.innerHTML = `<h1 style="padding-left:50px">${changelog}</h1><h3 style="padding-left:75px">${title}</h3><p style="font-size:15px;color:white;padding-left:100px">${text}</p>` + body.innerHTML
+        }
+    }
+
+    window.onload = async function () {
+            timer = 500
+            gradient = document.getElementById("gradient")
+            document.getElementById("gradient-text").style.opacity = "100%"
+            gradient.style.letterSpacing = "5px"
+            
+            setTimeout(function() {
+
+                document.getElementById("gradient-text").style.transition = "top 1s"
+                document.getElementById("gradient-text").style.top = "45%"
+                setTimeout(function() {
+                    document.getElementById("gradient-description").style.transition = "opacity 1s, padding 1s"
+                    document.getElementById("gradient-description").style.opacity = "100%"
+                    document.getElementById("gradient-description").style.padding = "10px"
+                }, timer)
+                
+            }, timer * 2)
+
+            for (let i = 1; i < 10; i++) {
+                try{setTimeout(function timer() {
+                    document.getElementById("topBar" + i).style.opacity = "100%"
+                    document.getElementById("topBar" + i).style.fontSize = "15px"
+                }, i * (timer / 10))}catch{}
+            }
+
+            await loadChangelogs()
+            
+        }
+
+        function linkTo(where) {
+            if (where == "/dashboard") document.getElementById("loading").style.top = "20px"
+            if (where == "/") {
+                document.getElementById("gradient").style.transition = "height 0.75s, top 1s"
+                document.getElementById("gradient").style.height = "500px"
+            }
+            for (let i = 1; i < 10; i++) {
+                try{setTimeout(function timer() {
+                    document.getElementById("topBar" + i).style.opacity = "0%"
+                    document.getElementById("topBar" + i).style.fontSize = "0px"
+                    document.getElementById("topBar" + i).style.padding = "25px"
+                }, i * 50)}catch{}
+            }
+            document.getElementById("gradient-description").style.transition = "opacity .5s, padding .5s"
+            document.getElementById("gradient-description").style.opacity = "0%"
+            document.getElementById("gradient-description").style.padding = "100px"
+            document.getElementById("gradient-text").style.transition = "opacity .5s"
+            document.getElementById("gradient-text").style.opacity = "0%"
+            setTimeout(() => {
+                window.open(where, '_self')
+            }, 700);
+            
+        }
+        
+    </script>
+</html>

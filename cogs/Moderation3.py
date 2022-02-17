@@ -133,7 +133,7 @@ class Moderation3(commands.Cog):
                     except Exception as error:
                         await ctx.respond(f"> I am missing permission to remove role {role}")
     
-    @slash_command(name="nick", description="prefixnick [user] [nickname/reset]|Change the nickname of a user", aliases=['nickname', 'setnick', 'setnickname'])
+    @slash_command(name="nick", description="Change the nickname of a user", aliases=['nickname', 'setnick', 'setnickname'])
     @commands.guild_only()
     async def nick(
         self, 

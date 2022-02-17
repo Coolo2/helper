@@ -3,15 +3,17 @@ from threading import Thread
 import os, time, json, base64
 from setup import var
 from webserver.oauth import Oauth as oauth
-from flask_minify import minify
 from functions import functions, encryption
-from gevent.pywsgi import WSGIServer
-from gevent import monkey
 from functions import functions, customCommands
-import asyncio
-import nest_asyncio
+import discord 
+import datetime
+import resources
+from gevent.pywsgi import WSGIServer
 
+loggingOptions = ["channelCreate", "channelDelete", "roleCreate", "roleDelete", "nicknameChange", "dashboardUse", "warns"]
 encryptionKey = os.environ.get("encryptionKey")
+
+bot : discord.Bot = None
 
 def webserver_run(client):
     t = Thread(target=run)
@@ -19,23 +21,9 @@ def webserver_run(client):
     global bot 
     bot = client
 
-app = Flask('', template_folder=os.path.abspath('./webserver/HTML'))
+app = Flask(__name__, template_folder=os.path.abspath('./webserver/HTML'))
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.config["TEMPLATES_AUTO_RELOAD"] = True
-
-minify(app=app, html=True, js=True, cssless=True)
-
-@app.route('/css/<path:filename>')
-def custom_static(filename):
-    return send_from_directory('webserver/Static/CSS/', filename)
-
-@app.route('/js/<path:filename>')
-def custom_js(filename):
-    return send_from_directory('webserver/Static/JS/', filename)
-
-@app.route('/images/<path:filename>')
-def custom_image(filename):
-    return send_from_directory('webserver/Static/Images/', filename)
 
 @app.route('/')
 def home():
@@ -45,12 +33,86 @@ def home():
 def about():
     return render_template('about.html', last_updated=dir_last_updated('/static'))
 
+@app.route('/changelogs')
+def changelogs():
+    return render_template('changelogs.html', last_updated=dir_last_updated('/static'))
+
+@app.route('/invite')
+def invite():
+    return redirect(var.invite)
+
+@app.route('/support')
+def support():
+    return redirect(var.server)
+
 @app.route('/invited')
 def invited():
     if request.args.get("guild_id") == None:
         return redirect("/")
     guildName = bot.get_guild(int(request.args['guild_id'])) if bot.get_guild(int(request.args['guild_id'])) else "None"
     return render_template('invited.html', last_updated=dir_last_updated('/static'), guild_name=guildName)
+
+@app.route('/api/changelogs', methods=['GET'])
+def changelogsAPI():
+    changelogs = {}
+    for file in [f for f in os.listdir("./resources/changelogs/") if os.path.isfile(os.path.join("./resources/changelogs/", f))]:
+        with open("resources/changelogs/" + file) as f:
+            changelogs[file.replace(".txt", "")] = f.read()
+
+    return jsonify(changelogs)
+
+@app.route('/api/commands', methods=['GET'])
+def commandsAPI():
+    commands = []
+    done = []
+
+    for command in bot.commands:
+        if command.name not in done:
+            done.append(command.name)
+            category = None 
+            for categoryIter in resources.commands.json:
+                if command.name in resources.commands.json[categoryIter]:
+                    category = categoryIter
+
+            options = [{"name":option.name, "description":option.description, "required":option.required} for option in command.options]
+
+            if category:
+                commands.append({"name":command.name, "description":command.description, "options":options, "category":category})
+    
+    return jsonify(commands)
+
+@app.route('/api/userinfo', methods=['GET'])
+def userinfoAPI():
+    try:
+        user = request.cookies.get('user').split(";;;;")
+        id = encryption.decode(user[1], encryptionKey)
+        name = encryption.decode(user[2], encryptionKey)
+        avatar = encryption.decode(user[3], encryptionKey)
+        user = bot.get_user(int(id))
+    except:
+        return jsonify({"user":None, "type":"unknown"})
+    
+    if not user:
+        return jsonify({
+            "user":{
+                "id":id,
+                "name":name,
+                "avatar":avatar
+            }, 
+            "type":"user"
+        })
+    else:
+        return jsonify({
+            "user":{
+                "id":str(user.id),
+                "name":user.name,
+                "avatar":user.avatar.url,
+                "mutual":[{"id":str(guild.id), "name":guild.name, "icon":guild.icon.url} for guild in bot.guilds if guild.get_member(int(user.id))]
+            }, 
+            "type":"mutual"
+        })
+
+
 
 @app.route("/login", methods=["GET"])  
 def admin():
@@ -109,8 +171,8 @@ def jsonifyB(data, status=200, indent=4, sort_keys=True):
     return response
 
 
-@app.route('/dashboard/serverDatabase')
-def serverData():
+@app.route('/api/dashboard/serverDatabase')
+def serverDataAPI():
     args = request.args
     value = {}
     try:
@@ -122,11 +184,12 @@ def serverData():
     warns = functions.read_data_sync('databases/warns.json')
     warnsString = json.dumps(warns)
     events = functions.read_data_sync("databases/events.json")
+    music = functions.read_data_sync("databases/music.json")
     
     with open("databases/commands.json") as f:
         commands = json.load(f)
     
-    with open("databases/joinleave.json") as f:
+    with open("databases/setup.json") as f:
         joinleaveData = json.load(f)
 
     if "guild" in args:
@@ -141,6 +204,7 @@ def serverData():
                 "has_permissions":{"manage_messages":member.guild_permissions.manage_messages, "manage_guild":member.guild_permissions.manage_guild},
                 "prefix":functions.prefix(guild),
                 "joinleave":joinleaveData[str(guild.id)] if str(guild.id) in joinleaveData else {},
+                "music":music[str(guild.id)] if str(guild.id) in music else {},
                 "warns":warns[str(guild.id)] if str(guild.id) in warns else {},
                 "owner":str(guild.owner_id),
                 "roles":[{"name":role.name,"id":str(role.id),"color":str(role.color)} for role in guild.roles],
@@ -165,7 +229,7 @@ def serverData():
         return jsonifyB(value)
     return jsonify(value)
 
-@app.route('/dashboard/post/setAutorole', methods=['POST'])
+@app.route('/api/dashboard/setAutorole', methods=['POST'])
 def setAutorole():
     try:
         user = request.cookies.get('user').split(";;;;")
@@ -174,7 +238,7 @@ def setAutorole():
     except:
         return redirect("/login")
 
-    with open("databases/joinleave.json") as f:
+    with open("databases/setup.json") as f:
         joinleave = json.load(f)
 
     data = request.json
@@ -198,14 +262,21 @@ def setAutorole():
         else:
             what = "set"
             joinleave[str(guild.id)]["autorole"] = str(role)
-        functions.save_data_sync("databases/joinleave.json", joinleave)
-        functions.read_load_sync("databases/joinleave.json", joinleave)
+        functions.save_data_sync("databases/setup.json", joinleave)
+        functions.read_load_sync("databases/setup.json", joinleave)
+
+        # Log update if available
+        embed = discord.Embed(title="Autorole role updated", color=var.embed, timestamp=datetime.datetime.now())
+        embed.add_field(name="New:", value=guild.get_role(int(role)).mention, inline=False)
+        embed.set_author(name=f"User: {member}", icon_url=member.avatar.url)
+
+        bot.loop.create_task(functions.log(bot, "dashboardUse", guild, embed))
             
         return jsonify({"data":joinleave[str(guild.id)], "returnMessage":f"Successfully {what} autorole role"})
     else:
         return jsonify({"error":"Missing perms"})
 
-@app.route('/dashboard/post/setLogging', methods=['POST'])
+@app.route('/api/dashboard/setLogging', methods=['POST'])
 def setLogging():
     try:
         user = request.cookies.get('user').split(";;;;")
@@ -214,7 +285,7 @@ def setLogging():
     except:
         return redirect("/login")
 
-    with open("databases/joinleave.json") as f:
+    with open("databases/setup.json") as f:
         joinleave = json.load(f)
 
     data = request.json
@@ -235,14 +306,31 @@ def setLogging():
             joinleave[str(guild.id)] = {}
 
         joinleave[str(guild.id)]["logging"] = loggingData
-        functions.save_data_sync("databases/joinleave.json", joinleave)
-        functions.read_load_sync("databases/joinleave.json", joinleave)
+
+        loggingSettings = "_ _ "
+        
+        for option in loggingOptions:
+            if option in loggingData["ignore"]:
+                loggingSettings += f"{option}: **F**alse\n"
+            else:
+                loggingSettings += f"{option}: **T**rue\n"
+
+        # Log update if available
+        embed = discord.Embed(title="Logging setting updated", color=var.embed, timestamp=datetime.datetime.now())
+        embed.add_field(name="Channel:", value=f"<#{loggingData['channel'] if 'channel' in loggingData else 'None'}>", inline=False)
+        embed.add_field(name="Settings:", value=loggingSettings, inline=False)
+        embed.set_author(name=f"User: {member}", icon_url=member.avatar.url)
+
+        bot.loop.create_task(functions.log(bot, "dashboardUse", guild, embed))
+
+        functions.save_data_sync("databases/setup.json", joinleave)
+        functions.read_load_sync("databases/setup.json", joinleave)
             
         return jsonify({"data":joinleave[str(guild.id)], "returnMessage":f"Successfully set logging settings"})
     else:
         return jsonify({"error":"Missing perms"})
 
-@app.route('/dashboard/post/setMessage', methods=['POST'])
+@app.route('/api/dashboard/setMessage', methods=['POST'])
 def setMessage():
     try:
         user = request.cookies.get('user').split(";;;;")
@@ -251,7 +339,7 @@ def setMessage():
     except:
         return redirect("/login")
     
-    with open("databases/joinleave.json") as f:
+    with open("databases/setup.json") as f:
         joinleave = json.load(f)
 
     data = request.json
@@ -279,15 +367,24 @@ def setMessage():
                 joinleave[str(guild.id)][choice] = {}
             joinleave[str(guild.id)][choice] = {"channel":str(channel),"message":message}
 
-        functions.save_data_sync("databases/joinleave.json", joinleave)
-        functions.read_load_sync("databases/joinleave.json", joinleave)
+        functions.save_data_sync("databases/setup.json", joinleave)
+        functions.read_load_sync("databases/setup.json", joinleave)
+
+        # Log update if available
+        embed = discord.Embed(title=f"{choice.title()} message updated", color=var.embed, timestamp=datetime.datetime.now())
+        embed.add_field(name="Type:", value=choice.title(), inline=False)
+        embed.add_field(name="Channel:", value=f"<#{channel}>", inline=False)
+        embed.add_field(name="Message:", value=message, inline=False)
+        embed.set_author(name=f"User: {member}", icon_url=member.avatar.url)
+
+        bot.loop.create_task(functions.log(bot, "dashboardUse", guild, embed))
 
         return jsonify({"data":joinleave[str(guild.id)], "returnMessage":f"Successfully set {choice} message to '{data['message']}'"})
     else:
         return jsonify({"error":"Missing perms"})
         
 
-@app.route('/dashboard/post/setPrefix', methods=['POST'])
+@app.route('/api/dashboard/setPrefix', methods=['POST'])
 def setPrefix():
     try:
         user = request.cookies.get('user').split(";;;;")
@@ -315,11 +412,14 @@ def setPrefix():
             returnMess = "Successfully reset prefix"
         functions.save_data_sync("databases/prefixes.json", prefixes)
         functions.read_load_sync("databases/prefixes.json", prefixes)
+
+        
+
         return jsonify({"prefix":returnPrefix, "returnMessage":returnMess})
     else:
         return jsonify({"error":"Missing perms"})
 
-@app.route('/dashboard/post/setEvents', methods=['POST'])
+@app.route('/api/dashboard/setEvents', methods=['POST'])
 def setEvents():
     try:
         user = request.cookies.get('user').split(";;;;")
@@ -336,11 +436,25 @@ def setEvents():
             return jsonify({"error":"You have hit the maximum amount of events for the server (10)!"})
         events[str(guild.id)] = data["events"]
         functions.save_data_sync("databases/events.json", events)
+
+        eventsText = "_ _ "
+        counter = 0
+        for event in data["events"]:
+            counter += 1
+            eventsText += f"{counter}. At **{event['amount']} {event['what']}**, **{event['action']}**.\n"
+
+        # Log update if available
+        embed = discord.Embed(title="Events updated", color=var.embed, timestamp=datetime.datetime.now())
+        embed.add_field(name="Events:", value=eventsText, inline=False)
+        embed.set_author(name=f"User: {member}", icon_url=member.avatar.url)
+
+        bot.loop.create_task(functions.log(bot, "dashboardUse", guild, embed))
+
         return jsonify({"returnMessage":"Successfully set events"})
     else:
         return jsonify({"error":"Missing perms"})
 
-@app.route('/dashboard/post/setCustomCommands', methods=['POST'])
+@app.route('/api/dashboard/setCustomCommands', methods=['POST'])
 def setCustomCommands():
     try:
         user = request.cookies.get('user').split(";;;;")
@@ -381,18 +495,24 @@ def setCustomCommands():
         
         for item in delList:
             del data["commands"][item]
+        
+        
 
         commands[str(guild.id)] = data["commands"]
 
         functions.save_data_sync("databases/commands.json", commands)
         functions.read_load_sync("databases/commands.json", commands)
 
-        cmds = customCommands.loadCustomCommands(bot, returnList=True)
-        """for cmd in cmds:
-            print(cmd.to_dict())
-            bot.add_application_command(cmd)"""
+        
+        bot.loop.create_task(customCommands.doGuildCustomCommands(bot, guild.id, commands[str(guild.id)]))
 
-        bot.loop.create_task(bot.http.bulk_upsert_guild_commands(bot.user.id, guild.id, cmds))
+        # Log update if available
+        embed = discord.Embed(title="Custom Commands updated", color=var.embed, timestamp=datetime.datetime.now())
+        embed.add_field(name="Commands:", value=f"Too many to send here. View them on the [Web Dashboard]({var.address}#dashboard)", inline=False)
+        embed.set_author(name=f"User: {member}", icon_url=member.avatar.url)
+
+        bot.loop.create_task(functions.log(bot, "dashboardUse", guild, embed))
+        
 
         if did == True:
             return jsonify({"error":"One or more of your custom commands already exist! Removed them.", "commands":commands[str(guild.id)]})
@@ -403,9 +523,7 @@ def setCustomCommands():
     else:
         return jsonify({"error":"Missing perms", "commands":commands[str(guild.id)]})
 
-    return {"error":"Unfinished f"}
-
-@app.route('/dashboard/post/delWarn', methods=['POST'])
+@app.route('/api/dashboard/delWarn', methods=['POST'])
 def delWarn():
     try:
         user = request.cookies.get('user').split(";;;;")
@@ -421,9 +539,44 @@ def delWarn():
         del warns[str(guild.id)][data['member']][data['id']]
         functions.save_data_sync("databases/warns.json", warns)
         warns["returnMessage"] = f"Successfully deleted warn {data['id']}"
+
+        # Log update if available
+        embed = discord.Embed(title="Warn deleted (from dashboard)", color=var.embedFail, timestamp=datetime.datetime.now())
+        embed.add_field(name="User:", value=f"<@{data['member']}>", inline=False)
+        embed.add_field(name="Moderator", value=str(member))
+        embed.set_author(name=f"User: {member}", icon_url=member.avatar.url)
+
+        bot.loop.create_task(functions.log(bot, "warns", guild, embed))
+
         return jsonify(warns)
     else:
         return jsonify({"error":"Missing perms"})
+
+@app.route('/api/dashboard/setMusic', methods=['POST'])
+def setMusic():
+    try:
+        user = request.cookies.get('user').split(";;;;")
+        user_id = encryption.decode(user[1], encryptionKey)
+        user_name = encryption.decode(user[2], encryptionKey)
+    except:
+        return redirect("/login")
+    music = functions.read_data_sync("databases/music.json")
+    data = request.json
+    guild = bot.get_guild(int(data['guild']))
+    member = guild.get_member(int(user_id))
+    del data["guild"]
+
+    if member.guild_permissions.manage_guild:
+        if str(guild.id) not in music:
+            music[str(guild.id)] = {}
+        music[str(guild.id)] = data 
+
+        functions.save_data_sync("databases/music.json", music)
+
+        return jsonify({"returnMessage":"Successfully set music permissions"})
+    else:
+        return jsonify({"error":"Missing perms"})
+
 
 def dir_last_updated(folder):
     try:
@@ -434,10 +587,7 @@ def dir_last_updated(folder):
         return 0
 
 def run():
-    try:
-        http = WSGIServer(('0.0.0.0', 5000), app.wsgi_app) 
-        http.serve_forever()
-    #app.run(host='0.0.0.0',port=5000,threaded=True)
-    except:
-        pass
+    http = WSGIServer(('0.0.0.0', 5000), app) 
+    http.serve_forever()
+    #app.run(host='0.0.0.0',port=5000)
 

@@ -6,13 +6,15 @@ from functions import customerror, functions, google
 from setup import var
 from datetime import datetime, timedelta
 
+from discord.commands import slash_command, Option, permissions
+
 class Owner(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
     
-    @commands.command(name='load', hidden=True)
-    @commands.is_owner()
+    @slash_command(name='load', guild_ids=var.guilds, hidden=True)
+    @permissions.is_owner()
     async def cogload(self, ctx, *, cog: str):
         cog = "cogs." + cog.replace("cogs.", "")
         try:
@@ -22,8 +24,8 @@ class Owner(commands.Cog):
         else:
             await ctx.send('**`SUCCESS`**')
 
-    @commands.command(name='unload', hidden=True)
-    @commands.is_owner()
+    @slash_command(name='unload', guild_ids=var.guilds, hidden=True)
+    @permissions.is_owner()
     async def cogunload(self, ctx, *, cog: str):
         cog = "cogs." + cog.replace("cogs.", "")
         try:
@@ -33,8 +35,8 @@ class Owner(commands.Cog):
         else:
             await ctx.send('**`SUCCESS`**')
 
-    @commands.command(name='reload', hidden=True)
-    @commands.is_owner()
+    @slash_command(name='reload', guild_ids=var.guilds, hidden=True)
+    @permissions.is_owner()
     async def cogreload(self, ctx, *, cog: str):
         cog = "cogs." + cog.replace("cogs.", "")
         try:
@@ -46,7 +48,13 @@ class Owner(commands.Cog):
             await ctx.send('**`SUCCESS`**')
 
 
-    @commands.command(name="blacklist", hidden=True)
+    @slash_command(
+        name="blacklist", 
+        hidden=True, 
+        default_permission=False, 
+        guild_ids=var.guilds,
+        permissions=[permissions.CommandPermission(id=userid, type=2, permission=True) for userid in var.botAdmins]
+    )
     async def blacklist(self, ctx, member : discord.Member, *, reason):
         if ctx.author.id in var.botAdmins:
             if member.id not in var.botAdmins:
@@ -61,7 +69,14 @@ class Owner(commands.Cog):
         else:
             raise customerror.MildErr("> You must be a bot admin to use this command.")
 
-    @commands.command(name="unblacklist", hidden=True, aliases=['whitelist'])
+    @slash_command(
+        name="whitelist", 
+        hidden=True, 
+        aliases=['unblacklist'], 
+        default_permission=False, 
+        guild_ids=var.guilds,
+        permissions=[permissions.CommandPermission(id=userid, type=2, permission=True) for userid in var.botAdmins]
+    )
     async def unblacklist(self, ctx, member : discord.Member):
         if ctx.author.id in var.botAdmins:
             with open('databases/blacklist.json') as f:

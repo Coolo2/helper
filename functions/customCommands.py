@@ -17,6 +17,7 @@ def testFunc(cmdGuild, cmdName, cmdValue):
         args = [x for x in args if x is not None]
 
         brackets = re.findall(r"\{(.*?)\}",resp)
+        
             
         for bracket in brackets:
 
@@ -43,43 +44,58 @@ def testFunc(cmdGuild, cmdName, cmdValue):
     
     return testFuncInside
 
-def loadCustomCommands(bot : discord.Bot, returnList=False):
+class CustomCommand():
+    def __init__(self, name : str, value : str):
+        self.name = name 
+        self.value = value 
+        self.rawOptions = []
+        self.options = self.generate_options()
+        
     
-    with open("databases/commands.json") as f:
-        data = json.load(f)
-    final = []
+    def generate_options(self):
+
+        options = []
+        rawOptions = []
+
+        counter = 0
+        for i in range(10):
+            for argAlias in ["args", "arg", "arguments", "argument"]:
+                if f"{argAlias}/{i}" in self.value:
+                    
+                    counter += 1
+                    opt = discord.Option(str, name=f"arg{counter}", required=True)
+                    opt.__setattr__("_parameter_name", f"arg{counter}")
+                    options.append(opt)
+                    rawOptions.append(f"arg{counter}")
+        self.options = options
+        self.rawOptions = rawOptions
+        return self.options
+
+
+
+async def doGuildCustomCommands(bot : discord.Bot, guild_id : int, pendingCommands : dict, register=True):
+
+    #bot._pending_application_commands = []
+
+    for pendingCommand in pendingCommands:
+        command = CustomCommand(pendingCommand, pendingCommands[pendingCommand])
+
+        func = testFunc(guild_id, command.name, command.value)
+
+        cmd = discord.SlashCommand(
+            func=func, 
+            callback=func, 
+            name=command.name, 
+            description=f"Helper Bot Custom Command: {command.name}", 
+            options=command.options,
+            guild_ids=[guild_id]
+        )
+
+        
+
+        bot.add_application_command(cmd)
     
-    for guildID in data:
-        for commandName in data[guildID]:
-            options = []
+    if register:
+        print(f"Commands reloaded: {await bot.register_commands()}")
+        
 
-            commandValue = data[guildID][commandName]
-
-            counter = 0
-            for i in range(10):
-                for argAlias in ["args", "arg", "arguments", "argument"]:
-                    if f"{argAlias}/{i}" in commandValue:
-                        
-                        counter += 1
-                        opt = discord.Option(str, name=f"arg{counter}", required=True)
-                        opt.__setattr__("_parameter_name", f"arg{counter}")
-                        options.append(opt)
-                        commandValue = commandValue.replace(f"{argAlias}/{i}", f"args/{counter}")
-            
-            func = testFunc(int(guildID), commandName, commandValue)
-
-            cmd = discord.SlashCommand(
-                func=func, 
-                callback=func, 
-                name=commandName, 
-                description=f"Helper Bot Custom Command: {commandName}", 
-                options=options,
-                guild_ids=[int(guildID)]
-            )
-            if returnList:
-                final.append(cmd.to_dict())
-                continue
-
-            bot.add_application_command(cmd)
-    
-    return final

@@ -11,8 +11,37 @@ import emoji as emojis
 from discordwebhook import asyncCreate
 import inspect
 from discord.ext.commands import MemberConverter
+import re
 
 from discord.commands import slash_command, Option
+
+guilds = {}
+
+async def mimic_autocomplete(ctx : discord.AutocompleteContext):
+    with open("databases/userSettings.json") as f:
+        options = json.load(f)
+    
+    members = [] 
+    for member in ctx.interaction.guild.members:
+        if (
+            str(member.id) not in options 
+            or "disableMimic" not in options[str(member.id)] 
+            or str(ctx.interaction.guild.id) not in options[str(member.id)]["disableMimic"]
+            or not options[str(member.id)]["disableMimic"][str(ctx.interaction.guild.id)]
+        ):
+
+            if not ctx.value or ctx.options["member"].lower() in member.name.lower() or ctx.options["member"].lower() in str(member.nick).lower():
+                
+                if member.nick:
+                    members.append(f"{member.nick} ({member})")
+                else:
+                    members.append(str(member))
+    
+    if ctx.options["member"] in "disable enable":
+        members.append("disable")
+        members.append("enable")
+
+    return members
 
 class Fun1(commands.Cog):
     def __init__(self, bot):
@@ -87,7 +116,7 @@ class Fun1(commands.Cog):
                 e = discord.Embed(title=random.choice(["Did you know that...", "Random fact"]), description=json['text'].replace("`", "'"), colour=var.embed)
                 await ctx.respond(embed=e)
     
-    @slash_command(name="clap", description="*[emoji] [message]")
+    @slash_command(name="clap", description="Add clap emojis between the message")
     async def clap(self, ctx, message : Option(str, description="The message to clap")):
         emoji = ":clap:"
         
@@ -153,7 +182,7 @@ class Fun1(commands.Cog):
     @slash_command(name="cat", description="Get a random cat image", aliases = ['randomcat'])
     async def cat(self, ctx):
         async with aiohttp.ClientSession() as session:
-            async with session.get('https://api.thecatapi.com/v1/images/search?format=json') as r:
+            async with session.get('https://api.thecatapi.com/v1/static/images/search?format=json') as r:
                 data = await r.json()
 
                 if r.status == 200:
@@ -176,7 +205,7 @@ class Fun1(commands.Cog):
                 else:
                     raise customerror.CustomErr("Could not access API. Try again?")
     
-    @slash_command(name="spoiler", description="|Make a message into a special spoiler")
+    @slash_command(name="spoiler", description="Make a message into a special spoiler")
     async def spoiler(self, ctx, message : Option(str, description="The message to spoiler-split")):
         final = "```"
         for character in message:
@@ -203,12 +232,21 @@ class Fun1(commands.Cog):
             raise customerror.MildErr("Final response too long!")
     
     @slash_command(name="mimic", description="Mimic another user!")
-    async def mimic(self, ctx, member : Option(discord.Member, description="The member to mimic"), message : Option(str, description="The message to send as the mimic")):
+    async def mimic(
+        self, 
+        ctx, 
+        member : Option(str, description="The member to mimic (Can be enable/disable to toggle mimicking for yourself)", autocomplete=mimic_autocomplete), 
+        message : Option(str, description="The message to send as the mimic", required=False) = None ):
         converter = MemberConverter()
         data = await functions.read_data("databases/userSettings.json")
 
-        if member.lower() not in ["on", "off"]:
-            member = await converter.convert(ctx, member)
+        if member.lower() not in ["disable", "enable"]:
+            if "(" in member.lower():
+                brackets = re.findall('\(.*?\)', member)
+                print(brackets[-1][1:][:-1])
+                member = await converter.convert(ctx, brackets[-1][1:][:-1])
+            else:
+                member = await converter.convert(ctx, member)
         else:
             if str(ctx.author.id) not in data:
                 data[str(ctx.author.id)] = {}
@@ -216,15 +254,15 @@ class Fun1(commands.Cog):
             if "disableMimic" not in data[str(ctx.author.id)]:
                 data[str(ctx.author.id)]["disableMimic"] = {}
 
-            data[str(ctx.author.id)]["disableMimic"][str(ctx.guild.id)] = True if member.lower() == "off" else False
+            data[str(ctx.author.id)]["disableMimic"][str(ctx.guild.id)] = True if member.lower() == "disable" else False
 
             await functions.save_data("databases/userSettings.json", data)
             await functions.read_load("databases/userSettings.json", data)
 
             return await ctx.respond(embed=
                 discord.Embed(
-                    title="Successfully " + ("enabled" if member.lower() == "on" else "disabled") + "!",
-                    description="Successfully **" + ("enabled" if member.lower() == "on" else "disabled") + "** other members mimicking you **in this server**!",
+                    title="Successfully " + ("enabled" if member.lower() == "enable" else "disabled") + "!",
+                    description="Successfully **" + ("enabled" if member.lower() == "enable" else "disabled") + "** other members mimicking you **in this server**!",
                     color=var.embed
                 )
             )
@@ -245,7 +283,7 @@ class Fun1(commands.Cog):
         if "mimicPrompt" not in data[str(ctx.author.id)]["data"]:
             data[str(ctx.author.id)]["data"]["mimicPrompt"] = True
 
-            await ctx.respond(f"Top tip! You can use `{functions.prefix(ctx.guild)}mimic [on/off]` to disable/enable someone mimicking you on this server!")
+            await ctx.respond(f"Top tip! You can use `{functions.prefix(ctx.guild)}mimic [enable/disable]` to disable/enable someone mimicking you on this server!")
         
         try:
             webhooks = await ctx.channel.webhooks()
@@ -258,7 +296,7 @@ class Fun1(commands.Cog):
             raise commands.BotMissingPermissions(["manage_webhooks"])
         
         main = asyncCreate.Webhook(finalwebhook.url)
-        main.avatar.url(str(member.avatar.url))
+        main.avatar_url(str(member.avatar.url))
         main.author(member.display_name)
         main.message(message)
         if not ctx.author.guild_permissions.mention_everyone:

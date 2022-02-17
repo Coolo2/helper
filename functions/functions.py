@@ -324,3 +324,16 @@ def checkList(iterable, check):
             except:
                 return command
     return None
+
+async def log(bot : discord.Bot, type : str, guild : discord.Guild, embed : discord.Embed):
+    with open("databases/setup.json") as f:
+        data = json.load(f)
+    
+    try:
+        ignore = data[str(guild.id)]["logging"]["ignore"]
+        if type not in ignore:
+            logChannel = guild.get_channel(int(data[str(guild.id)]["logging"]["channel"]))
+
+            await logChannel.send(embed=embed)
+    except:
+        pass

@@ -4,7 +4,7 @@ import asyncio
 
 import json, os
 from EasyConversion.textformat import color as c
-from functions import functions, customCommands
+from functions import functions, customCommands, library_overwrites
 from setup import var
 from webserver import main
 from datetime import datetime
@@ -14,9 +14,7 @@ load_dotenv('.env')
 
 intents = discord.Intents.default()
 intents.members = True
-intents.messages=False
-
-#utility1
+intents.message_content = False
 
 def get_prefix(bot, message):
     try:
@@ -28,24 +26,25 @@ def get_prefix(bot, message):
     except:
         return commands.when_mentioned_or(var.prefix, var.prefix.upper(), var.prefix.capitalize())(bot, message)
 
-#bot = commands.Bot(command_prefix=get_prefix, case_insensitive=True, intents=intents)
-bot = discord.Bot(command_prefix=get_prefix, case_insensitive=True, intents=intents, debug_guild=var.guilds[0])
-#bot.remove_command('help')
+bot = discord.Bot(command_prefix=get_prefix, case_insensitive=True, intents=intents, debug_guilds=[447702058162978827])
 
-customCommands.loadCustomCommands(bot)
+# Library overwrites
+#bot.on_connect = library_overwrites.on_connect_overwrite_sync(bot)
+#bot.register_commands = library_overwrites.register_commands_update(bot)
+
+extensions = [file.replace(".py", "") for file in os.listdir('./cogs') if file.endswith(".py")]
 
 @bot.event 
 async def on_ready():
+    print(c.end + "Loading Slash Commands...")
+    #await library_overwrites.add_custom_commands(bot)
     
-
     print(c.green + c.underline + bot.user.name + " online" + c.end)
 
     var.get_client(bot)
     
-    await bot.change_presence(activity=discord.Game(name=f"@{bot.user.name} help | v{var.version} | {len(bot.guilds)} servers"))
+    await bot.change_presence(activity=discord.Game(name=f"/help | v{var.version} | {len(bot.guilds)} servers"))
     ping_files.start()
-
-extensions = [file.replace(".py", "") for file in os.listdir('./cogs') if file.endswith(".py")]
 
 @tasks.loop(seconds=10)
 async def ping_files():
@@ -63,7 +62,7 @@ async def ping_files():
     await asyncio.sleep(1)
     await functions.read_load("databases/commands.json")
     await asyncio.sleep(1)
-    await functions.read_load("databases/joinleave.json")
+    await functions.read_load("databases/setup.json")
 
 @bot.check
 async def globally_blacklist_roles(ctx):
@@ -75,6 +74,7 @@ async def globally_blacklist_roles(ctx):
 
 if __name__ == '__main__':
     print(f'\n--- Extensions {", ".join(extensions)} ---')
+    #bot.load_extension('cogs.'+ "Music")
 
     for extension in extensions:
         try:
@@ -87,5 +87,7 @@ if __name__ == '__main__':
     print('---\n ' + c.red)
     main.webserver_run(bot)
     
+    
 
-    bot.run(os.environ.get("token"))
+bot.run(os.getenv("token"))
+    

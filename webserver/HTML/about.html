@@ -1,25 +1,155 @@
 <html>
     <head>
         <title>Helper Bot</title>
-        <link rel="stylesheet" href="/css/about.css">
-        <link rel=stylesheet href=https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css>
+        <link rel="stylesheet" href="/static/css/about.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
         <link rel="stylesheet" href="https://unpkg.com/balloon-css/balloon.min.css">
         <meta name="viewport" content="width=device-width">
         <meta name="viewport" content="initial-scale=0.36">
     </head>
     <body>
-        <div style="color:white;position:fixed;height:50px;filter:hue-rotate(100deg) grayscale(1);z-index:100;background-color:black;width:100%;background: rgb(196,0,0);background: radial-gradient(circle, rgba(196,0,0,1) 45%, rgba(242,89,0,1) 100%);transition:top 0.5s" id="navBar">
-            <span id="topBar1" class="vertical-center topBarItem" style="left:200px;" onclick="linkTo('/')">Home</span>
-            <span id="topBar2" class="vertical-center topBarItem" style="left:400px;" onclick="linkTo('/dashboard')">Dashboard</span>
-            <span id="topBar3" class="vertical-center topBarItem" style="left:600px;">Status</span>
+        <div style="z-index:10;color:white;position:fixed;height:50px;filter:hue-rotate(100deg) grayscale(1);z-index:100;background-color:black;width:100%;background: rgb(196,0,0);background: radial-gradient(circle, rgba(196,0,0,1) 45%, rgba(242,89,0,1) 100%);transition:top 0.5s" id="navBar">
+            <image src="/static/images/logoFull.png" id="tobBar1" style="height:50px;cursor:pointer" onclick="linkTo('/')"></image>
+            <span id="topBar2" class="vertical-center topBarItem" style="left:200px;" onclick="linkTo('/')">Home</span>
+            <span id="topBar3" class="vertical-center topBarItem" style="left:400px;" onclick="linkTo('/dashboard')">Dashboard</span>
+            <span id="topBar4" class="vertical-center topBarItem" style="left:600px;" onclick="linkTo('/changelogs')">Changelogs</span>
         </div>
+        <div style="white-space:nowrap;height:400px;width:100%;background: rgb(196,0,0);color:white;font-size:50px;top:50px;letter-spacing: 150px;transition: letter-spacing 1s, top 1s;
+        background: linear-gradient(0deg, #2D3033 0%, rgba(196,0,0,1) 50%, rgba(242,89,0,1) 100%);position:relative;text-align:center;z-index:2
+        " id="gradient">
+            <span class="horizontal-center" style="top:25%;white-space: nowrap;opacity:0%;transition: opacity 1s" id="gradient-text">Helper Bot</span>
+            <span class="horizontal-center" style="white-space: nowrap;transition: opacity 1s;top:32%;padding:50px;opacity:0%;font-size:20px;letter-spacing:normal" id="gradient-description">Features</span>
+        </div>
+        <div style="height:80px;width:250px;background: rgb(196,0,0);color:white;font-size:25px;border-radius:25px;
+        background: linear-gradient(0deg, rgba(196,0,0,1) 0%, rgba(242,89,0,1) 100%);position:absolute;top:-100px;right:20px;z-index:1000;transition:top 1s
+        " id="loading">
+            <span class="all-center">Loading...</span>
+        </div>
+        <div style="z-index:3;width:90%;top:300px;height:500px;margin: auto;overflow-x:hidden;height: 700px;" class="horizontal-center">
+            <div class="tile">
+                <img src="/static/images/examples-moderation.png" class="tile-image resize-image">
+                <span class="noselect tile-title" >Simple Moderation</span>
+                <span class="horizontal-center tile-description">A simple moderation system which can be instantly applied to your server with no overcomplicated commands.</span>
+            </div>
+            <div class="tile">
+                <img src="/static/images/examples-moderation.png" class="tile-image resize-image">
+                <span class="noselect tile-title">Web Dashboard</span>
+                <span class="horizontal-center tile-description">A simple web dashboard to customise many things for the bot.</span>
+            </div>
+            <div class="tile">
+                <img src="/static/images/examples-moderation.png" class="tile-image resize-image">
+                <span class="noselect tile-title">Fun and Utility</span>
+                <span class="horizontal-center tile-description">Many fun, utility and economy commands to improve the experience for users in your server.</span>
+            </div>
+        </div>
+        <div class="horizontal-center" style="top:800px;font-size:50px;color:white;text-shadow: 0 0 10px black;z-index:4"><span>View The Commands</span><span id="commands-count"></span></div>
+        <div style="z-index:3;top:900px;" class="horizontal-center commands" id="commands"></div>
+        <div id="popup" class="all-center">
+            <div id="popup-content" class="all-center">
+                <div style="height:50px;top:0;width:100%;background:rgb(196,0,0);background: radial-gradient(circle, rgba(196,0,0,1) 45%, rgba(242,89,0,1) 100%)">
+                    <i class="fa fa-times-circle" aria-hidden="true" style="font-size:50px;cursor:pointer" onclick="closePopUp()"></i>
+                </div>
+                <div id="popup-text">
 
-        <div style="overscroll-behavior: none;position: relative;height:calc(100% - 350px);padding-top:50px;top:50px;width:100%;overflow-x:auto;overflow-y:auto;transition:top 0.8s, height 0.8s" id="dashboardDiv">
-            f
+                </div>
+            </div>
         </div>
     </body>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script>
+        async function get(theUrl) {
+
+            const settings = {
+                method: 'GET',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                }
+            };
+            const fetchResponse = await fetch(theUrl, settings);
+            const data = await fetchResponse.json();
+            return data; 
+
+        }
+
+        function openPopUp() {
+            popup = document.getElementById("popup")
+            popup.style.display = "block"
+            popup.style.opacity = "100%"
+        } function closePopUp() {
+            popup = document.getElementById("popup")
+            popup.style.opacity = "0"
+            setTimeout(function() {
+                popup.style.display = "none"
+            }, 500)
+        } function setPopUpHTML(html) {
+            popup = document.getElementById("popup-text")
+            popup.innerHTML = html
+        }
+
+        var commands
+
+        function commandInfo(commandName) {
+            
+            for (command of commands) {
+                if (command.name == commandName) {
+                    opts = ""
+                    for (option of command.options) {
+                        required = ""
+                        if (!option.required) required = "*"
+                        opts += ` ${required}{${option.name}}`
+                    }
+
+                    setPopUpHTML(`<div style="padding-left:10px"><h1>/${command.name}</h1> <h3 style="padding-left:25px">Category: ${command.category.charAt(0).toUpperCase() + command.category.slice(1)} </h3><h3 style="padding-left:25px">Usage: /${command.name} ${opts}</h3> ${command.description}</div>`)
+                }
+            }
+            openPopUp()
+        }
+
+        async function getCommands() {
+            commands = await get("/api/commands")
+            
+            commandsDiv = document.getElementById("commands")
+
+            counter = 0
+            for (command of commands) {
+                if (command.category) {
+                    counter += 1
+                    commandsDiv.innerHTML += `<div class="command" onclick="commandInfo('${command.name}')"><center class="noselect">${command.name}</center></div>`
+                }
+                
+            }
+            document.getElementById("commands-count").innerText = `(${counter})`
+        }
+
+        getCommands()
+
+        window.onload = async function () {
+            timer = 500
+            gradient = document.getElementById("gradient")
+            document.getElementById("gradient-text").style.opacity = "100%"
+            gradient.style.letterSpacing = "5px"
+            
+            setTimeout(function() {
+
+                document.getElementById("gradient-text").style.transition = "top 1s"
+                document.getElementById("gradient-text").style.top = "15%"
+                setTimeout(function() {
+                    document.getElementById("gradient-description").style.transition = "opacity 1s, padding 1s"
+                    document.getElementById("gradient-description").style.opacity = "100%"
+                    document.getElementById("gradient-description").style.padding = "10px"
+                }, timer)
+                
+            }, timer * 2)
+
+            for (let i = 1; i < 10; i++) {
+                try{setTimeout(function timer() {
+                    document.getElementById("topBar" + i).style.opacity = "100%"
+                    document.getElementById("topBar" + i).style.fontSize = "15px"
+                }, i * (timer / 10))}catch{}
+            }
+            
+        }
 
         function linkTo(where) {
             if (where == "/dashboard") document.getElementById("loading").style.top = "20px"
@@ -34,42 +164,16 @@
                     document.getElementById("topBar" + i).style.padding = "25px"
                 }, i * 50)}catch{}
             }
-            document.getElementById("servers").style.opacity = "0%"
             document.getElementById("gradient-description").style.transition = "opacity .5s, padding .5s"
             document.getElementById("gradient-description").style.opacity = "0%"
             document.getElementById("gradient-description").style.padding = "100px"
             document.getElementById("gradient-text").style.transition = "opacity .5s"
             document.getElementById("gradient-text").style.opacity = "0%"
-            for (item of items) document.getElementById("serverSettings-" + item).style.opacity = `0%`
-            for (item of itemsOnly) document.getElementById("serverSettings-" + item).style.opacity = `0%`
             setTimeout(() => {
                 window.open(where, '_self')
             }, 700);
             
         }
-
-    $.fn.followTo = function (pos) {
-        var $this = this,
-            $window = $(window);
-
-        $window.scroll(function (e) {
-            if ($window.scrollTop() > pos) {
-                $this.css({
-                    position: 'absolute',
-                    top: pos
-                });
-            } else {
-                $this.css({
-                    position: 'fixed',
-                    top: 0
-                });
-            }
-        });
-    };
-
-
-    $('#navBar').followTo(250);
-    
         
     </script>
 </html>

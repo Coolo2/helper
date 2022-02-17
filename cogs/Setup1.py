@@ -12,7 +12,7 @@ class Setup1(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
-    @slash_command(name="prefix", description="Set or get prefix for a server", aliases=['getprefix', 'setprefix', 'get-prefix', 'set-prefix'])
+    """@slash_command(name="prefix", description="Set or get prefix for a server", aliases=['getprefix', 'setprefix', 'get-prefix', 'set-prefix'])
     @commands.has_permissions(manage_guild=True)
     async def prefix(self, ctx, prefix : Option(str, description="The prefix to change to", required=False) = None):
         currentPrefix = functions.prefix(ctx.guild)
@@ -50,7 +50,7 @@ class Setup1(commands.Cog):
             )
         await functions.save_data("databases/prefixes.json", data)
 
-        await functions.read_load("databases/prefixes.json", data)
+        await functions.read_load("databases/prefixes.json", data)"""
     
     @slash_command(name="setup")
     async def setup(self, ctx):

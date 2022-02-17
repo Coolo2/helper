@@ -1,0 +1,25 @@
+1.0.0 - The long awaited rewrite is finally out!
+
+A complete rewrite of every command and event, this fixes bugs and comes with slash command support
+
+<u>Updated commands:</u>
+
+All commands have been rewritten, too many to list here
+
+<u>Improvements:</u>
+
+Slash command support
+Much improved dashboard
+Window based website design
+
+<u>Bug fixes:</u>
+
+Fixed an issue with <h>{prefix}userinfo</h> when you aren't playing a game
+
+<u>Website changes:</u>
+
+Discord embed for the website
+
+<u>Development changes:</u>
+
+-The rewriting of some commands has lowered some file sizes

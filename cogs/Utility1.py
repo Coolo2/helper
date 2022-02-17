@@ -103,7 +103,7 @@ Random number from **1** to **1,000,000**: {random.randint(1, 1000000)}""")
         embed.set_thumbnail(url=user.avatar.url)
         await ctx.respond(embed=embed)
     
-    @slash_command(name="serverinfo", description="|Get info on the server", aliases=['guildinfo', 'server-info', 'guild-info'])
+    @slash_command(name="serverinfo", description="Get info on the server", aliases=['guildinfo', 'server-info', 'guild-info'])
     @commands.guild_only()
     async def serverinfo(self, ctx):
         embed = discord.Embed(title="Information For " + ctx.guild.name, color=var.embed)

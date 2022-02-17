@@ -1,7 +1,7 @@
 [
     "You pick up cash of the floor and get {amount} credits",
     "You help a kid download an antivirus and are paid {amount} credits",
-    "You avoid a tech support scam and are donated {amoumnt} credits",
+    "You avoid a tech support scam and are donated {amount} credits",
     "You create a clickbait stream and are donated {amount} credits thinking it's real",
     "You find a penny on the floor and it turns out to be an ancient coin. You are paid {amount} credits",
     "You get tripped up and are paid {amount} credits for literally no reason",
@@ -13,10 +13,12 @@
     "You work as a babysitter and earn {amount} credits", 
     "You help someone fix a flat tire and they kindly give you {amount} credits", 
     "You do your chores for once and your mom gives you {amount} credits", 
-    "You sold you OG fortnite account and got {amount} credits", 
+    "You sold your OG fortnite account and got {amount} credits", 
     "You help a blind man find his way home and earn {amount} credits", 
     "You helped a homeless man and then realized it was all part of a social experiement and you got paid {amount} credits", 
-    "Yow code a bot called karrot which is identical to Helper and get {amount} in payment", 
+    "You code a bot called Karrot which is identical to Helper and get {amount} in payment", 
     "You helped a drowning person at the beach and he kindly gave you {amount} because you saved their life", 
-    "You helped an old man get home and he kindly gave you {amount}"
+    "You helped an old man get home and he kindly gave you {amount}",
+    "You screenshotted an NFT and sold it for {amount}",
+    "You worked as a Discord Moderator and earned {amount}"
 ]

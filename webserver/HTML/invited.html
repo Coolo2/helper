@@ -1,13 +1,13 @@
 <html>
     <head>
         <title>Helper Bot - Thank You!</title>
-        <link rel="stylesheet" href="/css/dashboard.css">
+        <link rel="stylesheet" href="/static/css/dashboard.css">
     </head>
     <body>
         <div style="color:white;position:fixed;height:50px;filter:hue-rotate(100deg) grayscale(1);z-index:100;background-color:black;width:100%;background: rgb(196,0,0);background: radial-gradient(circle, rgba(196,0,0,1) 45%, rgba(242,89,0,1) 100%);transition:top 0.5s" id="navBar">
             <span id="topBar1" class="vertical-center topBarItem" style="left:200px;" onclick="linkTo('/')">Home</span>
             <span id="topBar2" class="vertical-center topBarItem" style="left:400px;" onclick="linkTo('/dashboard')">Dashboard</span>
-            <span id="topBar3" class="vertical-center topBarItem" style="left:600px;">Status</span>
+            <span id="topBar3" class="vertical-center topBarItem" style="left:600px;" onclick="linkTo('/changelogs')">Changelogs</span>
         </div>
         <div style="white-space:nowrap;height:100%;width:100%;background: rgb(196,0,0);color:white;font-size:50px;top:50px;letter-spacing: 150px;transition: letter-spacing 1s, height 1s;
         background: linear-gradient(0deg, rgba(196,0,0,1) 0%, rgba(242,89,0,1) 100%);position:relative;text-align:center; z-index:10
@@ -31,17 +31,41 @@
                 position:absolute;left:calc(50% - 100px);">
                 <span class="noselect" style="display:table-cell;vertical-align:middle;">Dashboard</span>
             </div>
-            <div onmousedown="if (event.which == 2) {window.open('/status')};if (event.which == 1) {window.open('/status', '_self')}" class="buttonClick" style="
+            <div onmousedown="if (event.which == 2) {window.open('/changelogs')};if (event.which == 1) {window.open('/changelogs', '_self')}" class="buttonClick" style="
                 position:absolute;right:0;">
-                <span class="noselect" style="display:table-cell;vertical-align:middle;">Status</span>
+                <span class="noselect" style="display:table-cell;vertical-align:middle;">Changelogs</span>
             </div>
         </div>
 
-        <div style="position:absolute;z-index:2;height:99%;width:100%;transition:background-size 0.8s, filter 0.8s;background-image:url('/images/avatar.webp');background-size: 100%;background-position:50%;filter:blur(50px)" id="bg"></div>
+        <div style="position:absolute;z-index:2;height:99%;width:100%;transition:background-size 0.8s, filter 0.8s;background-image:url('/static/images/avatar.webp');background-size: 100%;background-position:50%;filter:blur(50px)" id="bg"></div>
 
     </body>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script>
+
+    function linkTo(where) {
+            if (where == "/dashboard") document.getElementById("loading").style.top = "20px"
+            if (where == "/") {
+                document.getElementById("gradient").style.transition = "height 0.75s, top 1s"
+                document.getElementById("gradient").style.height = "500px"
+            }
+            for (let i = 1; i < 10; i++) {
+                try{setTimeout(function timer() {
+                    document.getElementById("topBar" + i).style.opacity = "0%"
+                    document.getElementById("topBar" + i).style.fontSize = "0px"
+                    document.getElementById("topBar" + i).style.padding = "25px"
+                }, i * 50)}catch{}
+            }
+            document.getElementById("gradient-description").style.transition = "opacity .5s, padding .5s"
+            document.getElementById("gradient-description").style.opacity = "0%"
+            document.getElementById("gradient-description").style.padding = "100px"
+            document.getElementById("gradient-text").style.transition = "opacity .5s"
+            document.getElementById("gradient-text").style.opacity = "0%"
+            setTimeout(() => {
+                window.open(where, '_self')
+            }, 700);
+            
+        }
 
         window.onload = async function () {
             timer = 500

@@ -12,12 +12,23 @@ from discord.commands import slash_command, Option
 start_time = time.time()
 starttime2 = time.ctime(int(time.time()))
 
+async def help_autocomplete(ctx : discord.AutocompleteContext):
+    cmds = []
+    for category, commandNames in resources.commands.json.items():
+        for commandName in commandNames:
+            if ctx.focused and ctx.options[ctx.focused.name].lower() in commandName.lower():
+                cmds.append(commandName)
+            elif not ctx.focused:
+                cmds.append(commandName)
+    
+    return cmds
+
 class Information1(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
     @slash_command(name="help", description="Get help on the bot and it's commands", aliases=['cmds', 'commands', 'hlp', 'botcommands', 'bot-commands'])
-    async def help(self, ctx, command : Option(str, description="Specific command help", required=False) = None):
+    async def help(self, ctx, command : Option(str, description="Specific command help", required=False, autocomplete=help_autocomplete) = None):
         prefix = functions.prefix(ctx.guild) 
         if command == None:
             embed = discord.Embed(

@@ -1,5 +1,5 @@
 
-guilds = [447702058162978827]
+import os
 
 musicCommands = ["connect", "play", "pause", "stop", "resume", "skip", "queue", "now_playing", "volume", "musicping", "join", "summon", "shut", "q", "playlist", "np", "current", "currentsong", "playingnow", "playing", "vol", "leave", "disconnect", "die", "musicuptime", "loop"]
 
@@ -20,7 +20,12 @@ server = "https://discord.gg/HChmbSN"
 topgg = "https://top.gg/bot/486180321444888586"
 website = address
 
-botAdmins = [368071242189897728, 444176530357354527, 449662597927665666]
+botAdmins = [368071242189897728, 444176530357354527, 378189620288159754]
+
+# Slash Commands
+production = os.getenv("production")
+refreshSlash = False
+guilds = [447702058162978827]
 
 def get_client(client):
     global login 

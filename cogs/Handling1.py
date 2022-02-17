@@ -79,72 +79,7 @@ class Handling1(commands.Cog):
         print(f"{textformat.color.red}{error.__class__.__name__}{textformat.color.end} + {error}")
         embed = discord.Embed(title=msgUnkown, description=f"```{error}```\n\nJoin the [Support Server]({var.server}) for support.", colour=var.embedFail, timestamp=datetime.datetime.now())
         await ctx.respond(embed=embed)
-        await self.bot.get_user(var.owner).send(f"> Error in **{ctx.guild.name}** from **{ctx.author}**: `{error}`")
-    
-    async def customCommands(self, ctx, error):
-
-        commands = str(error).replace('Command "', '')
-        commands = commands.replace('" is not found', '')
-
-        with open("databases/commands.json") as f:
-            data = json.load(f)
-        
-        if str(ctx.guild.id) in data and commands in data[str(ctx.guild.id)]:
-            resp = data[str(ctx.guild.id)][commands]
-
-            brackets = re.findall(r"\{(.*?)\}",resp)
-            
-            for bracket in brackets:
-                try:
-                    split = bracket.split("/")
-                    bracketType = split[0]
-                    if bracketType.lower() in ["args", "arg", "arguments", "argument"]:
-                        args = ctx.message.content.split(" ")
-
-                        if split[1][-1] == ":":
-                            split[1] = split[1].replace(":", "")
-                            arg = args[int(split[1]):]
-                            search = "%s" % (" ".join(arg))
-                            if search.replace(" ", "") == "":
-                                resp = resp.replace("{" + bracket + "}", "None")
-                        else:
-                            arg = args[int(split[1])]
-                            search = "%s" % ("".join(arg))
-                        
-                        
-                        resp = resp.replace("{" + bracket + "}", search)
-
-                    if bracketType.lower() in ["randomchoice", "random-choice", "random"]:
-                        
-                        randomChoice = random.choice(split[1:])
-                        
-                        resp = resp.replace("{" + bracket + "}", randomChoice)
-                    
-                    if bracketType.lower() in ["member", "user", "membername", "username", "member-name", "user-name"]:
-
-                        resp = resp.replace("{" + bracket + "}", ctx.author.name)
-                    
-                    if bracketType.lower() in ["nickname", "nick-name"]:
-
-                        resp = resp.replace("{" + bracket + "}", ctx.author.display_name)
-                    
-                    if bracketType.lower() in ["@member", "@user", "@member-name", "@username"]:
-
-                        resp = resp.replace("{" + bracket + "}", ctx.author.mention)
-                    
-                    if bracketType.lower() in ["server", "guild", "servername", "guildname", "server-name", "guild-name"]:
-
-                        resp = resp.replace("{" + bracket + "}", ctx.guild.name)
-
-                except Exception as e:
-                    print(e)
-                    resp = resp.replace("{" + bracket + "}", "None")
-
-            await ctx.send(resp, allowed_mentions=discord.AllowedMentions(everyone=False, roles=False))
-        
-            return True
-        else:
-            return False
+        await self.bot.get_channel(927926604838109215).send(f"> Error in **{ctx.guild.name}** from **{ctx.author}**: `{error}`")
     
     async def getCommandFromError(self, error):
         commands = str(error).replace('Command "', '')
