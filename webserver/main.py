@@ -21,7 +21,7 @@ def webserver_run(client):
     global bot 
     bot = client
 
-app = Flask(__name__, template_folder=os.path.abspath('./webserver/HTML'))
+app = Flask("", template_folder=os.path.abspath('./webserver/HTML'), static_folder="webserver/static/")
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 
