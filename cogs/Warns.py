@@ -44,31 +44,36 @@ class Warns(commands.Cog):
         
         data = await functions.save_data("databases/warns.json", data)
 
-        what = await functions.check_events(self.bot, data, ctx.guild, member)
+        button = await functions.check_events(self.bot, data, ctx.guild, member)
         noArg = f"\n\n__Top tip!__ Add a warn reason with `{functions.prefix(ctx.guild)}warn [user] [reason]`!"
+
+        view = discord.ui.View()
+        view.timeout = 600
+        if button:
+            view.add_item(button)
 
         try:
             memberEmbed = discord.Embed(
                 title=random.choice(["Uh oh!", "Oops!", "Oh no!"]),
-                description=f"You have been warned in **{ctx.guild.name}** for: **{reason}**" + (f". You were also given a **{what}** automatically." if what != None else ""),
+                description=f"You have been warned in **{ctx.guild.name}** for: **{reason}**" + (f". You may also be given a **{button.name}**." if button != None else ""),
                 color=var.embedFail
             )
             await member.send(embed=memberEmbed)
             embed = discord.Embed(
                 title=random.choice([f"Successfully warned {member.display_name}", "Successfully warned!", f"Warned {member.display_name} successfully!"]),
-                description=f"Warned **{member.display_name}** successfully with reason: **{reason}**" + (f". They were also given a **{what}** due to your [Server Events]({var.address}/dashboard#{ctx.guild.id})" if what != None else "") + (noArg if reason == "None" else ""),
+                description=f"Warned **{member.display_name}** successfully with reason: **{reason}**" + (f". Due to your [Server Events]({var.address}/dashboard#{ctx.guild.id}), this user should now get a **{button.name}**. Use the button below to do this action." if button != None else "") + (noArg if reason == "None" else ""),
                 colour=var.embedSuccess
             )
         except:
             embed = discord.Embed(
                 title=random.choice([f"Successfully warned {member.display_name}", "Successfully warned!", f"Warned {member.display_name} successfully!"]),
-                description=f"Warned **{member.display_name}** successfully with reason: **{reason}**, however could not DM them." + (f". They were also given a **{what}** due to your [Server Events]({var.address}/dashboard#{ctx.guild.id})" if what != None else "") + (noArg if reason == "None" else ""),
+                description=f"Warned **{member.display_name}** successfully with reason: **{reason}**, however could not DM them." + (f". Due to your [Server Events]({var.address}/dashboard#{ctx.guild.id}), this user should now get a **{button.name}**. Use the button below to do this action." if button != None else "") + (noArg if reason == "None" else ""),
                 colour=var.embedSuccess
             )
         embed.add_field(name="Warn ID", value=len(data[str(ctx.guild.id)][str(member.id)]))
         embed.add_field(name="Moderator", value=str(ctx.author))
         embed.set_footer(text=f"{member.display_name} now has {len(data[str(ctx.guild.id)][str(member.id)])} warn(s)")
-        await ctx.respond(embed=embed)
+        await ctx.respond(embed=embed, view=view)
 
         # Log update if available
         embed = discord.Embed(title="User warned", color=var.embed, timestamp=datetime.now())

@@ -1,0 +1,9 @@
+py-cord==2.0.0b4
+discordwebhook.py==1.1.0
+EasyConversion
+requests
+flask
+pycryptodomex==3.14.1
+gevent==21.12.0
+Pillow==9.0.0
+urllib3==1.26.8

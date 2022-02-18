@@ -29,11 +29,6 @@
             <span style="display:table;margin:0 auto;" id="postMessage-box"></span>
         </div>
         <div style="overscroll-behavior: none;position: relative;height:calc(100% - 350px);padding-top:50px;top:50px;width:100%;overflow-x:auto;overflow-y:auto;transition:top 0.8s, height 0.8s" id="dashboardDiv">
-            <!--<div style="position:absolute;left:500px" id="serverSettings-prefix">
-                <div class="serverSettings-style-sectionTitle" style="padding:25px 0px 25px 0px">Server Prefix</div>
-                <input id="serverSettings-prefix-input" placeholder="Prefix input" class="input">
-                <button class="button" id="serverSettings-prefix-button" onclick="postData('/api/dashboard/setPrefix', {prefix:document.getElementById('serverSettings-prefix-input').value})">Submit prefix</button>
-            </div>-->
             <div style="position:absolute;left:500px" id="serverSettings-music">
                 <div class="serverSettings-style-sectionTitle" style="padding:25px 0px 25px 0px">Music Permissions and Voting</div>
                 <span style="color:white">Permissions</span>
@@ -123,10 +118,10 @@
                 <div style="color:#a3a3a3;font-size:20px;padding-left:5px;padding-bottom:5px">Logging Channel</div>
                 <select id="serverSettings-logging-channel" class="input" style="width:200px"></select>
 
-                <br><input type="checkbox" id="serverSettings-logging-messageDelete" disabled>
-                <label for="serverSettings-logging-messageDelete" data-balloon-length="medium" aria-label="Message delete and message edit logging have been disabled due to discord blocking bot permissions to read messages outside of slash commands" data-balloon-pos="left" style="color:grey"> Message delete</label>
+                <br><input type="checkbox" id="serverSettings-logging-messageDelete" oninput="saveLogging()" checked>
+                <label for="serverSettings-logging-messageDelete" style="color:white"> Message delete</label>
                 <br><input type="checkbox" id="serverSettings-logging-messageEdit" disabled>
-                <label for="serverSettings-logging-messageEdit" data-balloon-length="medium" aria-label="Message delete and message edit logging have been disabled due to discord blocking bot permissions to read messages outside of slash commands" data-balloon-pos="left" style="color:grey"> Message edit</label>
+                <label for="serverSettings-logging-messageEdit" data-balloon-length="medium" aria-label="Message edit logging have been disabled due to discord blocking bot permissions to read messages outside of slash commands" data-balloon-pos="left" style="color:grey"> Message edit</label>
 
                 <br><input type="checkbox" id="serverSettings-logging-channelCreate" oninput="saveLogging()" checked>
                 <label for="serverSettings-logging-channelCreate" style="color:white"> Channel Create</label>
@@ -653,13 +648,13 @@
                     newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><select oninput="updateTable()" id="serverSettings-events-table-row-${table.rows.length}-amount" class="input">${numbers}</select></th>`
                     newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><select oninput="updateTable()" id="serverSettings-events-table-row-${table.rows.length}-what" class="input"><option value="warns">Warn(s)</option></select></th>`
                     newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"> = </th>`
-                    newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><select oninput="updateTable()" id="serverSettings-events-table-row-${table.rows.length}-action" class="input"><option value="1hMute">1h Mute</option><option value="3hMute">3h Mute</option><option value="6hMute">6h Mute</option><option value="12hMute">12h Mute</option><option value="24hMute">24h Mute</option><option value="kick">Kick</option><option value="ban">Ban</option></select></th>`
+                    newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><select oninput="updateTable()" id="serverSettings-events-table-row-${table.rows.length}-action" class="input"><option value="1hMute">1h Mute</option><option value="3hMute">3h Mute</option><option value="6hMute">6h Mute</option><option value="12hMute">12h Mute</option><option value="24hMute">24h Mute</option><option value="1hTimeout">1h Timeout</option><option value="3hTimeout">3h Timeout</option><option value="6hTimeout">6h Timeout</option><option value="12hTimeout">12h Timeout</option><option value="24hTimeout">24h Timeout</option><option value="kick">Kick</option><option value="ban">Ban</option></select></th>`
                     newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><i onclick="table=document.getElementById('serverSettings-events-table').getElementsByTagName('tbody')[0];try{table.deleteRow(${table.rows.length-1})}catch{table.deleteRow(0)};updateTable()" id="serverSettings-events-table-row-delete" class="fa fa-times" aria-hidden="true"></i></th>`
                 } else {
                     newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><select id="serverSettings-events-table-row-${table.rows.length}-amount" class="inputdisabled" disabled>${numbers}</select></th>`
                     newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><select id="serverSettings-events-table-row-${table.rows.length}-what" class="inputdisabled" disabled><option value="warns">Warn(s)</option></select></th>`
                     newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"> = </th>`
-                    newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><select id="serverSettings-events-table-row-${table.rows.length}-action" class="inputdisabled" disabled><option value="1hMute">1h Mute</option><option value="3hMute">3h Mute</option><option value="6hMute">6h Mute</option><option value="12hMute">12h Mute</option><option value="24hMute">24h Mute</option><option value="kick">Kick</option><option value="ban">Ban</option></select></th>`
+                    newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><select id="serverSettings-events-table-row-${table.rows.length}-action" class="inputdisabled" disabled><option value="1hMute">1h Mute</option><option value="3hMute">3h Mute</option><option value="6hMute">6h Mute</option><option value="12hMute">12h Mute</option><option value="24hMute">24h Mute</option><option value="1hTimeout">1h Timeout</option><option value="3hTimeout">3h Timeout</option><option value="6hTimeout">6h Timeout</option><option value="12hTimeout">12h Timeout</option><option value="24hTimeout">24h Timeout</option><option value="kick">Kick</option><option value="ban">Ban</option></select></th>`
                     newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><i id="serverSettings-events-table-row-delete-missingperms" class="fa fa-times" aria-hidden="true"></i></th>`
                 }
                 

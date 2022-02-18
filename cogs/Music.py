@@ -7,12 +7,9 @@ import asyncio
 import datetime
 from setup import var
 
-from functions import library_overwrites
-
 # Code is in discord.js, Music dir
 # Registering commands
 
-discord.SlashCommandGroup.invoke_autocomplete_callback = library_overwrites.invoke_autocomplete_callback
 
 async def autocomplete_blank(ctx):
     pass

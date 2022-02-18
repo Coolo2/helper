@@ -27,23 +27,82 @@
         </div>
         <div style="z-index:3;width:90%;top:300px;height:500px;margin: auto;overflow-x:hidden;height: 700px;" class="horizontal-center">
             <div class="tile">
-                <img src="/static/images/examples-moderation.png" class="tile-image resize-image">
+                <img src="/static/images/examples-moderation.png" class="tile-image resize-image" >
                 <span class="noselect tile-title" >Simple Moderation</span>
                 <span class="horizontal-center tile-description">A simple moderation system which can be instantly applied to your server with no overcomplicated commands.</span>
             </div>
-            <div class="tile">
-                <img src="/static/images/examples-moderation.png" class="tile-image resize-image">
+            <div class="tile" >
+                <img src="/static/images/examples-moderation.png" class="tile-image resize-image" style="filter:blur(2px)">
                 <span class="noselect tile-title">Web Dashboard</span>
                 <span class="horizontal-center tile-description">A simple web dashboard to customise many things for the bot.</span>
             </div>
             <div class="tile">
-                <img src="/static/images/examples-moderation.png" class="tile-image resize-image">
+                <img src="/static/images/examples-moderation.png" class="tile-image resize-image" style="filter:blur(2px)">
                 <span class="noselect tile-title">Fun and Utility</span>
                 <span class="horizontal-center tile-description">Many fun, utility and economy commands to improve the experience for users in your server.</span>
             </div>
         </div>
-        <div class="horizontal-center" style="top:800px;font-size:50px;color:white;text-shadow: 0 0 10px black;z-index:4"><span>View The Commands</span><span id="commands-count"></span></div>
-        <div style="z-index:3;top:900px;" class="horizontal-center commands" id="commands"></div>
+        <table style="width:100%;top:1000px;position:absolute;z-index:10;border:1px solid white">
+            <tr class="tr">
+                <th class="td"></th>
+                <th class="td">Helper</th>
+                <th class="td">MEE6</th>
+                <th class="td">Dyno</th>
+            </tr>
+            <tr class="tr">
+                <td class="td">Simple mute and moderation</td>
+                <td class="td"><img width="50" src="/static/Images/white_check.svg"></td>
+                <td class="td"><img width="50" src="/static/Images/red_cross.png"></td>
+                <td class="td"><img width="50" src="/static/Images/white_check.svg"></td>
+            </tr>
+            <tr class="tr">
+                <td class="td">Warn Events</td>
+                <td class="td"><img width="50" src="/static/Images/white_check.svg"></td>
+                <td class="td"><img width="50" src="/static/Images/red_cross.png"></td>
+                <td class="td"><img width="50" src="/static/Images/red_cross.png"></td>
+            </tr>
+            <tr class="tr">
+                <td class="td">Full slash command support</td>
+                <td class="td"><img width="50" src="/static/Images/white_check.svg"></td>
+                <td class="td"><img width="50" src="/static/Images/white_check.svg"></td>
+                <td class="td"><img width="50" src="/static/Images/red_cross.png"></td>
+            </tr>
+            <tr class="tr">
+                <td class="td">Custom Slash Commands</td>
+                <td class="td"><img width="50" src="/static/Images/white_check.svg"></td>
+                <td class="td"><img width="50" src="/static/Images/red_cross.png"></td>
+                <td class="td"><img width="50" src="/static/Images/red_cross.png"></td>
+            </tr>
+            <tr class="tr">
+                <td class="td">Fully Free Forever</td>
+                <td class="td"><img width="50" src="/static/Images/white_check.svg"></td>
+                <td class="td"><img width="50" src="/static/Images/red_cross.png"></td>
+                <td class="td"><img width="50" src="/static/Images/red_cross.png"></td>
+            </tr>
+            <tr class="tr">
+                <td class="td">Open source</td>
+                <td class="td"><img width="50" src="/static/Images/white_check.svg"></td>
+                <td class="td"><img width="50" src="/static/Images/red_cross.png"></td>
+                <td class="td"><img width="50" src="/static/Images/red_cross.png"></td>
+            </tr>
+            <tr class="tr">
+                <td class="td">Free music effects</td>
+                <td class="td"><img width="50" src="/static/Images/white_check.svg"></td>
+                <td class="td"><img width="50" src="/static/Images/red_cross.png"></td>
+                <td class="td"><img width="50" src="/static/Images/red_cross.png"></td>
+            </tr>
+        </table>
+        <div style="top:1500px;position:absolute;color:rgb(116, 116, 116);padding-left:50px;font-style:italic;font-size:15px">
+            * Based on the state of these bots in October 2021
+        </div>
+        <div style="width:100%;text-align:center;top:1550px;position:absolute;color:white">
+            Helper Bot is a Multipurpose discord bot designed to engage your server while still providing an all-round moderation system.
+            <br>
+            You have nothing to lose, why not <a href="/invite" target="_blank" style="color:white">invite Helper Bot to your server</a>?
+        </div>
+
+        <div class="horizontal-center" style="top:1700px;font-size:50px;color:white;text-shadow: 0 0 10px black;z-index:4"><span>View The Commands</span><span id="commands-count"></span></div>
+        <div style="z-index:3;top:1800px;" class="horizontal-center commands" id="commands"></div>
         <div id="popup" class="all-center">
             <div id="popup-content" class="all-center">
                 <div style="height:50px;top:0;width:100%;background:rgb(196,0,0);background: radial-gradient(circle, rgba(196,0,0,1) 45%, rgba(242,89,0,1) 100%)">
@@ -57,6 +116,14 @@
     </body>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script>
+        function inIframe () {
+            try {
+                return window.self !== window.top;
+            } catch (e) {
+                return true;
+            }
+        }
+
         async function get(theUrl) {
 
             const settings = {
@@ -100,7 +167,7 @@
                         opts += ` ${required}{${option.name}}`
                     }
 
-                    setPopUpHTML(`<div style="padding-left:10px"><h1>/${command.name}</h1> <h3 style="padding-left:25px">Category: ${command.category.charAt(0).toUpperCase() + command.category.slice(1)} </h3><h3 style="padding-left:25px">Usage: /${command.name} ${opts}</h3> ${command.description}</div>`)
+                    setPopUpHTML(`<div style="padding-left:10px;color:white"><h1>/${command.name}</h1> <h3 style="padding-left:25px">Category: ${command.category.charAt(0).toUpperCase() + command.category.slice(1)} </h3><h3 style="padding-left:25px">Usage: /${command.name} ${opts}</h3> ${command.description}</div>`)
                 }
             }
             openPopUp()

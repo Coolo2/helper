@@ -4,7 +4,7 @@ import os, time, json, base64
 from setup import var
 from webserver.oauth import Oauth as oauth
 from functions import functions, encryption
-from functions import functions, customCommands, library_overwrites
+from functions import functions, customCommands
 import discord 
 import datetime
 import resources
@@ -85,17 +85,17 @@ def commandsAPI():
 def userinfoAPI():
     try:
         user = request.cookies.get('user').split(";;;;")
-        id = encryption.decode(user[1], encryptionKey)
+        user_id = encryption.decode(user[1], encryptionKey)
         name = encryption.decode(user[2], encryptionKey)
         avatar = encryption.decode(user[3], encryptionKey)
-        user = bot.get_user(int(id))
+        user = bot.get_user(int(user_id))
     except:
         return jsonify({"user":None, "type":"unknown"})
     
     if not user:
         return jsonify({
             "user":{
-                "id":id,
+                "id":user_id,
                 "name":name,
                 "avatar":avatar
             }, 
@@ -118,18 +118,15 @@ def userinfoAPI():
 def admin():
     try:
         code = request.args['code']
-        print(code)
         access_token=oauth.get_access_token(code)
-        print(access_token)
         user_json = oauth.get_user_json(access_token)
-        print(user_json)
     except Exception as e:
         print(e)
         return redirect(var.login)
     try:
         
-        id = user_json["id"]
-        user = bot.get_user(int(id))
+        user_id = user_json["id"]
+        user = bot.get_user(int(user_id))
         resp = make_response(redirect("/#dashboard"))
         cookiestring = ''
         cookiestring = cookiestring + ';;;;' + encryption.encode(str(user_json['id']), encryptionKey).decode("utf-8")
@@ -145,7 +142,7 @@ def admin():
 def dashboard():
     try:
         user = request.cookies.get('user').split(";;;;")
-        id = encryption.decode(user[1], encryptionKey)
+        user_id = encryption.decode(user[1], encryptionKey)
         name = encryption.decode(user[2], encryptionKey)
     except:
         resp = make_response(redirect("/login"))
@@ -157,7 +154,7 @@ def dashboard():
 def dashboardWith(server):
     try:
         user = request.cookies.get('user').split(";;;;")
-        id = encryption.decode(user[1], encryptionKey)
+        user_id = encryption.decode(user[1], encryptionKey)
         name = encryption.decode(user[2], encryptionKey)
     except:
         return redirect("/login")

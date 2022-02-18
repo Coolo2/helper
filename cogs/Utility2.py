@@ -2,11 +2,13 @@ from discord.ext import commands
 import discord
 
 import random, os, json
+from discord import webhook
 from functions import customerror, functions, google
 from setup import var
 from datetime import datetime, timedelta
-from discordwebhook import asyncCreate
 import aiohttp
+
+import discordwebhook
 
 from discord.commands import slash_command, Option
 
@@ -18,7 +20,7 @@ class Utility2(commands.Cog):
     async def embed(
         self, 
         ctx, 
-        message : Option(str, description="The description to go into the embed"),
+        description : Option(str, description="The description to go into the embed"),
         me : Option(bool, description="Send the embed as yourself", required=False) = None,
         title : Option(str, description="The title of the embed", required=False) = None,
         footer : Option(str, description="The footer of the embed", required=False) = None,
@@ -26,7 +28,8 @@ class Utility2(commands.Cog):
         image : Option(str, description="Image URL", required=False) = None
     ):
 
-        prefix = functions.prefix(ctx.guild)
+        embed = None 
+        webhookEmbed = None
 
         if color == None:
             color = "None"
@@ -41,16 +44,21 @@ class Utility2(commands.Cog):
                 color = var.embed
 
         if title and footer:
-            embed = discord.Embed(title=title, description=message, color=color)
+            embed = discord.Embed(title=title, description=description, color=color)
+            webhookEmbed = discordwebhook.Embed(title=title, description=description, color=color)
         elif title:
-            embed = discord.Embed(title=title, description=message)
+            embed = discord.Embed(title=title, description=description)
+            webhookEmbed = discordwebhook.Embed(title=title, description=description)
         else:
-            embed = discord.Embed(description=message)
+            embed = discord.Embed(description=description)
+            webhookEmbed = discordwebhook.Embed(description=description)
         
         if footer:
             embed.set_footer(text=footer)
+            webhookEmbed.set_footer(text=footer)
         if image:
             embed.set_thumbnail(url=image)
+            webhookEmbed.set_thumbnail(url=image)
 
         if me:
 
@@ -65,21 +73,10 @@ class Utility2(commands.Cog):
                 print(e)
                 raise commands.BotMissingPermissions(["manage_webhooks"])
             
-            main = asyncCreate.Webhook()
-            main.avatar_url(str(ctx.author.avatar.url))
-            main.author(ctx.author.display_name)
+            webhook = discordwebhook.Webhook(url=finalwebhook.url)
 
-            embed = asyncCreate.Embed()
-            if title:
-                embed.title(title)
-            if footer:
-                embed.set_footer(text=footer)
-            if image:
-                embed.set_thumbnail(url=image)
-            embed.description(message)
-            embed.color(color) 
             await ctx.defer()
-            return await main.send(finalwebhook.url, embed=embed)
+            return await webhook.send_async(embed=embed, username=ctx.author.display_name, avatar_url=ctx.author.avatar.url)
         
         await ctx.respond(embed=embed)
 

@@ -24,6 +24,11 @@ class Cooldowns():
 
         return self.getCooldown(name, user)
     
+    def clearCooldown(self, name : str, user : discord.User):
+        
+        if name in self.data and str(user.id) in self.data[name]:
+            del self.data[name][str(user.id)]
+        
     def getCooldown(self, name : str, user : discord.User):
         """[Get the cooldwown for a user]
 

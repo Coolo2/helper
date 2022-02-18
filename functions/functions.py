@@ -8,6 +8,8 @@ from datetime import datetime, timedelta
 from urllib.parse import urlparse
 from difflib import SequenceMatcher
 
+from functions import components, classes
+
 def get_bot_users(bot):
     servers = list(bot.guilds)
     counter = 0
@@ -148,7 +150,7 @@ async def mute (bot, guild, member : discord.Member, length):
     embed.add_field(name="Errors", value=f"{errors-1} errors")
     return embed
 
-async def check_events(bot, warns, guild, member):
+async def check_events(bot : discord.Bot, warns : dict, guild : discord.Guild, member : discord.Member):
 
     events = await read_data("databases/events.json")
     
@@ -159,29 +161,32 @@ async def check_events(bot, warns, guild, member):
         if str(member.id) in warns[str(guild.id)]:
             for event in events[str(guild.id)]:
                 if event["what"] == "warns":
-                    if len(warns[str(guild.id)][str(member.id)]) >= int(event["amount"]):
+                    if len(warns[str(guild.id)][str(member.id)]) == int(event["amount"]):
 
                         if event["action"] == "1hMute":
-                            await mute(bot, guild, member, "1h")
-                            return "1 hour mute"
+                            return components.EventConfirmationButton(member, mute(bot, guild, member, "1h"), classes.EventType.mute, "1 Hour Mute")
                         if event["action"] == "3hMute":
-                            await mute(bot, guild, member, "3h")
-                            return "3 hour mute"
+                            return components.EventConfirmationButton(member, mute(bot, guild, member, "3h"), classes.EventType.mute, "3 Hour Mute")
                         if event["action"] == "6hMute":
-                            await mute(bot, guild, member, "6h")
-                            return "6 hour mute"
+                            return components.EventConfirmationButton(member, mute(bot, guild, member, "6h"), classes.EventType.mute, "6 Hour Mute")
                         if event["action"] == "12hMute":
-                            await mute(bot, guild, member, "12h")
-                            return "12 hour mute"
+                            return components.EventConfirmationButton(member, mute(bot, guild, member, "12h"), classes.EventType.mute, "12 Hour Mute")
                         if event["action"] == "24hMute":
-                            await mute(bot, guild, member, "24h")
-                            return "24 hour mute"
+                            return components.EventConfirmationButton(member, mute(bot, guild, member, "24h"), classes.EventType.mute, "24 Hour Mute")
+                        if event["action"] == "1hTimeout":
+                            return components.EventConfirmationButton(member, member.timeout_for(timedelta(hours=1)), classes.EventType.timeout, "1 Hour Timeout")
+                        if event["action"] == "3hTimeout":
+                            return components.EventConfirmationButton(member, member.timeout_for(timedelta(hours=3)), classes.EventType.timeout, "3 Hour Timeout")
+                        if event["action"] == "6hTimeout":
+                            return components.EventConfirmationButton(member, member.timeout_for(timedelta(hours=6)), classes.EventType.timeout, "6 Hour Timeout")
+                        if event["action"] == "12hTimeout":
+                            return components.EventConfirmationButton(member, member.timeout_for(timedelta(hours=12)), classes.EventType.timeout, "12 Hour Timeout")
+                        if event["action"] == "24hTimeout":
+                            return components.EventConfirmationButton(member, member.timeout_for(timedelta(hours=24)), classes.EventType.timeout, "24 Hour Timeout")
                         if event["action"] == "kick":
-                            await member.kick(reason=str(len(warns[str(guild.id)][str(member.id)])) + " warns")
-                            return "kick"
+                            return components.EventConfirmationButton(member, member.kick(reason=str(len(warns[str(guild.id)][str(member.id)])) + " warns"), classes.EventType.kick, "Kick")
                         if event["action"] == "ban":
-                            await member.ban(reason=str(len(warns[str(guild.id)][str(member.id)])) + " warns")
-                            return "ban"
+                            return components.EventConfirmationButton(member, member.ban(reason=str(len(warns[str(guild.id)][str(member.id)])) + " warns"), classes.EventType.kick, "Ban")
     return None
 
 

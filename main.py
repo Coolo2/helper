@@ -4,17 +4,13 @@ import asyncio
 
 import json, os
 from EasyConversion.textformat import color as c
-from functions import functions, customCommands, library_overwrites
+from functions import functions, customCommands
 from setup import var
 from webserver import main
 from datetime import datetime
 
-from dotenv import load_dotenv
-load_dotenv('.env')
-
 intents = discord.Intents.default()
 intents.members = True
-intents.message_content = False
 
 def get_prefix(bot, message):
     try:
@@ -28,23 +24,18 @@ def get_prefix(bot, message):
 
 bot = discord.Bot(command_prefix=get_prefix, case_insensitive=True, intents=intents, debug_guilds=[447702058162978827])
 
-# Library overwrites
-#bot.on_connect = library_overwrites.on_connect_overwrite_sync(bot)
-#bot.register_commands = library_overwrites.register_commands_update(bot)
-
 extensions = [file.replace(".py", "") for file in os.listdir('./cogs') if file.endswith(".py")]
 
 @bot.event 
 async def on_ready():
-    print(c.end + "Loading Slash Commands...")
-    await customCommands.sync_custom_commands(bot)
-    
     print(c.green + c.underline + bot.user.name + " online" + c.end)
 
     var.get_client(bot)
     
     await bot.change_presence(activity=discord.Game(name=f"/help | v{var.version} | {len(bot.guilds)} servers"))
     ping_files.start()
+
+    await customCommands.sync_custom_commands(bot)
 
 @tasks.loop(seconds=10)
 async def ping_files():

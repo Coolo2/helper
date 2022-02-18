@@ -8,10 +8,11 @@ from functions import functions
 from datetime import datetime, timedelta
 import requests, aiohttp, asyncio
 import emoji as emojis
-from discordwebhook import asyncCreate
 import inspect
 from discord.ext.commands import MemberConverter
 import re
+
+import discordwebhook
 
 from discord.commands import slash_command, Option
 
@@ -295,13 +296,19 @@ class Fun1(commands.Cog):
         except:
             raise commands.BotMissingPermissions(["manage_webhooks"])
         
-        main = asyncCreate.Webhook(finalwebhook.url)
-        main.avatar_url(str(member.avatar.url))
-        main.author(member.display_name)
-        main.message(message)
+        webhook = discordwebhook.Webhook(finalwebhook.url)
+
         if not ctx.author.guild_permissions.mention_everyone:
-            main.allowed_mentions(everyone=False, roles=False)
-        await main.send()
+            allowed_mentions = discordwebhook.AllowedMentions(everyone=False, roles=False)
+        else:
+            allowed_mentions = discordwebhook.AllowedMentions()
+
+        await webhook.send_async(
+            content=message,
+            avatar_url=str(member.avatar.url),
+            username=member.display_name,
+            allowed_mentions=allowed_mentions
+        )
 
         await functions.save_data("databases/userSettings.json", data)
         await functions.read_load("databases/userSettings.json", data)

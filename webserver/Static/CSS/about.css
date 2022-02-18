@@ -422,6 +422,17 @@ textarea:focus, input:focus, select:focus{
     padding:10px
 }
 
+.tr {
+    border:1px solid white
+}
+.td {
+    border:1px solid white;
+    width:25%;
+    height:50px;
+    color:white;
+    padding:5px;
+}
+
 .command {
     background:linear-gradient(0deg, rgba(196,0,0,1) 0%, rgb(242, 77, 0) 100%);
     color: #fff;
