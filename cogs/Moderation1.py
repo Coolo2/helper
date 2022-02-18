@@ -38,14 +38,12 @@ class Moderation1(commands.Cog):
     @commands.guild_only()
     async def ban(self, ctx, 
         member : Option(discord.Member, description="The member to ban"), 
+        delete_message_days : Option(int, description="The amount of days of messages to delete (defaults to 0)", min_value=0, required=False) = 0,
         reason : Option(str, description="The reason to show in audit logs", required=False) = None
     ):
         if ctx.author.guild_permissions.ban_members and ctx.author.top_role.position > member.top_role.position or ctx.guild.owner == ctx.author:
             try:
-                if reason == None:
-                    await member.ban()
-                else:
-                    await member.ban(reason=reason)
+                await member.ban(reason=reason, delete_message_days=delete_message_days)
             except:
                 raise commands.BotMissingPermissions(["ban_members"])
             embed = discord.Embed(title=random.choice(["Banned successfully!", "Banned!", "Successfully banned!"]), description=f"Successfully banned **{member.display_name}**{' with reason **' if reason != None else ''}{reason + '**' if reason != None else ''}", colour=var.embedSuccess)

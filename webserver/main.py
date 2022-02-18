@@ -4,7 +4,7 @@ import os, time, json, base64
 from setup import var
 from webserver.oauth import Oauth as oauth
 from functions import functions, encryption
-from functions import functions, customCommands
+from functions import functions, customCommands, library_overwrites
 import discord 
 import datetime
 import resources
@@ -504,7 +504,7 @@ def setCustomCommands():
         functions.read_load_sync("databases/commands.json", commands)
 
         
-        bot.loop.create_task(customCommands.doGuildCustomCommands(bot, guild.id, commands[str(guild.id)]))
+        bot.loop.create_task(customCommands.sync_custom_commands(bot))
 
         # Log update if available
         embed = discord.Embed(title="Custom Commands updated", color=var.embed, timestamp=datetime.datetime.now())

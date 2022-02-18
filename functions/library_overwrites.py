@@ -4,25 +4,8 @@ from setup import var
 from functions import customCommands
 import json
 import sys
-async def add_custom_commands(bot : discord.Bot):
 
-    print(bot.guilds)
 
-    with open("databases/commands.json") as f:
-        data = json.load(f)
-    
-    toRemove = []
-    for guild_id in data:
-        if not bot.get_guild(int(guild_id)):
-            toRemove.append(guild_id)
-    
-    for removeable in toRemove:
-        del data[removeable]
-
-    for guild_id in data:
-        await customCommands.doGuildCustomCommands(bot, int(guild_id), data[guild_id], register=False)
-
-    await bot.sync_commands()
 
 
 def on_connect_overwrite_sync(bot : discord.Bot, guild_id = int):

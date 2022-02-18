@@ -9,6 +9,7 @@ __pycache__/
 *.so
 
 node_modules/
+package_lock.json
 
 # Distribution / packaging
 .Python

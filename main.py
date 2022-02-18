@@ -37,7 +37,7 @@ extensions = [file.replace(".py", "") for file in os.listdir('./cogs') if file.e
 @bot.event 
 async def on_ready():
     print(c.end + "Loading Slash Commands...")
-    #await library_overwrites.add_custom_commands(bot)
+    await customCommands.sync_custom_commands(bot)
     
     print(c.green + c.underline + bot.user.name + " online" + c.end)
 
