@@ -32,7 +32,7 @@
             <div style="position:absolute;left:500px" id="serverSettings-music">
                 <div class="serverSettings-style-sectionTitle" style="padding:25px 0px 25px 0px">Music Permissions and Voting</div>
                 <span style="color:white">Permissions</span>
-                <button class="button" style="top:75px;right:10px;position:absolute" onclick="setMusicDefault()">Reset to default</button>
+                <button class="button" style="top:75px;right:10px;position:absolute" onclick="setMusicDefault()" id="resetMusic">Reset to default</button>
                 <span>
                     <select class="input" oninput="submitMusic()" id="serverSettings-music-permissions">
                     </select>
@@ -506,6 +506,19 @@
             document.getElementById("serverSettings-music-commands-right").innerHTML = ``
             document.getElementById("serverSettings-music-permissions").innerHTML = ``
             
+            if (guildData.has_permissions.manage_guild) {
+                disabled = ``
+                document.getElementById("serverSettings-music-permissions").disabled = false
+                document.getElementById("serverSettings-music-permissions").classList = "input"
+                document.getElementById("resetMusic").disabled = false 
+                document.getElementById("resetMusic").classList = "button"
+            } else {
+                disabled = `disabled`
+                document.getElementById("serverSettings-music-permissions").disabled = true
+                document.getElementById("serverSettings-music-permissions").classList = "inputdisabled"
+                document.getElementById("resetMusic").disabled = true 
+                document.getElementById("resetMusic").classList = "buttondisabled"
+            }
 
             counter = 0
             for (command in musicCommands) {
@@ -526,7 +539,7 @@
                 if (counter < (7)) {
                     section = document.getElementById("serverSettings-music-commands-left")
                 } else {section = document.getElementById("serverSettings-music-commands-right")}
-                section.innerHTML += `<br><br><span style="color:#a3a3a3">${command.toProperCase()}</span><span>  </span><span><select oninput="submitMusic()" id="serverSettings-music-commands-${command}" class="input">${options}</select></span>`
+                section.innerHTML += `<br><br><span style="color:#a3a3a3">${command.toProperCase()}</span><span>  </span><span><select oninput="submitMusic()" id="serverSettings-music-commands-${command}" class="input${disabled}" ${disabled}>${options}</select></span>`
             }
 
             for (permission of musicPermissions) {
@@ -535,6 +548,7 @@
                     selected = " selected"
                 }
                 document.getElementById("serverSettings-music-permissions").innerHTML += `<option value="${permission}"${selected}>${permission.toLowerCase().split("_").join(" ").toProperCase()}</option>`
+                
             }
         } 
 
@@ -555,7 +569,7 @@
             await postData("/api/dashboard/setMusic", toSubmit)
         }
 
-        loggingOptions = ["channelCreate", "channelDelete", "roleCreate", "roleDelete", "nicknameChange", "dashboardUse", "warns"]
+        loggingOptions = ["messageDelete", "channelCreate", "channelDelete", "roleCreate", "roleDelete", "nicknameChange", "dashboardUse", "warns"]
 
         async function saveLogging() {
             loggingChannel = document.getElementById("serverSettings-logging-channel")
@@ -728,6 +742,7 @@
                 for (warn in guildData.warns[warnMember]) {
                     warnSelect = guildData.warns[warnMember][warn]
                     warnMemberName = "Unknown"
+                    warnModName = "Unknown"
                     for (member of guildData.members) {if (member.id == warnSelect.mod) {warnModName = member.tag};if (member.id == warnMember) {warnMemberName = member.tag}}
                     var newRow = tableRef.insertRow(tableRef.rows.length);
                     newRow.id = `serverSettings-warns-table-row`

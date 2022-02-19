@@ -2,8 +2,8 @@ import requests
 from setup import var
 
 class Oauth(object):
-    client_id = "444882566529417216"
-    client_secret = "DOpMSrjEyWDvttUK2bbCNdqWVnATL4SH"
+    client_id = var.client_id
+    client_secret = var.client_secret
     scope = "identify%20guilds"
     redirect_uri = var.address + "/login"
     discord_login_url = var.login

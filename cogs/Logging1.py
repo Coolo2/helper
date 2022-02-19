@@ -15,7 +15,6 @@ class Logging1(commands.Cog):
     
     @commands.Cog.listener()
     async def on_message_delete(self, message):
-        print("f")
         desc = message.content
 
         if desc == "" or not desc:
@@ -26,7 +25,7 @@ class Logging1(commands.Cog):
 
         embed = discord.Embed(title="Message Deleted in #" + message.channel.name, description=desc, color=var.embedFail, timestamp=message.created_at)
         embed.set_footer(text="Original message sent at")
-        embed.set_author(name="User: " + str(message.author), icon_url=message.author.avatar.url)
+        embed.set_author(name="User: " + str(message.author), icon_url=message.author.avatar.url if message.author.avatar else None)
 
         await functions.log(self.bot, "delete", message.guild, embed)
     
@@ -89,7 +88,7 @@ class Logging1(commands.Cog):
             embed.add_field(name="Before:", value= before.name + " (username)" if before.nick == None else before.nick, inline=False)
             embed.add_field(name="After:", value= after.name + " (reset)" if after.nick == None else after.nick, inline=False)
 
-            embed.set_author(name="User: " + str(before), icon_url=after.avatar.url)
+            embed.set_author(name="User: " + str(before), icon_url=after.avatar.url if after.avatar else None)
 
             await functions.log(self.bot, "nicknameChange", after.guild, embed)
 

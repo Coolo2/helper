@@ -80,7 +80,7 @@ class Warns(commands.Cog):
         embed.add_field(name="User:", value=str(member), inline=False)
         embed.add_field(name="Reason:", value=str(reason), inline=False)
         embed.add_field(name="Moderator", value=str(ctx.author))
-        embed.set_author(name=f"User: {member}", icon_url=member.avatar.url)
+        embed.set_author(name=f"User: {member}", icon_url=member.avatar.url if member.avatar else None)
 
         await functions.log(self.bot, "warns", ctx.guild, embed)
     
@@ -178,7 +178,7 @@ class Warns(commands.Cog):
         embed = discord.Embed(title="Warn deleted", color=var.embedFail, timestamp=datetime.now())
         embed.add_field(name="User:", value=str(member), inline=False)
         embed.add_field(name="Moderator", value=str(ctx.author))
-        embed.set_author(name=f"User: {member}", icon_url=member.avatar.url)
+        embed.set_author(name=f"User: {member}", icon_url=member.avatar.url if member.avatar else None)
 
         await functions.log(self.bot, "warns", ctx.guild, embed)
     

@@ -65,7 +65,6 @@ async def globally_blacklist_roles(ctx):
 
 if __name__ == '__main__':
     print(f'\n--- Extensions {", ".join(extensions)} ---')
-    #bot.load_extension('cogs.'+ "Music")
 
     for extension in extensions:
         try:

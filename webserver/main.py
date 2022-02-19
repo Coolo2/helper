@@ -106,8 +106,8 @@ def userinfoAPI():
             "user":{
                 "id":str(user.id),
                 "name":user.name,
-                "avatar":user.avatar.url,
-                "mutual":[{"id":str(guild.id), "name":guild.name, "icon":guild.icon.url} for guild in bot.guilds if guild.get_member(int(user.id))]
+                "avatar":user.avatar.url if user.avatar else None,
+                "mutual":[{"id":str(guild.id), "name":guild.name, "icon":guild.icon.url if guild.icon else None} for guild in bot.guilds if guild.get_member(int(user.id))]
             }, 
             "type":"mutual"
         })
@@ -265,7 +265,7 @@ def setAutorole():
         # Log update if available
         embed = discord.Embed(title="Autorole role updated", color=var.embed, timestamp=datetime.datetime.now())
         embed.add_field(name="New:", value=guild.get_role(int(role)).mention, inline=False)
-        embed.set_author(name=f"User: {member}", icon_url=member.avatar.url)
+        embed.set_author(name=f"User: {member}", icon_url=member.avatar.url if member.avatar else None)
 
         bot.loop.create_task(functions.log(bot, "dashboardUse", guild, embed))
             
@@ -316,7 +316,7 @@ def setLogging():
         embed = discord.Embed(title="Logging setting updated", color=var.embed, timestamp=datetime.datetime.now())
         embed.add_field(name="Channel:", value=f"<#{loggingData['channel'] if 'channel' in loggingData else 'None'}>", inline=False)
         embed.add_field(name="Settings:", value=loggingSettings, inline=False)
-        embed.set_author(name=f"User: {member}", icon_url=member.avatar.url)
+        embed.set_author(name=f"User: {member}", icon_url=member.avatar.url if member.avatar else None)
 
         bot.loop.create_task(functions.log(bot, "dashboardUse", guild, embed))
 
@@ -443,7 +443,7 @@ def setEvents():
         # Log update if available
         embed = discord.Embed(title="Events updated", color=var.embed, timestamp=datetime.datetime.now())
         embed.add_field(name="Events:", value=eventsText, inline=False)
-        embed.set_author(name=f"User: {member}", icon_url=member.avatar.url)
+        embed.set_author(name=f"User: {member}", icon_url=member.avatar.url if member.avatar else None)
 
         bot.loop.create_task(functions.log(bot, "dashboardUse", guild, embed))
 
@@ -506,7 +506,7 @@ def setCustomCommands():
         # Log update if available
         embed = discord.Embed(title="Custom Commands updated", color=var.embed, timestamp=datetime.datetime.now())
         embed.add_field(name="Commands:", value=f"Too many to send here. View them on the [Web Dashboard]({var.address}#dashboard)", inline=False)
-        embed.set_author(name=f"User: {member}", icon_url=member.avatar.url)
+        embed.set_author(name=f"User: {member}", icon_url=member.avatar.url if member.avatar else None)
 
         bot.loop.create_task(functions.log(bot, "dashboardUse", guild, embed))
         
@@ -541,7 +541,7 @@ def delWarn():
         embed = discord.Embed(title="Warn deleted (from dashboard)", color=var.embedFail, timestamp=datetime.datetime.now())
         embed.add_field(name="User:", value=f"<@{data['member']}>", inline=False)
         embed.add_field(name="Moderator", value=str(member))
-        embed.set_author(name=f"User: {member}", icon_url=member.avatar.url)
+        embed.set_author(name=f"User: {member}", icon_url=member.avatar.url if member.avatar else None)
 
         bot.loop.create_task(functions.log(bot, "warns", guild, embed))
 

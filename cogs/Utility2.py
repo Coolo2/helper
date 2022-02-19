@@ -76,7 +76,7 @@ class Utility2(commands.Cog):
             webhook = discordwebhook.Webhook(url=finalwebhook.url)
 
             await ctx.defer()
-            return await webhook.send_async(embed=embed, username=ctx.author.display_name, avatar_url=ctx.author.avatar.url)
+            return await webhook.send_async(embed=embed, username=ctx.author.display_name, avatar_url=ctx.author.avatar.url if ctx.author.avatar else None)
         
         await ctx.respond(embed=embed)
 

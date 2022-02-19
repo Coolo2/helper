@@ -97,7 +97,7 @@ async def sync_custom_commands(bot : discord.Bot):
         await doGuildCustomCommands(bot, int(guild_id), data[guild_id])
 
     for command in bot.commands:
-        if command.guild_ids and len(command.guild_ids) > 0 and (command.name not in data[str(command.guild_ids[0])]) and "Helper Bot Custom Command" in command.description:
+        if command.guild_ids and len(command.guild_ids) > 0 and (str(command.guild_ids[0]) in data and command.name not in data[str(command.guild_ids[0])]) and "Helper Bot Custom Command" in command.description:
             unregister_guilds.append(command.guild_ids[0])
             bot.remove_application_command(command)
 

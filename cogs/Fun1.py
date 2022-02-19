@@ -123,30 +123,6 @@ class Fun1(commands.Cog):
         
         return await ctx.respond(emoji + " " + message.replace(" ", f" {emoji} ") + " " + emoji, allowed_mentions=discord.AllowedMentions(everyone=False, roles=False))
     
-    @slash_command(name="colorfilter", description="Blurpify an image", aliases=["colourfilter", "color-filter", "colour-filter"])
-    async def colorfilter(self, ctx, color : Option(str, description="The colour to filter"), args : Option(str, name="url_user", description="The URL or user to use the image of", required=False) = None):
-        with open("resources/colors.json") as f:
-            colors = json.load(f)
-        colorHex = ""
-        color = color.replace("#", "")
-        for colour in colors:
-            if colour[1].lower() == color.lower() or colour[0].lower() == color.lower():
-                colorHex = colour[0]
-        if colorHex == "":
-            if len(color) == 6 and False not in [c in "ABCDEF0123456789" for c in color.upper()]:
-                colorHex = color 
-            else:
-                raise customerror.MildErr(f"Invalid color! Make sure it is valid hex (eg: `#FF0000`) or is a valid color name.")
-        imgURL = await functions.imageFromArg(ctx, args, ("image/png", "image/jpeg", "image/jpg"), ["png", "jpg", "jpeg"])
-        if imgURL == False:
-            raise customerror.MildErr("Could not find image! This command support png and jpeg images only.")
-        try:
-            e = discord.Embed(title="Filted the colors!", colour=var.embed)
-            e.set_image(url=f"https://api.no-api-key.com/api/v2/customify?image={str(imgURL).replace('.webp', '').split('?')[0]}&color={colorHex}")
-            await ctx.respond(embed=e)
-        except Exception as e:
-            raise customerror.CustomErr("Unknown image error occurred. Maybe try another image? " + str(e))
-    
     @slash_command(name="meme", description="Get a random reddit post", aliases=['randomreddit', 'reddit', 'subreddit', 'redditpost'])
     async def meme(self, ctx, subreddit : Option(str, description="subreddit to find an image from") = None):
 
@@ -234,10 +210,12 @@ class Fun1(commands.Cog):
     
     @slash_command(name="mimic", description="Mimic another user!")
     async def mimic(
-        self, 
-        ctx, 
-        member : Option(str, description="The member to mimic (Can be enable/disable to toggle mimicking for yourself)", autocomplete=mimic_autocomplete), 
-        message : Option(str, description="The message to send as the mimic", required=False) = None ):
+            self, 
+            ctx, 
+            member : Option(str, description="The member to mimic (Can be enable/disable to toggle mimicking for yourself)", autocomplete=mimic_autocomplete), 
+            message : Option(str, description="The message to send as the mimic") 
+    ):
+
         converter = MemberConverter()
         data = await functions.read_data("databases/userSettings.json")
 
@@ -284,7 +262,7 @@ class Fun1(commands.Cog):
         if "mimicPrompt" not in data[str(ctx.author.id)]["data"]:
             data[str(ctx.author.id)]["data"]["mimicPrompt"] = True
 
-            await ctx.respond(f"Top tip! You can use `{functions.prefix(ctx.guild)}mimic [enable/disable]` to disable/enable someone mimicking you on this server!")
+            await ctx.respond(f"Top tip! You can use `{functions.prefix(ctx.guild)}mimic [enable/disable]` to disable/enable someone mimicking you on this server!", ephemeral=True)
         
         try:
             webhooks = await ctx.channel.webhooks()
@@ -305,7 +283,7 @@ class Fun1(commands.Cog):
 
         await webhook.send_async(
             content=message,
-            avatar_url=str(member.avatar.url),
+            avatar_url=str(member.avatar.url) if member.avatar else None,
             username=member.display_name,
             allowed_mentions=allowed_mentions
         )

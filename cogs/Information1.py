@@ -29,7 +29,7 @@ class Information1(commands.Cog):
     
     @slash_command(name="help", description="Get help on the bot and it's commands", aliases=['cmds', 'commands', 'hlp', 'botcommands', 'bot-commands'])
     async def help(self, ctx, command : Option(str, description="Specific command help", required=False, autocomplete=help_autocomplete) = None):
-        prefix = functions.prefix(ctx.guild) 
+        prefix = "/"
         if command == None:
             embed = discord.Embed(
                 title=random.choice(["Bot commands", "Bot help", "All bot commands"]),
@@ -178,65 +178,11 @@ class Information1(commands.Cog):
         await ctx.respond(embed=embed)
     
     @slash_command(name="changelog", description="Gets the bot changelog for the current version", aliases=["changelogs", "change-log", "change-logs"])
-    @commands.guild_only()
     async def changelog(self, ctx):
-        prefix = functions.prefix(ctx.guild)
-        changelog = functions.changelog()
-        changelog = changelog.replace("{prefix}", prefix).replace("{websitelink}", var.website)
-        
-        if ctx.guild.me.guild_permissions.external_emojis and ctx.guild.me.guild_permissions.add_reactions:
-            if len(changelog) < 1024:  
+        embed = discord.Embed(title=f"Changelog for version {var.version}", description=f"View the changelog on [the website]({var.address}/changelogs)", color=var.embed)
 
-                embed = discord.Embed(title=f"Changelog for version {var.version}\n Click <:script:716964697223725123> to show development changes!", description=changelog.split("__Development changes:__")[0], color=var.embed)
+        await ctx.response.send_message(embed=embed)
 
-                embeds = discord.Embed(title=f"Changelog for version {var.version}\n Click <:script:716964697223725123> to hide development changes!", 
-                    description=changelog.split("__Development changes:__")[0] + "__Development changes:__" + changelog.split("__Development changes:__")[1], color=var.embed)
-                msg = await ctx.respond(embed=embed)
-
-                embed2 = discord.Embed(title=f"Changelog for version {var.version}", description=changelog.split("__Development changes:__")[0], color=var.embed)
-
-            else:
-
-                preembed = discord.Embed(title=f"Changelog for version {var.version}\n Click <:script:716964697223725123> to show development changes!", 
-                    description=changelog.split("__Development changes:__")[0].split("__Bug fixes:__")[0], color=var.embed)
-
-                embed = discord.Embed(title=f"Changelog for version {var.version}\n Click <:script:716964697223725123> to show development changes!", 
-                    description="__Bug fixes:__" + changelog.split("__Development changes:__")[0].split("__Bug fixes:__")[1], color=var.embed)
-
-                embeds = discord.Embed(title=f"Changelog for version {var.version}\n Click <:script:716964697223725123> to hide development changes!", 
-                    description=changelog.split("__Development changes:__")[0].split("__Bug fixes:__")[1] + "__Development changes:__" + changelog.split("__Development changes:__")[1], color=var.embed)
-
-                await ctx.respond(embed=preembed)
-                msg = await ctx.send(embed=embed)
-
-                embed2 = discord.Embed(title=f"Changelog for version {var.version}", 
-                    description="__Bug fixes:__" + changelog.split("__Development changes:__")[0].split("__Bug fixes:__")[1], color=var.embed)
-            msg = await msg.original_message()
-            await msg.add_reaction("<:script:716964697223725123>")
-
-            def check(reaction, user):
-                return user == ctx.author and str(reaction.emoji) == '<:script:716964697223725123>'
-
-            try:
-                reaction, user = await self.bot.wait_for('reaction_add', timeout=60.0, check=check)
-            except asyncio.TimeoutError:
-                pass
-            else:
-                await msg.edit(embed=embeds)
-            try:
-                reaction, user = await self.bot.wait_for('reaction_remove', timeout=60.0, check=check)
-            except asyncio.TimeoutError:
-                pass
-            else:
-                await msg.edit(embed=embed2)
-                try:
-                    await msg.clear_reactions()
-                except:
-                    pass
-        else:
-            embed2 = discord.Embed(title=f"Changelog for version {var.version}", color=var.embed)
-            embed2.add_field(name="Changelog:", value=changelog.split("__Development changes:__")[0])
-            await ctx.respond(embed=embed2)
 
 
 def setup(bot):

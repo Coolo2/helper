@@ -20,6 +20,9 @@ server = "https://discord.gg/HChmbSN"
 topgg = "https://top.gg/bot/486180321444888586"
 website = address
 
+client_id = 444882566529417216
+client_secret = os.getenv("client_secret")
+
 botAdmins = [368071242189897728, 444176530357354527, 378189620288159754]
 
 # Slash Commands

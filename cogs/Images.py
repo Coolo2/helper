@@ -29,7 +29,6 @@ class Images(commands.Cog):
 
     @slash_command(name="whiteboard", description="Write on a whiteboard", aliases=["write"])
     async def whiteboard(self, ctx, text : str):
-        area = ctx.channel
 
         img = Image.open("Images/Whiteboard.png")
         draw = ImageDraw.Draw(img)
@@ -46,7 +45,7 @@ class Images(commands.Cog):
         if user == None:
             content = ctx.author.display_name
         else:
-            if "<@" in user:
+            if user.replace("<", "").replace(">", "").replace("@", "").replace("!", "").isdigit():
                 for member in ctx.guild.members:
                     if member.id == int(user.replace("<", "").replace(">", "").replace("@", "").replace("!", "")):
                         content = member.display_name

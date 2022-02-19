@@ -212,9 +212,9 @@ async def imageFromArg(ctx, args, imgTuple, imgList):
 
         for member in ctx.guild.members:
             if member.name.lower() == args.lower() or member.display_name.lower() == args.lower() or str(member.id) == args or member.mention == args:
-                imgURL = member.avatar.url
+                imgURL = member.avatar.url if member.avatar else None
     else:
-        imgURL = ctx.author.avatar.url
+        imgURL = ctx.author.avatar.url if ctx.author.avatar else None
     if imgURL == "":
         return False
     return imgURL

@@ -15,7 +15,6 @@ class Interaction(commands.Cog):
         
     @slash_command(name="suggest", description = "Suggest something to add to the bot")
     async def suggest(self, ctx, suggestion : Option(str, description="The suggestion to send")):
-        prefix = functions.prefix(ctx.guild)
 
         await ctx.respond(f"> **Thanks for suggesting!** You will recieve a DM if your suggestion is verified (allowed to be voted on) in the Discord <{var.server}>")
 
@@ -62,7 +61,6 @@ class Interaction(commands.Cog):
 
     @slash_command(name="report", description = "Report a bug or issue")
     async def report(self, ctx, issue : Option(str, description="The issue to report")):
-        prefix = functions.prefix(ctx.guild)
 
         await ctx.respond("> **Thanks for reporting!**")
 

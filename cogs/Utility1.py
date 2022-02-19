@@ -100,7 +100,7 @@ Random number from **1** to **1,000,000**: {random.randint(1, 1000000)}""")
             embed.add_field(name="Users Highest Role", value=member.top_role.mention)
         else:
             embed.set_footer(text="This user is from another server.")
-        embed.set_thumbnail(url=user.avatar.url)
+        embed.set_thumbnail(url=user.avatar.url if user.avatar else None)
         await ctx.respond(embed=embed)
     
     @slash_command(name="serverinfo", description="Get info on the server", aliases=['guildinfo', 'server-info', 'guild-info'])
@@ -110,10 +110,10 @@ Random number from **1** to **1,000,000**: {random.randint(1, 1000000)}""")
         embed.add_field(name="Server Name", value= ctx.guild.name)
         embed.add_field(name="Server ID", value= ctx.guild.id)
         embed.add_field(name="Server Creation Date", value= f"<t:{int(ctx.guild.created_at.timestamp())}:F> (<t:{int(ctx.guild.created_at.timestamp())}:R>)")
-        embed.add_field(name="Server Region", value= ctx.guild.region)
+        embed.add_field(name="Preferred Locale", value= ctx.guild.preferred_locale)
         embed.add_field(name="Verification level", value= str(ctx.guild.verification_level))
         embed.add_field(name="Owner", value= ctx.guild.owner.mention)
-        embed.set_thumbnail(url=ctx.guild.icon.url)
+        embed.set_thumbnail(url=ctx.guild.icon.url if ctx.guild.icon else None)
         embed.set_footer(text=f"See more info with {functions.prefix(ctx.guild)}serverstats")
         
         await ctx.respond(embed=embed)
@@ -122,7 +122,7 @@ Random number from **1** to **1,000,000**: {random.randint(1, 1000000)}""")
     @commands.guild_only()
     async def serverstatistics(self, ctx):
         embed = discord.Embed(title="{}'s Server statistics".format(ctx.guild.name), color=var.embed)
-        embed.set_thumbnail(url=ctx.guild.icon.url)
+        embed.set_thumbnail(url=ctx.guild.icon.url if ctx.guild.icon else None)
         embed.add_field(name="Members", value=len(ctx.guild.members))
         embed.add_field(name="Bots", value=str(sum(member.bot for member in ctx.guild.members)))
         embed.add_field(name="Administrators", value=str(sum(member.guild_permissions.administrator and not member.bot for member in ctx.guild.members)))
@@ -162,7 +162,7 @@ Random number from **1** to **1,000,000**: {random.randint(1, 1000000)}""")
         if user == None:
             user = ctx.author
         embed = discord.Embed(title="{}'s avatar".format(user.display_name), color=var.embed)
-        embed.set_image(url=user.avatar.url)
+        embed.set_image(url=user.avatar.url if user.avatar else None)
         await ctx.respond(embed=embed)
     
 
