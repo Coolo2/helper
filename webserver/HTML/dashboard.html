@@ -611,8 +611,11 @@
                 loggingChannel.disabled = true 
                 loggingChannel.oninput = undefined
                 loggingChannel.setAttribute(`class`, `inputdisabled`)
+            } else {
+                loggingChannel.disabled = false 
+                loggingChannel.oninput = saveLogging
+                loggingChannel.setAttribute(`class`, `input`)
             }
-
             if (guildData.logging) {
                 if (guildData.logging.channel) {
                     loggingChannel.value = guildData.logging.channel
@@ -637,6 +640,9 @@
                         if (!guildData.has_permissions.manage_guild) {
                             element.disabled = true 
                             element.onclick = undefined
+                        } else {
+                            element.disabled = false 
+                            element.onclick = saveLogging
                         }
                     }
                 }
@@ -891,6 +897,7 @@
         }
 
         window.onload = async function () {
+            document.getElementById("navBar").ondblclick = function() {window.open("/#dashboard", "_self")}
             timer = 500
             gradient = document.getElementById("gradient")
             document.getElementById("gradient-text").style.opacity = "100%"

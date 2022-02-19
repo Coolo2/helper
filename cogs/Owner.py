@@ -20,9 +20,9 @@ class Owner(commands.Cog):
         try:
             self.bot.load_extension(cog)
         except Exception as e:
-            await ctx.send(f'**`ERROR:`** {type(e).__name__} - {e}')
+            await ctx.respond(f'**`ERROR:`** {type(e).__name__} - {e}')
         else:
-            await ctx.send('**`SUCCESS`**')
+            await ctx.respond('**`SUCCESS`**')
 
     @slash_command(name='unload', guild_ids=var.guilds, hidden=True)
     @permissions.is_owner()
@@ -31,9 +31,9 @@ class Owner(commands.Cog):
         try:
             self.bot.unload_extension(cog)
         except Exception as e:
-            await ctx.send(f'**`ERROR:`** {type(e).__name__} - {e}')
+            await ctx.respond(f'**`ERROR:`** {type(e).__name__} - {e}')
         else:
-            await ctx.send('**`SUCCESS`**')
+            await ctx.respond('**`SUCCESS`**')
 
     @slash_command(name='reload', guild_ids=var.guilds, hidden=True)
     @permissions.is_owner()
@@ -43,9 +43,9 @@ class Owner(commands.Cog):
             self.bot.unload_extension(cog)
             self.bot.load_extension(cog)
         except Exception as e:
-            await ctx.send(f'**`ERROR:`** {type(e).__name__} - {e}')
+            await ctx.respond(f'**`ERROR:`** {type(e).__name__} - {e}')
         else:
-            await ctx.send('**`SUCCESS`**')
+            await ctx.respond('**`SUCCESS`**')
 
 
     @slash_command(
@@ -63,7 +63,7 @@ class Owner(commands.Cog):
                 prefixes[str(member.id)] = reason 
                 with open('databases/blacklist.json', 'w') as f:
                     json.dump(prefixes, f, indent=4)
-                await ctx.send("> Successfully blacklisted {}".format(member))
+                await ctx.respond("> Successfully blacklisted {}".format(member))
             else:
                 raise customerror.MildErr("> You cannot blacklist a bot admin")
         else:
@@ -84,7 +84,7 @@ class Owner(commands.Cog):
             del prefixes[str(member.id)] 
             with open('databases/blacklist.json', 'w') as f:
                 json.dump(prefixes, f, indent=4)
-            await ctx.send("> Successfully whitelisted {}".format(member))
+            await ctx.respond("> Successfully whitelisted {}".format(member))
         else:
             raise customerror.MildErr("> You must be a bot admin to use this command.")
     

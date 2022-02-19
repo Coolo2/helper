@@ -23,14 +23,14 @@ class Handling1(commands.Cog):
         
         if isinstance(error, commands.MissingRequiredArgument):
             embed = discord.Embed(title=msgMild, description=f"```{error}\n{functions.prefix(ctx.guild)}{ctx.command.name} {ctx.command.description.split('|')[0]}```", colour=var.embedFail, timestamp=datetime.datetime.now())
-            return await ctx.respond(embed=embed)
+            return await ctx.respond(embed=embed, ephemeral=True)
         
         if isinstance(error, commands.NoPrivateMessage):
             embed = discord.Embed(title=msgMild, description=f"```{error}```", colour=var.embedFail, timestamp=datetime.datetime.now())
-            return await ctx.respond(embed=embed)
+            return await ctx.respond(embed=embed, ephemeral=True)
         if isinstance(error, commands.CommandOnCooldown):
             embed = discord.Embed(title=msgMild, description=f"{error}", colour=var.embedFail)
-            return await ctx.respond(embed=embed)
+            return await ctx.respond(embed=embed, ephemeral=True)
         if isinstance(error, commands.CommandNotFound):
             cc = await self.customCommands(ctx, error)
             similar = await self.checkCustomCommands(ctx, error)
@@ -40,45 +40,45 @@ class Handling1(commands.Cog):
                 if similar != False:
                     embed = discord.Embed(title=msgMild, 
                         description=f"Command **{functions.prefix(ctx.guild)}{command}** was not found! You may have meant **{functions.prefix(ctx.guild)}{similar}**.", colour=var.embedFail, timestamp=datetime.datetime.now())
-                    return await ctx.respond(embed=embed)
+                    return await ctx.respond(embed=embed, ephemeral=True)
                 return await self.bot.get_user(var.owner).send(f"> Error in **{ctx.guild.name}** from **{ctx.author}**: `{error}`")
             else:
                 return
         if isinstance(error, errors.CheckFailure):
             embed = discord.Embed(title=msgMild, description=f"t", colour=var.embedFail)
-            return await ctx.respond(embed=embed)
+            return await ctx.respond(embed=embed, ephemeral=True)
 
         if isinstance(error, errors.ApplicationCommandInvokeError):
             if isinstance(error.original, commands.MemberNotFound):
                 embed = discord.Embed(title=msgMild, description=f"```{str(error.original)}```", colour=var.embedFail, timestamp=datetime.datetime.now())
-                return await ctx.respond(embed=embed)
+                return await ctx.respond(embed=embed, ephemeral=True)
             if isinstance(error.original, commands.MissingPermissions):
                 embed = discord.Embed(title=msgMild, description=f"```{error.original}```", colour=var.embedFail, timestamp=datetime.datetime.now())
-                return await ctx.respond(embed=embed)
+                return await ctx.respond(embed=embed, ephemeral=True)
             if isinstance(error.original, commands.BotMissingPermissions):
                 embed = discord.Embed(title=msgMild, 
                 description=f"```{error.original}\n\nEnsure that I have the above permissions and my role is high enough to use {functions.prefix(ctx.guild)}{ctx.command.name}```", 
                 colour=var.embedFail, timestamp=datetime.datetime.now())
-                return await ctx.respond(embed=embed)
+                return await ctx.respond(embed=embed, ephemeral=True)
             if isinstance(error.original, errors.CheckFailure):
                 embed = discord.Embed(title=msgMild, description=f"t", colour=var.embedFail)
-                return await ctx.respond(embed=embed)
+                return await ctx.respond(embed=embed, ephemeral=True)
 
             # Custom errors
             if isinstance(error.original, customerror.CustomErr):
                 embed = discord.Embed(title=msgMild, description=f"```{error.original}```", colour=var.embedFail, timestamp=datetime.datetime.now())
-                return await ctx.respond(embed=embed)
+                return await ctx.respond(embed=embed, ephemeral=True)
             if isinstance(error.original, customerror.MildErr):
                 embed = discord.Embed(title=msgMild, description=f"{error.original}", colour=var.embedFail)
-                return await ctx.respond(embed=embed)
+                return await ctx.respond(embed=embed, ephemeral=True)
             
             if isinstance(error.original, customerror.CooldownError):
                 embed = discord.Embed(title="You're on cooldown!", description=f"{error.original}", colour=var.embedFail)
-                return await ctx.respond(embed=embed)
+                return await ctx.respond(embed=embed, ephemeral=True)
 
         print(f"{textformat.color.red}{error.__class__.__name__}{textformat.color.end} + {error}")
         embed = discord.Embed(title=msgUnkown, description=f"```{error}```\n\nJoin the [Support Server]({var.server}) for support.", colour=var.embedFail, timestamp=datetime.datetime.now())
-        await ctx.respond(embed=embed)
+        await ctx.respond(embed=embed, ephemeral=True)
         await self.bot.get_channel(927926604838109215).send(f"> Error in **{ctx.guild.name}** from **{ctx.author}**: `{error}`")
     
     async def getCommandFromError(self, error):

@@ -28,21 +28,21 @@
         " id="loading">
             <span class="all-center">Loading...</span>
         </div>
-        <div style="width:300px;height:200px;border-radius:0px 0px 0px 10px;box-shadow: 0 0 10px black;position:absolute;right:0;top:0;background-color:#2D3033;z-index:5;transition: top 0.5s" id="profile">
-            <img id="profile-avatar" width="45px" src="" style="position:absolute;top:45px;border-radius:25px">
-            <span style="color:rgb(199, 199, 199);top:5px;left:5px;position:absolute" id="profile-status">Logged in as: </span>
+        <div style="box-sizing: border-box;border:1px solid white;width:300px;height:200px;border-radius:0px 0px 0px 10px;box-shadow: 0 0 10px black;position:absolute;right:0;top:0;background-color:#2D3033;z-index:5;transition: top 0.5s" id="profile">
+            <img id="profile-avatar" width="45px" src="" style="position:absolute;top:45px;border-radius:25px;left:15px">
+            <span style="color:rgb(199, 199, 199);top:5px;left:10px;position:absolute" id="profile-status">Logged in as: </span>
             <span style="position:absolute;left:65px;top:55px;color:white" id="profile-name"> </span>
             <button id="profile-switchAccount" class="button" style="position:absolute;bottom:35px;right:10px;z-index:8" onclick="window.open('/login', '_self')">Switch Account</button>
 
-            <button id="profile-settings" onmousedown="if (event.which == 2) {window.open('/profile')};if (event.which == 1) {linkTo('/profile')}"
-                class="button" style="position:absolute;bottom:35px;left:5px;font-size:15px;;width:150px;display:none">Profile</button>
+            <button id="profile-settings" onmousedown="if (event.which == 2) {window.open('/profile')};if (event.which == 1) {linkTo('/profile')}" aria-label="Coming soon" data-balloon-pos="down"
+                class="buttondisabled" style="position:absolute;bottom:35px;left:5px;font-size:15px;;width:150px;display:none" disabled>Profile</button>
             <div style="position:absolute;bottom:25px;left:5px;font-size:15px;;width:150px;display:none" id="profile-noMutual">
                 <a style="color:rgb(199, 199, 199);text-decoration:none" href="/invite">You're not in any servers with Helper! Invite the bot <span style="text-decoration:underline;color:white" >Here</span></a>
             </div>
 
             <div id="profile-dropdown-shadowcover" style="height:25px;width:150px;bottom:0;right:0;background-color:#2D3033;z-index:7;position:absolute;"></div>
-            <div id="profile-dropdown" style="height:25px;width:100px;bottom:-25px;right:0;background-color:#2D3033;z-index:6;position:absolute;box-shadow: 0 0 10px black;cursor:pointer">
-                <i id="profile-dropdown-icon" class="fas fa-chevron-up" style="font-size:25px;margin-left:37px;transition:transform 0.25s"></i>
+            <div id="profile-dropdown" style="box-sizing: border-box;border:1px solid white;border-width:0 1px 1px 1px;height:25px;width:100px;bottom:-25px;right:0;background-color:#2D3033;z-index:6;position:absolute;box-shadow: 0 0 10px black;cursor:pointer">
+                <i id="profile-dropdown-icon" class="fas fa-chevron-up" style="font-size:25px;margin-left:37px;transition:transform 0.25s;color:white"></i>
             </div>
         </div>
         <div style="height:99%;width:100%;" id="dataBody">
@@ -167,7 +167,7 @@
                 profileChanged = true
             }
             
-            if (where == "/dashboard" && !getCookie("user")) return window.open(where, '_self')
+            if (OSName == "Mobile" || (where == "/dashboard" && !getCookie("user"))) return window.open(where, '_self')
 
 
             var iframe = document.createElement("iframe");
@@ -207,7 +207,7 @@
                 
                 var exit = ifrDoc.createElement("div");
                 exit.setAttribute("style", "text-align:center;position:fixed;width:50px;height:50px;top:0;left:0;background-color:red;z-index:1000;cursor:pointer")
-                exit.innerHTML = `<i class="fa fa-times-circle" aria-hidden="true" style="font-size:50px"></i>`
+                exit.innerHTML = `<i class="fa fa-solid fa-xmark" aria-hidden="true" style="font-size:50px"></i>`
                 exit.setAttribute("aria-Label", "Close Window");exit.setAttribute("data-balloon-pos", "down-left")
                 exit.onclick = function() {
                     windows.splice(windows.indexOf(iframe), 1);
@@ -231,10 +231,11 @@
                 }
 
                 var external = ifrDoc.createElement("div");
-                external.setAttribute("style", "text-align:center;position:fixed;width:50px;height:50px;top:0;left:50px;background-color:lightblue;z-index:1000;cursor:pointer")
-                external.innerHTML = `<i class="fa fa-external-link" aria-hidden="true" style="font-size:50px"></i>`
+                external.setAttribute("style", "text-align:center;position:fixed;width:50px;height:50px;top:0;left:50px;background-color:lightblue;z-index:1000;cursor:pointer;")
+                external.innerHTML = `<i class="fa fa-external-link" aria-hidden="true" style="font-size:40px;margin-top:3px;margin-left:3px"></i>`
                 external.setAttribute("aria-Label", "Open window externally (fullscreen)");external.setAttribute("data-balloon-pos", "right")
                 external.onclick = function() {window.open(where, '_self')}
+                ifrDoc.getElementById("navBar").ondblclick = function() {window.open(where, '_self')}
                 
                 ifrDoc.body.appendChild(exit);
                 ifrDoc.body.appendChild(external);
@@ -247,40 +248,40 @@
 
         function dragElement(doc, elmnt, dragName) {
 
-var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-if (doc.getElementById(dragName)) {
-    doc.getElementById(dragName).onmousedown = dragMouseDown;
-} else {
-    elmnt.onmousedown = dragMouseDown;
-}
+            var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            if (doc.getElementById(dragName)) {
+                doc.getElementById(dragName).onmousedown = dragMouseDown;
+            } else {
+                elmnt.onmousedown = dragMouseDown;
+            }
 
-function dragMouseDown(e) {
-    e = e || window.event;
+            function dragMouseDown(e) {
+                e = e || window.event;
 
-    pos3 = e.clientX;
-    pos4 = e.clientY;
-    doc.onmouseup = closeDragElement;
-    doc.onmousemove = elementDrag;
-}
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                doc.onmouseup = closeDragElement;
+                doc.onmousemove = elementDrag;
+            }
 
-function elementDrag(e) {
-    e = e || window.event;
+            function elementDrag(e) {
+                e = e || window.event;
 
-    pos1 = pos3 - e.clientX;
-    pos2 = pos4 - e.clientY;
-    pos3 = e.clientX;
-    pos4 = e.clientY;
-    
-    elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
-    elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
-    e.preventDefault();
-}
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY ;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                
+                elmnt.style.top = (elmnt.offsetTop - pos2 )  + "px";
+                elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+                e.preventDefault();
+            }
 
-function closeDragElement() {
-    doc.onmouseup = null;
-    doc.onmousemove = null;
-}
-}
+            function closeDragElement() {
+                doc.onmouseup = null;
+                doc.onmousemove = null;
+            }
+        }
 
     </script>
 </html>

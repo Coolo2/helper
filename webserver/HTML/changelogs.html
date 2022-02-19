@@ -97,6 +97,7 @@ var OSName = "Unknown";
     }
 
     window.onload = async function () {
+        document.getElementById("navBar").ondblclick = function() {window.open("/#changelogs", "_self")}
             timer = 500
             gradient = document.getElementById("gradient")
             document.getElementById("gradient-text").style.opacity = "100%"

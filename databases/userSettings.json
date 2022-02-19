@@ -30,5 +30,13 @@
         "data": {
             "mimicPrompt": true
         }
+    },
+    "530301206095069194": {
+        "data": {
+            "mimicPrompt": true
+        },
+        "disableMimic": {
+            "742065869856702514": true
+        }
     }
 }

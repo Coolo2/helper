@@ -22,7 +22,7 @@ class Economy2(commands.Cog):
         msg = await msg.original_message()
 
         balances = await functions.read_data("databases/economy.json")
-        balanceList = [ k for k, v in sorted(balances[str(ctx.guild.id)].items(), key=lambda item: item[1], reverse=True) ]
+        balanceList = [ k for k, v in sorted(balances[str(ctx.guild.id)].items(), key=lambda item: item[1]["balance"], reverse=True) ]
         
         lb = ""
 
@@ -35,7 +35,7 @@ class Economy2(commands.Cog):
         await msg.edit(content=None, embed=embed)
     
     @slash_command(name="balance", description="Check account balance", aliases=["bal", "money", "credits"])
-    async def balance(self, ctx, member : Option(discord.Member, option="Optional member to see balance of. Defaults to yourself", required=False) = None):
+    async def balance(self, ctx, member : Option(discord.Member, description="Optional member to see balance of. Defaults to yourself", required=False) = None):
         if member == None:
             member = ctx.author
         
@@ -49,7 +49,7 @@ class Economy2(commands.Cog):
         await ctx.respond(embed=embed)
     
     @slash_command(name="pay", description="Pay a user", aliases=["give"])
-    async def pay(self, ctx, member : Option(discord.Member), amount : Option(int, min_value=1)):
+    async def pay(self, ctx, member : Option(discord.Member), amount : Option(str, description="The amount to pay (all for all your money)")):
 
         balances = await functions.read_data("databases/economy.json")
         
@@ -60,19 +60,20 @@ class Economy2(commands.Cog):
 
         if amount == "all":
             amount = balances[str(ctx.guild.id)][str(ctx.author.id)]['balance']
-
+        
         if int(amount) <= 0:
-            raise customerror.MildError("> You cant pay less than 1 credit!")
+            raise customerror.MildErr("> You cant pay less than 1 credit!")
         if member == ctx.author:
-            raise customerror.MildError("> You cant pay yourself!")
+            raise customerror.MildErr("> You cant pay yourself!")
         if int(balances[str(ctx.guild.id)][str(ctx.author.id)]) < 1:
-            raise customerror.MildError(f"> You're below 0 credits! Do **{functions.prefix(ctx.guild)}work** to get some credits!")
+            raise customerror.MildErr(f"> You're below 0 credits! Do **{functions.prefix(ctx.guild)}work** to get some credits!")
         if int(balances[str(ctx.guild.id)][str(ctx.author.id)]) < int(amount):
-            raise customerror.MildError(f"> You do not have enough credits! You're on **{balances[str(ctx.guild.id)][str(ctx.author.id)]}** credits!")
+            raise customerror.MildErr(f"> You do not have enough credits! You're on **{balances[str(ctx.guild.id)][str(ctx.author.id)]['balance']}** credits!")
         
         if str(member.id) not in balances[str(ctx.guild.id)]:
             balances[str(ctx.guild.id)][str(member.id)] = {"balance":0}
 
+        
         balances[str(ctx.guild.id)][str(member.id)]['balance'] += int(amount) 
         balances[str(ctx.guild.id)][str(ctx.author.id)]['balance'] -= int(amount) 
 

@@ -22,7 +22,6 @@ class Moderation3(commands.Cog):
         user : Option(str, description="User or 'all' - User(s) to add the role to"), 
         role : Option(discord.Role, description="The role to add / remove")
     ):
-        prefix = functions.prefix(ctx.guild)
 
         if setting == "add":
             if user not in ["all", "everyone", "allmembers"]:

@@ -45,7 +45,7 @@
         <table style="width:100%;top:1000px;position:absolute;z-index:10;border:1px solid white">
             <tr class="tr">
                 <th class="td"></th>
-                <th class="td">Helper</th>
+                <th class="td"><div style="width:25%;height:50px;top:0;left:25%;z-index:-1;filter:blur(5px);transform: scale(0.9);position:absolute;background-image:url(/static/images/avatar.webp);background-position:-275px -305px;background-size:50%"></div>Helper</th>
                 <th class="td">MEE6</th>
                 <th class="td">Dyno</th>
             </tr>
@@ -192,6 +192,7 @@
         getCommands()
 
         window.onload = async function () {
+            document.getElementById("navBar").ondblclick = function() {window.open("/#about", "_self")}
             timer = 500
             gradient = document.getElementById("gradient")
             document.getElementById("gradient-text").style.opacity = "100%"

@@ -62,6 +62,7 @@ async def globally_blacklist_roles(ctx):
     blacklist = prefixes  # Role names
     return not str(ctx.author.id) in blacklist
 
+#extensions.remove("Handling1")
 
 if __name__ == '__main__':
     print(f'\n--- Extensions {", ".join(extensions)} ---')

@@ -1,4 +1,4 @@
-1.0.0 - The long awaited rewrite is finally out!
+[19th Feb 2022] 1.0.0 - The long awaited rewrite is finally out!
 
 A complete rewrite of every command and event, this fixes bugs and comes with slash command support
 
@@ -9,17 +9,20 @@ All commands have been rewritten, too many to list here
 <u>Improvements:</u>
 
 Slash command support
-Much improved dashboard
-Window based website design
+Cleaner commands and simpler usage all round the bot 
+Music is back!
 
 <u>Bug fixes:</u>
 
-Fixed an issue with <h>{prefix}userinfo</h> when you aren't playing a game
+Every command has been rewritten, therefore hundreds of bugs have been fixed.
+See the bug fixes by using the bot!
 
 <u>Website changes:</u>
 
 Discord embed for the website
+Much improved dashboard
+Window based website design
 
 <u>Development changes:</u>
 
--The rewriting of some commands has lowered some file sizes
+Bot is simpler coded all around, therefore runs faster and is easier to update 
