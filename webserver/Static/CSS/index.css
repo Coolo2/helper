@@ -88,7 +88,7 @@ body {
 .topBarItem {
     padding:15px 50px 15px 50px;
     opacity:0%;
-    font-size:0px;
+    font-size:0;
     width:100px;
     transition:all .5s;
     text-align:center;
