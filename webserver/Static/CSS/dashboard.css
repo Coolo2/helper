@@ -34,9 +34,9 @@ body {
 }
 
 .topBarItem {
-    padding:15px 50px 15px 50px;
+    padding:15px 50px;
     opacity:0%;
-    font-size:0px;
+    font-size:0;
     width:100px;
     transition:all .5s;
     text-align:center;
@@ -56,7 +56,7 @@ body {
 
 .serverList {
     width: 250px;
-    padding:1px 25px 25px 25px;
+    padding:1px 25px 25px;
     position:relative;
     background-color:#3b3f44;
     transition:display 1s, opacity 1s;
@@ -102,7 +102,7 @@ body {
     height:200px;
     transition:opacity .5s;
     opacity:0%;
-    padding:0px 25px 25px 25px
+    padding:0 25px 25px
 }
 
 #serverSettings-music {
@@ -111,7 +111,7 @@ body {
     height:700px;
     transition:opacity .5s;
     opacity:0%;
-    padding:0px 25px 25px 25px
+    padding:0 25px 25px
 }
 
 #serverSettings-joinleave {
@@ -120,7 +120,7 @@ body {
     height:600px;
     transition:opacity .5s;
     opacity:0%;
-    padding:0px 25px 25px 25px
+    padding:0 25px 25px
 }
 
 #serverSettings-customcommands {
@@ -129,7 +129,7 @@ body {
     height:900px;
     transition:opacity .5s;
     opacity:0%;
-    padding:0px 25px 25px 25px
+    padding:0 25px 25px
 }
 
 #serverSettings-joinleave-join-select {
