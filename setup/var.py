@@ -16,7 +16,10 @@ address = "http://localhost:5000"
 login = None
 invite = None
 
+dblToken = os.getenv("dblToken")
+
 server = "https://discord.gg/HChmbSN"
+support_guild_add_remove_channel = 681410332832563234
 topgg = "https://top.gg/bot/486180321444888586"
 website = address
 
@@ -26,8 +29,7 @@ client_secret = os.getenv("client_secret")
 botAdmins = [368071242189897728, 444176530357354527, 378189620288159754]
 
 # Slash Commands
-production = os.getenv("production")
-refreshSlash = False
+production = False
 guilds = [447702058162978827]
 
 def get_client(client):

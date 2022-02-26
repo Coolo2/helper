@@ -17,7 +17,7 @@ class Utility1(commands.Cog):
         self.bot = bot
 
     @slash_command(name="poll", description="Make a poll")
-    async def poll(self, ctx, question : Option(str, "The question to ask", required=True)):
+    async def poll(self, ctx, question : Option(str, "The question to ask")):
         embed = discord.Embed(color=var.embed)
         embed.add_field(name="Poll from {}".format(ctx.author), value= question)
         reactthis = await ctx.respond(embed=embed)
@@ -48,7 +48,7 @@ Random number from **1** to **1,000,000**: {random.randint(1, 1000000)}""")
         await ctx.respond(embed=embed)
     
     @slash_command(name="google", description="Search google", aliases=["search", "googlesearch", "google-search"])
-    async def google(self, ctx, query : Option(str, name="query", description="The query to search google for", required=True)):
+    async def google(self, ctx, query : Option(str, name="query", description="The query to search google for")):
         search = await google.search(query, num_results=10)
 
         embed = discord.Embed(title=f"Results for: {query}", color=var.embed)
@@ -86,7 +86,7 @@ Random number from **1** to **1,000,000**: {random.randint(1, 1000000)}""")
         await ctx.respond(embed=embed)
     
     @slash_command(name="userinfo", description="Check info for a user", aliases=['memberinfo'])
-    async def userinfo(self, ctx, user: Option(discord.User, description="The user to get info for", required=False) = None):
+    async def userinfo(self, ctx, user: Option(discord.User, description="The user to get info for")):
         if user == None:
             user = ctx.author
         member = ctx.guild.get_member(user.id)
@@ -158,7 +158,7 @@ Random number from **1** to **1,000,000**: {random.randint(1, 1000000)}""")
             await ctx.respond("> Output too long!")
     
     @slash_command(name="avatar", description="Get a user's profile picture", aliases=['pfp', 'logo', 'profilepicture', 'useravatar'])
-    async def avatar(self, ctx, user : Option(discord.User, required=False, description="User to get the avatar of") = None):
+    async def avatar(self, ctx, user : Option(discord.User, description="User to get the avatar of")):
         if user == None:
             user = ctx.author
         embed = discord.Embed(title="{}'s avatar".format(user.display_name), color=var.embed)

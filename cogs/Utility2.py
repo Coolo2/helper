@@ -27,6 +27,7 @@ class Utility2(commands.Cog):
         color : Option(str, description="The embed color (hex or text)", required=False) = None,
         image : Option(str, description="Image URL", required=False) = None
     ):
+        start_time = datetime.now()
 
         embed = None 
         webhookEmbed = None
@@ -75,8 +76,12 @@ class Utility2(commands.Cog):
             
             webhook = discordwebhook.Webhook(url=finalwebhook.url)
 
-            await ctx.defer()
-            return await webhook.send_async(embed=embed, username=ctx.author.display_name, avatar_url=ctx.author.avatar.url if ctx.author.avatar else None)
+            
+            await webhook.send_async(embed=embed, username=ctx.author.display_name, avatar_url=ctx.author.avatar.url if ctx.author.avatar else None)
+
+            timeElapsed = round((datetime.now() - start_time).total_seconds(), 3)
+
+            return await ctx.response.send_message(f"Complete `{timeElapsed}s`", ephemeral=True)
         
         await ctx.respond(embed=embed)
 

@@ -49,7 +49,7 @@ class Economy2(commands.Cog):
         await ctx.respond(embed=embed)
     
     @slash_command(name="pay", description="Pay a user", aliases=["give"])
-    async def pay(self, ctx, member : Option(discord.Member), amount : Option(str, description="The amount to pay (all for all your money)")):
+    async def pay(self, ctx, member : Option(discord.Member, description="The member to pay"), amount : Option(int, description="The amount to pay (all for all your money)")):
 
         balances = await functions.read_data("databases/economy.json")
         

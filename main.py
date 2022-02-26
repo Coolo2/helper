@@ -22,7 +22,8 @@ def get_prefix(bot, message):
     except:
         return commands.when_mentioned_or(var.prefix, var.prefix.upper(), var.prefix.capitalize())(bot, message)
 
-bot = discord.Bot(command_prefix=get_prefix, case_insensitive=True, intents=intents, debug_guilds=[447702058162978827])
+bot = discord.Bot(command_prefix=get_prefix, case_insensitive=True, intents=intents, debug_guilds=[447702058162978827, 450914634963353600])
+bot.auto_sync_commands = False
 
 extensions = [file.replace(".py", "") for file in os.listdir('./cogs') if file.endswith(".py")]
 
@@ -46,14 +47,12 @@ async def ping_files():
                 if (datetime.now() - datetime.strptime(data[guild][member]["endAt"], "%d-%b-%Y (%H:%M:%S.%f)")).total_seconds() > 0:
                     await functions.unmute(bot.get_guild(int(guild)), bot.get_guild(int(guild)).get_member(int(member)))
     
-    await asyncio.sleep(1)
-    await functions.read_load("databases/prefixes.json")
-    await asyncio.sleep(1)
-    await functions.read_load("databases/userSettings.json")
-    await asyncio.sleep(1)
-    await functions.read_load("databases/commands.json")
-    await asyncio.sleep(1)
-    await functions.read_load("databases/setup.json")
+    read_load_items = ["prefixes", "userSettings", "commands", "setup"]
+
+    for file_name in read_load_items:
+
+        await asyncio.sleep(1)
+        await functions.read_load(f"databases/{file_name}.json")
 
 @bot.check
 async def globally_blacklist_roles(ctx):
@@ -77,8 +76,6 @@ if __name__ == '__main__':
 
     print('---\n ' + c.red)
     main.webserver_run(bot)
-    
-    
 
 bot.run(os.getenv("token"))
     

@@ -208,19 +208,16 @@ async def imageFromArg(ctx, args, imgTuple, imgList):
     elif args != None and True in [True if member.name.lower() == args.lower() 
         or member.display_name.lower() == args.lower() 
         or str(member.id) == args 
-        or member.mention == args else False for member in ctx.guild.members]:
+        or member.mention.replace("!", "") == args.replace("!", "") else False for member in ctx.guild.members]:
 
         for member in ctx.guild.members:
-            if member.name.lower() == args.lower() or member.display_name.lower() == args.lower() or str(member.id) == args or member.mention == args:
+            if member.name.lower() == args.lower() or member.display_name.lower() == args.lower() or str(member.id) == args or member.mention.replace("!", "") == args.replace("!", ""):
                 imgURL = member.avatar.url if member.avatar else None
     else:
         imgURL = ctx.author.avatar.url if ctx.author.avatar else None
     if imgURL == "":
         return False
     return imgURL
-
-    """elif message.attachments != [] and message.attachments[0].url.split(".")[-1].lower() in imgList:
-        imgURL = message.attachments[0].url """
 
 def replaceMessage(member, message):
     message = message.replace("{user}", member.name)

@@ -2,15 +2,18 @@ from discord.ext import commands
 import discord
 
 import random, os, json
+from discord.commands.context import ApplicationContext
 from setup import var
-from functions import customerror
-from functions import functions
+from functions import customerror, functions, image
 from datetime import datetime, timedelta
 import requests, aiohttp, asyncio
 import emoji as emojis
 import inspect
 from discord.ext.commands import MemberConverter
 import re
+from PIL import Image, ImageEnhance
+import io
+import threading
 
 import discordwebhook
 
@@ -50,36 +53,68 @@ class Fun1(commands.Cog):
         self.runtimeDadJoke = {}
 
     @slash_command(name="deepfry", description="Deepfry an image", aliases=["fry", "deep-fry"])
-    async def deepfry(self, ctx, args : Option(str, name="user-url", description="A user or URL to deepfry the image of", required=False) = None):
+    async def deepfry(
+        self, 
+        ctx : ApplicationContext, 
+        args : Option(str, name="user-url", description="A user or URL to deepfry the image of", required=False) = None,
+        attachment : Option(discord.Attachment, description="Optional attachment instead of a URL", required=False) = None
+    ):  
+        if attachment:
+            args = attachment.url
+        
+        await ctx.defer()
+        
         imgURL = await functions.imageFromArg(ctx, args, ("image/png", "image/jpeg", "image/jpg"), ["png", "jpg", "jpeg"])
         if imgURL == False:
             raise customerror.MildErr("Could not find image! This command support png and jpeg images only.")
         try:
-            loadingMsg = await ctx.respond("> Deepfrying image...")
-            loadingMsg = await loadingMsg.original_message()
+
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"http://nekobot.xyz/api/imagegen?type=deepfry&image={imgURL}") as r:
-                    json = await r.json()
-                    e = discord.Embed(title="Deep fried image!", colour=var.embed)
-                    e.set_image(url=json['message'])
-                    await loadingMsg.edit(content=None, embed=e)
+                async with session.get(imgURL) as r:
+
+                    img = Image.open(io.BytesIO(await r.read()))
+
+                    img = await image.deepfry(img)
+
+                    with io.BytesIO() as image_binary:
+                        img.save(image_binary, 'PNG')
+                        image_binary.seek(0)
+
+                        await ctx.followup.send(file=discord.File(fp=image_binary, filename='image.png'))
+
         except Exception as e:
             raise customerror.CustomErr("Unknown image error occurred. Maybe try another image? " + str(e))
     
     @slash_command(name="blurpify", description="Blurpify an image", aliases=["blurp", "blurple"])
-    async def blurpify(self, ctx, args : Option(str, name="user-url", description="A user or URL to deepfry the image of", required=False) = None):
+    async def blurpify(
+        self, 
+        ctx, 
+        args : Option(str, name="user-url", description="A user or URL to deepfry the image of", required=False) = None,
+        attachment : Option(discord.Attachment, description="Optional attachment instead of a URL", required=False) = None
+    ):  
+        if attachment:
+            args = attachment.url
+        
+        await ctx.defer()
+
         imgURL = await functions.imageFromArg(ctx, args, ("image/png", "image/jpeg", "image/jpg", "image/gif"), ["png", "jpg", "jpeg", "gif"])
         if imgURL == False:
             raise customerror.MildErr("Could not find image! This command support png, jpeg and gif images only.")
+
         try:
-            loadingMsg = await ctx.respond("> Blurpifying image... This can take a while so please wait...")
-            loadingMsg = await loadingMsg.original_message()
+
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"http://nekobot.xyz/api/imagegen?type=blurpify&image={imgURL}") as r:
-                    json = await r.json()
-                    e = discord.Embed(title="Blurpified image!", colour=var.embed)
-                    e.set_image(url=json['message'])
-                    await loadingMsg.edit(content=None, embed=e)
+                async with session.get(imgURL) as r:
+
+                    img = Image.open(io.BytesIO(await r.read()))
+
+                    img = await image.blurpify(img)
+
+                    with io.BytesIO() as image_binary:
+                        img.save(image_binary, 'PNG')
+                        image_binary.seek(0)
+
+                        await ctx.followup.send(file=discord.File(fp=image_binary, filename='image.png'))
         except Exception as e:
             raise customerror.CustomErr("Unknown image error occurred. Maybe try another image? " + str(e))
     
@@ -215,6 +250,7 @@ class Fun1(commands.Cog):
             member : Option(str, description="The member to mimic (Can be enable/disable to toggle mimicking for yourself)", autocomplete=mimic_autocomplete), 
             message : Option(str, description="The message to send as the mimic") 
     ):
+        start_time = datetime.now()
 
         converter = MemberConverter()
         data = await functions.read_data("databases/userSettings.json")
@@ -287,6 +323,10 @@ class Fun1(commands.Cog):
             username=member.display_name,
             allowed_mentions=allowed_mentions
         )
+
+        timeElapsed = round((datetime.now() - start_time).total_seconds(), 3)
+
+        await ctx.response.send_message(f"Complete `{timeElapsed}s`", ephemeral=True)
 
         await functions.save_data("databases/userSettings.json", data)
         await functions.read_load("databases/userSettings.json", data)

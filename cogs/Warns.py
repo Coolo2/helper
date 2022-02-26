@@ -18,29 +18,29 @@ class Warns(commands.Cog):
     @commands.has_permissions(manage_messages=True)
     async def warn(
         self, 
-        ctx, 
+        ctx : discord.ApplicationContext, 
         member: Option(discord.Member, description="The member to warn"), 
         reason : Option(str, description="The reason to show for the warn", required=False) = "None"
     ):
+        await ctx.defer()
         data = await functions.read_data("databases/warns.json")
 
         thedate = str(datetime.now())
         if str(ctx.guild.id) not in data:
             data[str(ctx.guild.id)] = {}
         if str(member.id) not in data[str(ctx.guild.id)]:
-            data[str(ctx.guild.id)][str(member.id)] = {
-                "1":{
-                    "time":thedate,
-                    "mod":str(ctx.author.id),
-                    "reason":reason
-                }
-            }
-        else:
-            data[str(ctx.guild.id)][str(member.id)][str(len(data[str(ctx.guild.id)][str(member.id)]) + 1)] = {
-                "time":thedate,
-                "mod":str(ctx.author.id),
-                "reason":reason
-            }
+            data[str(ctx.guild.id)][str(member.id)] = {}
+
+        for i in range(1, 1000):
+            if str(i) not in data[str(ctx.guild.id)][str(member.id)]:
+                warnID = str(i)
+                break
+
+        data[str(ctx.guild.id)][str(member.id)][warnID] = {
+            "time":thedate,
+            "mod":str(ctx.author.id),
+            "reason":reason
+        }
         
         data = await functions.save_data("databases/warns.json", data)
 
@@ -73,7 +73,7 @@ class Warns(commands.Cog):
         embed.add_field(name="Warn ID", value=len(data[str(ctx.guild.id)][str(member.id)]))
         embed.add_field(name="Moderator", value=str(ctx.author))
         embed.set_footer(text=f"{member.display_name} now has {len(data[str(ctx.guild.id)][str(member.id)])} warn(s)")
-        await ctx.respond(embed=embed, view=view)
+        await ctx.followup.send(embed=embed, view=view)
 
         # Log update if available
         embed = discord.Embed(title="User warned", color=var.embed, timestamp=datetime.now())
@@ -86,7 +86,7 @@ class Warns(commands.Cog):
     
     @slash_command(name="warns", description="Check a users warns", aliases=['viewwarns', 'viewwarn', 'mywarns', 'mywarn'])
     @commands.guild_only()
-    async def warns(self, ctx, member: Option(discord.Member, description="Optional member to get warns for", required=False) = None):
+    async def warns(self, ctx, member: Option(discord.Member, description="Optional member to get warns for")):
         if member == None:
             member = ctx.author
         data = await functions.read_data("databases/warns.json")

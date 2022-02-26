@@ -1,10 +1,16 @@
 const discord = require("discord.js-light");
 const youtube = require("youtube-sr").default;
 const functions = require("./functions.js")
-const classes = require("./classes")
 const ytdl = require("discord-ytdl-core")
 const genius = require("genius-lyrics");
 const dotenv = require("dotenv")
+
+musicGuild = class {
+    constructor(bot, guild) {
+        this.bot = bot 
+        this.guild = guild
+    }
+}
 
 dotenv.config()
 
@@ -312,6 +318,28 @@ bot.on('interactionCreate', async interaction => {
     }
     
 });
+
+bot.on('voiceStateUpdate', async (oldMember, newMember) => {
+    if (oldMember.channelId && !newMember.channelId) {
+        if (oldMember.id == bot.user.id) {
+            mGuild = guilds[oldMember.guild.id]
+
+            if (mGuild) {
+                await mGuild.textChannel.send(`Queue ended (bot diconnected)`)
+                await mGuild.stop()
+            }
+        }
+    }
+    if (oldMember.channelId && newMember.channelId) {
+        if (oldMember.id == bot.user.id) {
+            if (oldMember.channelId != newMember.channelId) {
+                guilds[oldMember.guild.id].voiceChannel = await bot.channels.fetch(newMember.channelId)
+            }
+
+        }
+
+    }
+})
 
 async function autocomplete_queueItem(interaction, argName, ignoreFirst=false) {
     mGuild = guilds[interaction.guild.id]
@@ -639,7 +667,7 @@ async function command_play(interaction) {
     queueData = {video:search[0], search:interaction.options.getString("song"), requestor:interaction.member, seek:seek}
 
     if (!(guilds[interaction.guild.id])) {
-        guilds[interaction.guild.id] = new classes.musicGuild(bot, interaction.guild)
+        guilds[interaction.guild.id] = new musicGuild(bot, interaction.guild)
         guild = guilds[interaction.guild.id]
 
         guild.queue = []
@@ -1039,9 +1067,20 @@ async function command_filter(interaction) {
     filtersStr = ``
     if (guilds[interaction.guild.id].filters.bass) filtersStr += `Bass: **${guilds[interaction.guild.id].filters.bass}%**`
     if (guilds[interaction.guild.id].filters.speed) filtersStr += `Speed: **${guilds[interaction.guild.id].filters.speed}%**`
-    if (guilds[interaction.guild.id].filters.pitch) filtersStr += `Pitch: *${guilds[interaction.guild.id].filters.pitch}**`
+    if (guilds[interaction.guild.id].filters.pitch) filtersStr += `Pitch: **${guilds[interaction.guild.id].filters.pitch}**`
 
     return interaction.reply({embeds:[functions.getSuccessEmbed("Set filters", `Successfully set filters:\n${filtersStr}`)]})
 }
+
+const express = require('express')
+const app = express()
+
+app.get('/', (req, res) => {
+    res.send('Hello World!')
+})
+
+app.listen(3000, () => {
+    console.log(`Example app listening at http://localhost:${3000}`)
+})
 
 bot.login(process.env.token)
