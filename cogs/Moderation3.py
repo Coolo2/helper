@@ -55,7 +55,7 @@ class Moderation3(commands.Cog):
                 try:
                     await ctx.respond(f"> Started adding role **{role.name}** to all {len(ctx.guild.members)} members! This is estimated to take {calculation} seconds.")
                     goahead = 1
-                except:
+                except Exception as e:
                     await ctx.respond(f"> Could not find role **{role}**!")        
                     goahead = 0
 
@@ -90,7 +90,7 @@ class Moderation3(commands.Cog):
                 try:
                     await ctx.respond(f"> Started removing role **{role.name}** from all {len(ctx.guild.members)} members! This is estimated to take {calculation} seconds.")
                     goahead = 1
-                except:
+                except Exception as e:
                     await ctx.respond(f"> I am missing permission to remove role {role}.")        
                     goahead = 0
                 if goahead == 1:
@@ -158,7 +158,7 @@ class Moderation3(commands.Cog):
                             else:
                                 await member.respond(nick=nickname)
                                 await ctx.respond(f"> Successfully set **{member}**s nickname to **{nickname}**")
-                        except:
+                        except Exception as e:
                             await ctx.respond("> Could not change nickname `Bot Missing permissions`")
         else:
             if ctx.author.guild_permissions.manage_nicknames:
@@ -185,12 +185,12 @@ class Moderation3(commands.Cog):
                                 pass 
                             else:
                                 data[str(member.id)] = member.display_name
-                        except:
+                        except Exception as e:
                             data[str(member.id)] = member.display_name
                         if nickname == "reset":
                             try:
                                 prev = prefixes[str(ctx.guild.id)][str(member.id)]
-                            except:
+                            except Exception as e:
                                 prev = member.name
                             await member.edit(nick=prev)
                         else:
@@ -220,7 +220,7 @@ class Moderation3(commands.Cog):
                     else:
                         prefixes[str(ctx.guild.id)] = data
                         doit = 1
-                except:
+                except Exception as e:
                     prefixes[str(ctx.guild.id)] = data
                     doit = 1
                 if doit == 1:

@@ -64,7 +64,7 @@ class Warns(commands.Cog):
                 description=f"Warned **{member.display_name}** successfully with reason: **{reason}**" + (f". Due to your [Server Events]({var.address}/dashboard#{ctx.guild.id}), this user should now get a **{button.name}**. Use the button below to do this action." if button != None else "") + (noArg if reason == "None" else ""),
                 colour=var.embedSuccess
             )
-        except:
+        except Exception as e:
             embed = discord.Embed(
                 title=random.choice([f"Successfully warned {member.display_name}", "Successfully warned!", f"Warned {member.display_name} successfully!"]),
                 description=f"Warned **{member.display_name}** successfully with reason: **{reason}**, however could not DM them." + (f". Due to your [Server Events]({var.address}/dashboard#{ctx.guild.id}), this user should now get a **{button.name}**. Use the button below to do this action." if button != None else "") + (noArg if reason == "None" else ""),

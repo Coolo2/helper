@@ -75,7 +75,7 @@ class Information1(commands.Cog):
                         embed.add_field(name="Usage", value=prefix + cmd.name + optionString, inline=False)
                         try:
                             embed.add_field(name="Aliases", value="`" + "`, `".join(cmd.aliases) + "`", inline=False)
-                        except:
+                        except Exception as e:
                             pass
                         return await ctx.respond(embed=embed)
             

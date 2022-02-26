@@ -41,7 +41,7 @@ class Utility2(commands.Cog):
         else:
             try:
                 color = int(color, 16)
-            except:
+            except Exception as e:
                 color = var.embed
 
         if title and footer:
@@ -116,7 +116,7 @@ class Utility2(commands.Cog):
             index += 1
             try:
                 embed.add_field(name=f"Option {index}", value=choice)
-            except:
+            except Exception as e:
                 pass
 
                 
@@ -149,7 +149,7 @@ class Utility2(commands.Cog):
                                 if reverse[country2["country"].lower()] == country.lower():
                                     final = country2
                                     done = True
-                            except:
+                            except Exception as e:
                                 pass
                     
                     if done == False:

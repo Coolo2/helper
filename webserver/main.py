@@ -89,7 +89,7 @@ def userinfoAPI():
         name = encryption.decode(user[2], encryptionKey)
         avatar = encryption.decode(user[3], encryptionKey)
         user = bot.get_user(int(user_id))
-    except:
+    except AttributeError:
         return jsonify({"user":None, "type":"unknown"})
     
     if not user:
@@ -101,16 +101,16 @@ def userinfoAPI():
             }, 
             "type":"user"
         })
-    else:
-        return jsonify({
-            "user":{
-                "id":str(user.id),
-                "name":user.name,
-                "avatar":user.avatar.url if user.avatar else None,
-                "mutual":[{"id":str(guild.id), "name":guild.name, "icon":guild.icon.url if guild.icon else None} for guild in bot.guilds if guild.get_member(int(user.id))]
-            }, 
-            "type":"mutual"
-        })
+
+    return jsonify({
+        "user":{
+            "id":str(user.id),
+            "name":user.name,
+            "avatar":user.avatar.url if user.avatar else None,
+            "mutual":[{"id":str(guild.id), "name":guild.name, "icon":guild.icon.url if guild.icon else None} for guild in bot.guilds if guild.get_member(int(user.id))]
+        }, 
+        "type":"mutual"
+    })
 
 
 
@@ -134,7 +134,7 @@ def admin():
         cookiestring = cookiestring + ';;;;' + encryption.encode(str(user_json['avatar']), encryptionKey).decode("utf-8")
         resp.set_cookie('user', cookiestring, max_age=8_760*3600)
         return resp
-    except Exception as e:
+    except AttributeError as e:
         print(e)
         return redirect("/")
 
@@ -143,8 +143,7 @@ def dashboard():
     try:
         user = request.cookies.get('user').split(";;;;")
         user_id = encryption.decode(user[1], encryptionKey)
-        name = encryption.decode(user[2], encryptionKey)
-    except:
+    except AttributeError:
         resp = make_response(redirect("/login"))
         resp.set_cookie('user', '', expires=0)
         return resp
@@ -155,8 +154,7 @@ def dashboardWith(server):
     try:
         user = request.cookies.get('user').split(";;;;")
         user_id = encryption.decode(user[1], encryptionKey)
-        name = encryption.decode(user[2], encryptionKey)
-    except:
+    except AttributeError:
         return redirect("/login")
     return render_template('dashboard.html', last_updated=dir_last_updated('/static'))
 
@@ -175,8 +173,7 @@ def serverDataAPI():
     try:
         user = request.cookies.get('user').split(";;;;")
         user_id = encryption.decode(user[1], encryptionKey)
-        user_name = encryption.decode(user[2], encryptionKey)
-    except:
+    except AttributeError:
         return redirect("/login")
     warns = functions.read_data_sync('databases/warns.json')
     warnsString = json.dumps(warns)
@@ -231,8 +228,7 @@ def setAutorole():
     try:
         user = request.cookies.get('user').split(";;;;")
         user_id = encryption.decode(user[1], encryptionKey)
-        user_name = encryption.decode(user[2], encryptionKey)
-    except:
+    except AttributeError:
         return redirect("/login")
 
     with open("databases/setup.json") as f:
@@ -244,7 +240,7 @@ def setAutorole():
 
     try:
         role = data["role"]
-    except:
+    except AttributeError:
         return jsonify({"error":"Invalid role"})
     
     if member.guild_permissions.manage_guild:
@@ -255,7 +251,6 @@ def setAutorole():
             del joinleave[str(guild.id)]["autorole"]
         elif role == "None":
             what = "removed"
-            pass 
         else:
             what = "set"
             joinleave[str(guild.id)]["autorole"] = str(role)
@@ -270,16 +265,15 @@ def setAutorole():
         bot.loop.create_task(functions.log(bot, "dashboardUse", guild, embed))
             
         return jsonify({"data":joinleave[str(guild.id)], "returnMessage":f"Successfully {what} autorole role"})
-    else:
-        return jsonify({"error":"Missing perms"})
+
+    return jsonify({"error":"Missing perms"})
 
 @app.route('/api/dashboard/setLogging', methods=['POST'])
 def setLogging():
     try:
         user = request.cookies.get('user').split(";;;;")
         user_id = encryption.decode(user[1], encryptionKey)
-        user_name = encryption.decode(user[2], encryptionKey)
-    except:
+    except AttributeError:
         return redirect("/login")
 
     with open("databases/setup.json") as f:
@@ -291,7 +285,7 @@ def setLogging():
 
     try:
         loggingData = data["logging"]
-    except:
+    except AttributeError:
         return jsonify({"error":"Invalid role"})
     
     if "channel" in loggingData:
@@ -324,16 +318,15 @@ def setLogging():
         functions.read_load_sync("databases/setup.json", joinleave)
             
         return jsonify({"data":joinleave[str(guild.id)], "returnMessage":f"Successfully set logging settings"})
-    else:
-        return jsonify({"error":"Missing perms"})
+
+    return jsonify({"error":"Missing perms"})
 
 @app.route('/api/dashboard/setMessage', methods=['POST'])
 def setMessage():
     try:
         user = request.cookies.get('user').split(";;;;")
         user_id = encryption.decode(user[1], encryptionKey)
-        user_name = encryption.decode(user[2], encryptionKey)
-    except:
+    except AttributeError:
         return redirect("/login")
     
     with open("databases/setup.json") as f:
@@ -347,7 +340,7 @@ def setMessage():
         channel = int(data["channel"])
         message = data["message"]
         choice = data["type"]
-    except:
+    except AttributeError:
         return jsonify({"error":"Invalid channel/message"})
     
     if member.guild_permissions.manage_guild:
@@ -377,8 +370,8 @@ def setMessage():
         bot.loop.create_task(functions.log(bot, "dashboardUse", guild, embed))
 
         return jsonify({"data":joinleave[str(guild.id)], "returnMessage":f"Successfully set {choice} message to '{data['message']}'"})
-    else:
-        return jsonify({"error":"Missing perms"})
+
+    return jsonify({"error":"Missing perms"})
         
 
 @app.route('/api/dashboard/setPrefix', methods=['POST'])
@@ -386,8 +379,7 @@ def setPrefix():
     try:
         user = request.cookies.get('user').split(";;;;")
         user_id = encryption.decode(user[1], encryptionKey)
-        user_name = encryption.decode(user[2], encryptionKey)
-    except:
+    except AttributeError:
         return redirect("/login")
     prefixes = functions.read_data_sync("databases/prefixes.json")
     data = request.json
@@ -410,19 +402,16 @@ def setPrefix():
         functions.save_data_sync("databases/prefixes.json", prefixes)
         functions.read_load_sync("databases/prefixes.json", prefixes)
 
-        
-
         return jsonify({"prefix":returnPrefix, "returnMessage":returnMess})
-    else:
-        return jsonify({"error":"Missing perms"})
+
+    return jsonify({"error":"Missing perms"})
 
 @app.route('/api/dashboard/setEvents', methods=['POST'])
 def setEvents():
     try:
         user = request.cookies.get('user').split(";;;;")
         user_id = encryption.decode(user[1], encryptionKey)
-        user_name = encryption.decode(user[2], encryptionKey)
-    except:
+    except AttributeError:
         return redirect("/login")
     events = functions.read_data_sync("databases/events.json")
     data = request.json
@@ -448,16 +437,15 @@ def setEvents():
         bot.loop.create_task(functions.log(bot, "dashboardUse", guild, embed))
 
         return jsonify({"returnMessage":"Successfully set events"})
-    else:
-        return jsonify({"error":"Missing perms"})
+    
+    return jsonify({"error":"Missing perms"})
 
 @app.route('/api/dashboard/setCustomCommands', methods=['POST'])
 def setCustomCommands():
     try:
         user = request.cookies.get('user').split(";;;;")
         user_id = encryption.decode(user[1], encryptionKey)
-        user_name = encryption.decode(user[2], encryptionKey)
-    except:
+    except AttributeError:
         return redirect("/login")
 
     commands = functions.read_data_sync("databases/commands.json")
@@ -517,16 +505,16 @@ def setCustomCommands():
             return jsonify({"error":"One or more of your custom commands were empty! Removed them.", "commands":commands[str(guild.id)]})
 
         return jsonify({"returnMessage":"Successfully set commands. This may take up to a minute to refresh.", "commands":commands[str(guild.id)]})
-    else:
-        return jsonify({"error":"Missing perms", "commands":commands[str(guild.id)]})
+
+    
+    return jsonify({"error":"Missing perms", "commands":commands[str(guild.id)]})
 
 @app.route('/api/dashboard/delWarn', methods=['POST'])
 def delWarn():
     try:
         user = request.cookies.get('user').split(";;;;")
         user_id = encryption.decode(user[1], encryptionKey)
-        user_name = encryption.decode(user[2], encryptionKey)
-    except:
+    except AttributeError:
         return redirect("/login")
     warns = functions.read_data_sync("databases/warns.json")
     data = request.json
@@ -546,16 +534,15 @@ def delWarn():
         bot.loop.create_task(functions.log(bot, "warns", guild, embed))
 
         return jsonify(warns)
-    else:
-        return jsonify({"error":"Missing perms"})
+
+    return jsonify({"error":"Missing perms"})
 
 @app.route('/api/dashboard/setMusic', methods=['POST'])
 def setMusic():
     try:
         user = request.cookies.get('user').split(";;;;")
         user_id = encryption.decode(user[1], encryptionKey)
-        user_name = encryption.decode(user[2], encryptionKey)
-    except:
+    except AttributeError:
         return redirect("/login")
     music = functions.read_data_sync("databases/music.json")
     data = request.json
@@ -571,17 +558,15 @@ def setMusic():
         functions.save_data_sync("databases/music.json", music)
 
         return jsonify({"returnMessage":"Successfully set music permissions"})
-    else:
-        return jsonify({"error":"Missing perms"})
+
+    return jsonify({"error":"Missing perms"})
 
 
 def dir_last_updated(folder):
     try:
-        return str(max(os.path.getmtime(os.path.join(root_path, f))
-                    for root_path, dirs, files in os.walk(folder)
-                    for f in files))
-    except:
-        return 0
+        return str(max(os.path.getmtime(os.path.join(root_path, f)) for root_path, dirs, files in os.walk(folder) for f in files))
+    except ValueError:
+        pass
 
 def run():
     http = WSGIServer(('0.0.0.0', 5000), app) 

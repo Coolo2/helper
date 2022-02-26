@@ -27,7 +27,7 @@ class Moderation1(commands.Cog):
                     await member.kick()
                 else:
                     await member.kick(reason=reason)
-            except:
+            except Exception as e:
                 raise commands.BotMissingPermissions(["kick_members"])
             embed = discord.Embed(title=random.choice(["Kicked successfully!", "Kicked!", "Successfully kicked!"]), description=f"Successfully kicked **{member.display_name}**{' with reason **' if reason != None else ''}{reason + '**' if reason != None else ''}", colour=var.embedSuccess)
             return await ctx.respond(embed=embed)
@@ -44,7 +44,7 @@ class Moderation1(commands.Cog):
         if ctx.author.guild_permissions.ban_members and ctx.author.top_role.position > member.top_role.position or ctx.guild.owner == ctx.author:
             try:
                 await member.ban(reason=reason, delete_message_days=delete_message_days)
-            except:
+            except Exception as e:
                 raise commands.BotMissingPermissions(["ban_members"])
             embed = discord.Embed(title=random.choice(["Banned successfully!", "Banned!", "Successfully banned!"]), description=f"Successfully banned **{member.display_name}**{' with reason **' if reason != None else ''}{reason + '**' if reason != None else ''}", colour=var.embedSuccess)
             return await ctx.respond(embed=embed)

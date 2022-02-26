@@ -83,7 +83,7 @@ class Economy2(commands.Cog):
         try:
             embed = discord.Embed(title="You have been paid!", description=f"You have been paid {amount} from {ctx.author}! You are now on {balances[str(ctx.guild.id)][str(member.id)]['balance']} credits!", color=var.embed)
             await member.send(embed=embed)
-        except:
+        except Exception as e:
             pass
 
         await functions.save_data("databases/economy.json", balances)

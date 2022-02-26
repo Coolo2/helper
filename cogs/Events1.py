@@ -19,7 +19,7 @@ class Handling(commands.Cog):
                     for memberRole in member.roles:
                         try:
                             await member.remove_roles(memberRole)
-                        except:
+                        except Exception as e:
                             pass
                     for guildRole in member.guild.roles:
                         if guildRole.name == "Muted":
@@ -29,7 +29,7 @@ class Handling(commands.Cog):
             if "join" in data[str(member.guild.id)]:
                 try:
                     await self.bot.get_channel(int(data[str(member.guild.id)]["join"]["channel"])).send(functions.replaceMessage(member,data[str(member.guild.id)]["join"]["message"]))
-                except:
+                except Exception as e:
                     pass
             if "autorole" in data[str(member.guild.id)]:
                 try:

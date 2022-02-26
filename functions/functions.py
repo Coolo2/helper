@@ -23,27 +23,27 @@ def prefix(guild):
         with open('databases/prefixes.json') as f:
             prefixes = json.load(f)
             return prefixes[str(guild.id)]
-    except:
+    except Exception as e:
         theprefix = var.prefix
         return theprefix
 
 def oneTime(timeStr):
     if "y" in timeStr:
         return int(timeStr.replace("y", "")) * 86400 * 365
-    elif "m" in timeStr:
+    if "m" in timeStr:
         return int(timeStr.replace("m", "")) * 86400 * 30
-    elif "w" in timeStr:
+    if "w" in timeStr:
         return int(timeStr.replace("w", "")) * 86400 * 7
-    elif "d" in timeStr:
+    if "d" in timeStr:
         return int(timeStr.replace("d", "")) * 86400
-    elif "h" in timeStr:
+    if "h" in timeStr:
         return int(timeStr.replace("h", "")) * 3600
-    elif "m" in timeStr:
+    if "m" in timeStr:
         return int(timeStr.replace("m", "")) * 60
-    elif "s" in timeStr:
+    if "s" in timeStr:
         return int(timeStr.replace("s", ""))
-    else:
-        return int(timeStr)
+
+    return int(timeStr)
 
 def timeToSeconds(timeStr):
     timeStr = timeStr.lower()
@@ -52,8 +52,8 @@ def timeToSeconds(timeStr):
         for time in timeStr.split(" "):
             returnTime += oneTime(time)
         return returnTime
-    else:
-        return oneTime(timeStr)
+
+    return oneTime(timeStr)
 
 async def unmute(guild, member : discord.Member):
     data = await read_data('databases/mutes.json')
@@ -84,9 +84,10 @@ async def mute (bot, guild, member : discord.Member, length):
     if member == guild.owner:
         embed = discord.Embed(title="Uh oh!", description="I can't mute the owner of the server", colour=var.embedFail)
         return embed
-    elif member == bot.user:
+    if member == bot.user:
         embed = discord.Embed(title="Uh oh!", description="I can't mute myself", colour=var.embedFail)
         return embed
+
     hasMuted = False
     for role in guild.roles:
         if role.name == "Muted":
@@ -101,7 +102,7 @@ async def mute (bot, guild, member : discord.Member, length):
     if length != None:
         try:
             length = str((datetime.now() + timedelta(seconds=timeToSeconds(length))).strftime("%d-%b-%Y (%H:%M:%S.%f)"))
-        except:
+        except Exception as e:
             embed = discord.Embed(title="Uh oh!", description=f"Invalid mute length! Mute Length example: '2h 5m'", colour=var.embedFail)
             return embed
     
@@ -136,7 +137,7 @@ async def mute (bot, guild, member : discord.Member, length):
         try:
             await member.remove_roles(memberRole)
             errors = errors + "true"
-        except:
+        except Exception as e:
             errors = errors + "false"
     errors = errors.count("false")
     await member.add_roles(mutedRole)
@@ -197,7 +198,7 @@ async def is_url_image(image_url, image_formats):
                 if r.headers["content-type"] in image_formats:
                     return True
                 return False
-    except:
+    except Exception as e:
         return False
 
 async def imageFromArg(ctx, args, imgTuple, imgList):
@@ -269,7 +270,7 @@ def uri_validator(x):
     try:
         result = urlparse(x)
         return all([result.scheme, result.netloc, result.path])
-    except:
+    except Exception as e:
         return False
 
 def colorfromword(input):
@@ -323,7 +324,7 @@ def checkList(iterable, check):
         if det != None:
             try:
                 return command.name
-            except:
+            except Exception as e:
                 return command
     return None
 
@@ -337,5 +338,5 @@ async def log(bot : discord.Bot, type : str, guild : discord.Guild, embed : disc
             logChannel = guild.get_channel(int(data[str(guild.id)]["logging"]["channel"]))
 
             await logChannel.send(embed=embed)
-    except:
+    except Exception as e:
         pass

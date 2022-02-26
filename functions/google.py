@@ -43,7 +43,7 @@ async def search(request,
             link = result.find('a', href=True)
             try:
                 title = result.find('h3').text
-            except:
+            except Exception as e:
                 title = None
             if link and title:
                 yield ReturnValue(url=link['href'], description=desc, title=title)

@@ -19,10 +19,10 @@ def get_prefix(bot, message):
         
         prefix = prefixes[str(message.guild.id)]
         return commands.when_mentioned_or(prefix, prefix.upper(), prefix.capitalize())(bot, message)
-    except:
+    except Exception as e:
         return commands.when_mentioned_or(var.prefix, var.prefix.upper(), var.prefix.capitalize())(bot, message)
 
-bot = discord.Bot(command_prefix=get_prefix, case_insensitive=True, intents=intents, debug_guilds=[447702058162978827, 450914634963353600])
+bot = discord.Bot(command_prefix=get_prefix, case_insensitive=True, intents=intents, debug_guilds=[447702058162978827])
 bot.auto_sync_commands = False
 
 extensions = [file.replace(".py", "") for file in os.listdir('./cogs') if file.endswith(".py")]

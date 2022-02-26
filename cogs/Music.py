@@ -26,7 +26,7 @@ class Music(commands.Cog):
                     description=f"Music command didn't respond. Either it is offline or an unexpected error occurred.\n\nJoin the [Support Server]({var.server}) for support.", 
                     color=var.embedFail, timestamp=datetime.datetime.now()))
             return await self.bot.get_channel(927926604838109215).send(f"> Error in **{ctx.guild.name}** from **{ctx.author}**: `Music section offline / error`")
-        except:
+        except Exception as e:
             pass
 
     @slash_command(name="play", description="Play a song from a YouTube URL or search")

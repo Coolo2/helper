@@ -227,7 +227,7 @@ class Fun1(commands.Cog):
         final = final + "```"
         try:
             await ctx.respond(final, ephemeral=True)
-        except:
+        except Exception as e:
             raise customerror.MildErr("Final response too long!")
     
     @slash_command(name="emoji", description="Emojify a message", aliases=["emojify"])
@@ -240,7 +240,7 @@ class Fun1(commands.Cog):
                 finalstring = finalstring + " {} ".format(character)
         try:
             await ctx.respond(finalstring, allowed_mentions=discord.AllowedMentions(everyone=False, roles=False))
-        except:
+        except Exception as e:
             raise customerror.MildErr("Final response too long!")
     
     @slash_command(name="mimic", description="Mimic another user!")
@@ -307,7 +307,7 @@ class Fun1(commands.Cog):
                 finalwebhook = await ctx.channel.create_webhook(name="Helper Webhook")
             else:
                 finalwebhook = webhooks[0]
-        except:
+        except Exception as e:
             raise commands.BotMissingPermissions(["manage_webhooks"])
         
         webhook = discordwebhook.Webhook(finalwebhook.url)

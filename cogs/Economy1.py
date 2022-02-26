@@ -242,7 +242,7 @@ class Economy1(commands.Cog):
             try:
                 embed = discord.Embed(title="Uh-oh! You have been robbed!", description=f"You got robbed **{removeAmount}** credits, you are now on **{balances[str(ctx.guild.id)][str(member.id)]['balance']}** credits.", color=var.embedFail)
                 await member.send(embed=embed)
-            except:
+            except Exception as e:
                 pass
         else:
             balances[str(ctx.author.id)] -= fine

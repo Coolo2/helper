@@ -72,7 +72,7 @@ Random number from **1** to **1,000,000**: {random.randint(1, 1000000)}""")
         try:
             em = discord.Embed(title=message, url=url, colour=var.embed)
             await ctx.respond(embed=em)
-        except:
+        except Exception as e:
             await ctx.respond("> Could not find a valid URL.")
     
     @slash_command(name="wikipedia", description="Search wikipedia for an article")
@@ -154,7 +154,7 @@ Random number from **1** to **1,000,000**: {random.randint(1, 1000000)}""")
         embed.set_footer(text="Command made with EasyConversion {} | tiny.cc/EasyConversion".format(info.version.current.name))
         try:
             await ctx.respond(embed=embed)
-        except:
+        except Exception as e:
             await ctx.respond("> Output too long!")
     
     @slash_command(name="avatar", description="Get a user's profile picture", aliases=['pfp', 'logo', 'profilepicture', 'useravatar'])
@@ -188,7 +188,7 @@ Random number from **1** to **1,000,000**: {random.randint(1, 1000000)}""")
             else:
                 amount = int(functions.calculateTime(time))
                 
-        except:
+        except Exception as e:
             raise customerror.MildErr("Invalid time! Time must be a number above 1.")
 
         await ctx.respond("> I will remind you in " + str(amount) + " second(s)", ephemeral=True)
@@ -215,7 +215,7 @@ Random number from **1** to **1,000,000**: {random.randint(1, 1000000)}""")
             else:
                 amount = int(functions.calculateTime(time))
                 
-        except:
+        except Exception as e:
             raise customerror.MildErr("Invalid time! Time must be a number above 1.")
         
         if amount < 1:
