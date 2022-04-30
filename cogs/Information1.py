@@ -49,7 +49,7 @@ class Information1(commands.Cog):
             cmdCategory = "_ _"
 
             tree : app_commands.CommandTree = self.bot.tree
-            if var.production:
+            if not var.guilds:
                 commands = tree.walk_commands()
             else:
                 commands = tree.walk_commands(guild=var.guilds[0])
@@ -78,7 +78,7 @@ class Information1(commands.Cog):
 
                         optionString = ""
                         for option_name, option in cmd._params.items():
-                            optionString += (" *[" if option.required == False else " [") + f"{option_name}" + "]"
+                            optionString += (" \*[" if option.required == False else " [") + f"{option_name}" + "]"
 
                         embed.add_field(name="Category", value=cmdCategory, inline=False)
                         embed.add_field(name="Description", value=cmd.description, inline=False)

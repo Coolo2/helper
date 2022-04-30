@@ -1,27 +1,45 @@
-[20th March 2022] 1.0.0 - The long awaited rewrite is finally out!
+[30th April 2022] 1.0.0 - The long awaited rewrite is finally out!
 
-A complete rewrite of every command and event, this fixes bugs and comes with slash command support
+Back in 2021, Helper was in a bad state. The whole bot was in a mess and half the commands didn't work. 
+That's why I decided to rewrite the whole thing, which lead to this version. 
+The bot works similarly, yet is easier to use and less buggy overall. Each command and event has been completely written behind the scenes into slash commands.
+Please note that as of this version, prefixed (hb/) commands will not work due to changes on Discord. All commands must be requested via slash commands (/help).
 
 <u>Updated commands:</u>
 
-All commands have been rewritten, too many to list here
+All commands have been rewritten, too many to list here.
+Notable changes:
+- Warn improvements : Events! (see below)
+- Better integration to the dashboard
+- Moderation command fixes 
+- Slash commands and slash custom commands
+
 
 <u>Improvements:</u>
 
-Slash command support
+Full slash command, slash command permission, and button support
 Cleaner commands and simpler usage all round the bot 
-Music is back!
+<strike>Music is back!</strike> Music will be back soon
+New dashboard
+Events system: warns can chain other actions when they are trigged: eg 3 warns to ban. See more on the Dashboard
+Image commands are faster and less reliant on third parties
 
 <u>Bug fixes:</u>
 
 Every command has been rewritten, therefore hundreds of bugs have been fixed.
-See the bug fixes by using the bot!
+Notable bug fixes:
+- Moderation commands no longer send a "missing permissions" message alongside a "success" message 
+- Dashboard login now works 
+- Mimic now works 
+- Random image commands now work
+- Meme command is less buggy 
 
 <u>Website changes:</u>
 
 Discord embed for the website
 Much improved dashboard
 Window based website design
+Login save
 
 <u>Development changes:</u>
 

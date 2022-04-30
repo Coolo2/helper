@@ -85,7 +85,7 @@ class CustomCommand():
         return self.options
 
 
-async def sync_custom_commands(bot : commands.Bot):
+async def sync_custom_commands(bot : commands.Bot, guild : discord.Guild = None):
     tree : app_commands.CommandTree = bot.tree
 
     print("Custom commands syncing...")
@@ -94,17 +94,25 @@ async def sync_custom_commands(bot : commands.Bot):
         data = json.load(f)
 
     for guild_id in data:
+        if guild and str(guild_id) != str(guild.id):
+            continue
         await doGuildCustomCommands(bot, int(guild_id), data[guild_id])
 
     cmds = tree._guild_commands
 
+    to_remove = []
+
     for guild_id, guild_cmds in cmds.items():
+        if guild and str(guild_id) != str(guild.id):
+            continue
+
         for name, cmd in guild_cmds.items():
 
             if cmd.description and "Helper Bot Custom Command" in cmd.description:
 
                 if str(guild_id) not in data or name not in data[str(guild_id)]:
-                    tree.remove_command(name, guild=discord.Object(guild_id))
+                    to_remove.append([name, discord.Object(guild_id)])
+                    
         if var.reload_custom_commands:
             try:
                 await tree.sync(guild=discord.Object(guild_id))
@@ -112,6 +120,9 @@ async def sync_custom_commands(bot : commands.Bot):
                 print("Couldnt sync commands to guild")
         else:
             print("Warning: custom command reloading is disabled!")
+    
+    for command in to_remove:
+        tree.remove_command(command[0], guild=command[1])
 
 async def doGuildCustomCommands(bot : commands.Bot, guild_id : int, pendingCommands : dict):
     tree : app_commands.CommandTree = bot.tree
@@ -137,9 +148,10 @@ async def doGuildCustomCommands(bot : commands.Bot, guild_id : int, pendingComma
         
 
         try:
-            tree.add_command(cmd, guild=discord.Object(guild_id))
+            tree.add_command(cmd, guild=discord.Object(guild_id), override=True)
+            
         except app_commands.errors.CommandAlreadyRegistered:
-            tree.remove_command(cmd, guild=discord.Object(guild_id))
+            tree.remove_command(cmd, guild=discord.Object(guild_id))       
             tree.add_command(cmd, guild=discord.Object(guild_id))
         
 

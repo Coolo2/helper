@@ -481,3 +481,27 @@ textarea:focus, input:focus, select:focus{
     -webkit-mask-image:linear-gradient(to top, rgb(255, 255, 255) 0%, rgb(0, 0, 0, 0) 100%);
     overflow: hidden
 }
+
+.footer {
+    background-color:rgb(0, 0, 0, 0.5);
+    height:300px;
+    width:100%;
+    position:absolute;
+    margin-top:500px;
+}
+.footer-title {
+    left:5%;
+    color:white;
+    font-size:40px;
+}
+.footer-links {
+    left:25%;
+    font-size:20px;
+}
+.footer-links-2 {
+    left:calc(25% + 200px)
+}
+
+a {
+    color:#a3a3a3
+}

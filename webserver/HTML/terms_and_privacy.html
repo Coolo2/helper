@@ -22,6 +22,7 @@
             }
         </style>
     </head>
+    
     <body>
         <div style="z-index:10;color:white;position:fixed;height:50px;filter:hue-rotate(100deg) grayscale(1);z-index:100;background-color:black;width:100%;background: rgb(196,0,0);background: radial-gradient(circle, rgba(196,0,0,1) 45%, rgba(242,89,0,1) 100%);transition:top 0.5s" id="navBar">
             <image src="/static/images/logoFull.png" id="tobBar1" style="height:50px;cursor:pointer" onclick="linkTo('/')"></image>
@@ -33,7 +34,7 @@
         background: linear-gradient(0deg, rgba(196,0,0,1) 0%, rgba(242,89,0,1) 100%);position:relative;text-align:center;
         " id="gradient">
             <span class="all-center" style="white-space: nowrap;opacity:0%;transition: opacity 1s" id="gradient-text">Helper Bot</span>
-            <span class="horizontal-center" style="white-space: nowrap;transition: opacity 1s;top:55%;padding:50px;opacity:0%;font-size:20px;letter-spacing:normal" id="gradient-description">Changelogs</span>
+            <span class="horizontal-center" style="white-space: nowrap;transition: opacity 1s;top:55%;padding:50px;opacity:0%;font-size:20px;letter-spacing:normal" id="gradient-description">Terms of Service and Privacy Policy</span>
         </div>
         <div style="height:80px;width:250px;background: rgb(196,0,0);color:white;font-size:25px;border-radius:25px;
         background: linear-gradient(0deg, rgba(196,0,0,1) 0%, rgba(242,89,0,1) 100%);position:absolute;top:-100px;right:20px;z-index:1000;transition:top 1s
@@ -41,6 +42,76 @@
             <span class="all-center">Loading...</span>
         </div>
         <div style="overscroll-behavior: none;position: relative;height:calc(100% - 350px);padding-top:50px;top:50px;width:100%;overflow-x:auto;overflow-y:auto;transition:top 0.8s, height 0.8s;" id="body">
+            
+            <h1 style="padding-left:50px;color:white">Terms of Service</h1>
+            <p>Please read these Terms before using our Services, your access to use Helper is conditioned upon you acceptance and compliance with these Terms.
+                <br>
+                By using Helper's Services, you agree with our Terms of Service, Privacy Policy and the 
+                <a href="https://discord.com/terms" style="color:white">Discord Terms of Service</a>.
+            </p>
+            
+            <h3>Inaccuracies</h3>
+            <p>
+                Any information found across our Services may not be up to date, or could have slight inaccuracies. Helper can not guarantee complete accuracy
+                of any information found across its Services.
+            </p>
+            <h3>Purchasables</h3>
+            <p>
+                Any future purchasable products sold by Helper will be warned of at least 30 days in advance. Helper currently will not charge for any of its 
+                Services.
+                By using Helper you agree that part of the Bot may become a paid feature in the future and will not be given for free. Helper will never charge 
+                users automatically for previously free features.
+            </p>
+            <h3>Termination</h3>
+            <p>
+                We may terminate or suspend access to any Helper service, without prior notice and for any reason whatsoever, if you breach the Terms.
+            </p>
+            <h3>External links</h3>
+            <p>
+                This Software may include links to the third-party websites; you may redirect to such third-party websites as the user of this software. 
+                The third-party sites are not under the control of Helper and Helper is not responsible for the content of any third-party websites and/or any 
+                links contained in the third-party websites. Helper is providing these links to the third-party websites to you only for your convenience and 
+                Helper is not responsible for any kind of loss/ damage arising out of it and the access to or any other act on such third party links shall be 
+                entirely at your risk.
+            </p>
+            <h3>Changes</h3>
+            <p>
+                We reserve the right at any time to modify these Terms. Any changes will be notified at least 30 days in advance. 
+                <br>
+                By continuing to use our Service after modification, you agree to follow the updated terms of service. If you do not agree to the new terms, you may
+                no longer continue using our Service.
+            </p>
+
+            <h1 style="padding-left:50px;color:white">Privacy Policy</h1>
+            <p>
+                Any significant changes to this privacy policy will be warned of at least 30 days in advance. By using Helper Services, you agree to this Privacy 
+                Policy, the Terms of Service and the <a href="https://discord.com/terms" style="color:white">Discord Terms of Service</a>.
+            </p>
+
+            <h3>Types of Data collected</h3>
+            <p>
+                Helper collects basic Discord user information, such as ID's and usernames for identification when storing data. Any data stored is simply for 
+                setup and commands. Helper will never track its users.
+                <br>
+                Helper will never store any personal information other than Discord identification. 
+            </p>
+            <h3>Cookies</h3>
+            <p>
+                Helper will never use cookies to track users or save unnecessary information. Cookies are only used to remain logged in, and are deletable. No cookie 
+                data will be shared with third parties.
+            </p>
+            <h3>Use of Data</h3>
+            <p>
+                By using Helper you agree to have your Discord ID stored for identification and detection or prevention of technical issues.
+                <br>
+                No data held by Helper will be used outside of the Bot or Website. No analytics will be taken externally from data held or previous data.
+            </p>
+
+            <h1 style="padding-left:50px;color:white">Contact</h1>
+            <p>
+                If you have any queries about our Terms of Service or Privacy Policy, <a href="/support" style="color:white">contact us through Discord</a>
+            </p>
+            
             
             <div class="footer">
                 <div class="footer-title vertical-center">Helper</div>
@@ -58,7 +129,6 @@
                 </div>
             </div>
         </div>
-        
     </body>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script>
@@ -113,20 +183,6 @@ var OSName = "Unknown";
         }
     }
 
-    async function loadChangelogs() {
-        changelogs = await get("/api/changelogs")
-
-        body = document.getElementById("body")
-
-        for (changelog in changelogs) {
-            text = changelogs[changelog].split("\n").join("<br>")
-            title = text.split('<br>')[0]
-            text = text.split('<br>').slice(1).join("<br>")
-
-            body.innerHTML = `<h1 style="padding-left:50px">${changelog}</h1><h3 style="padding-left:75px">${title}</h3><p style="font-size:15px;padding-left:100px">${text}</p>` + body.innerHTML
-        }
-    }
-
     window.onload = async function () {
         document.getElementById("navBar").ondblclick = function() {window.open("/#changelogs", "_self")}
             timer = 500
@@ -152,8 +208,6 @@ var OSName = "Unknown";
                     document.getElementById("topBar" + i).style.fontSize = "15px"
                 }, i * (timer / 10))}catch{}
             }
-
-            await loadChangelogs()
             
         }
 

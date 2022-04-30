@@ -169,3 +169,12 @@ body {
     cursor:not-allowed;
     font-family:'Manrope' ;
 }
+
+.terms  {
+    color:gray;
+}
+
+.terms:hover {
+    filter:brightness(150%)
+}
+

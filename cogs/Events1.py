@@ -88,7 +88,7 @@ See my commands with `/help`
         em.add_field(name="Servers: ", value=f"I am now in **{len(self.bot.guilds)}** servers!")
         await server_channel.send(embed=em)
 
-        await self.bot.change_presence(activity=discord.Game(name=f"/help | v{var.version} | {len(self.bot.guilds)} servers"))
+        await self.bot.change_presence(activity=discord.Game(name=f"/help | b{var.version} | {len(self.bot.guilds)} servers"))
         
         if var.production:
             payload = {"server_count"  : len(self.bot.guilds)}
@@ -106,7 +106,7 @@ See my commands with `/help`
         em.add_field(name="Servers: ", value=f"I am now in **{len(self.bot.guilds)}** servers!")
         await server_channel.send(embed=em)
 
-        await self.bot.change_presence(activity=discord.Game(name=f"/help | v{var.version} | {len(self.bot.guilds)} servers"))
+        await self.bot.change_presence(activity=discord.Game(name=f"/help | b{var.version} | {len(self.bot.guilds)} servers"))
         
         if var.production:
             payload = {"server_count"  : len(self.bot.guilds)}

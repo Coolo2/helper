@@ -44,9 +44,11 @@ class Moderation1(commands.Cog):
     @app_commands.describe(member="The member to ban", delete_message_days="Amount of days to delete message history of the banned user", reason="A reason to be added to audit logs")
     async def ban(self, ctx : discord.Interaction, 
         member : discord.Member, 
-        delete_message_days : app_commands.Range[int, 0] = 0,
+        delete_message_days : app_commands.Range[int, 0] = None,
         reason : str = None
     ):
+        if delete_message_days == None:
+            delete_message_days = 0
         if ctx.user.guild_permissions.ban_members and ctx.user.top_role.position > member.top_role.position or ctx.guild.owner == ctx.user:
             try:
                 await member.ban(reason=reason, delete_message_days=delete_message_days)

@@ -22,7 +22,7 @@ def get_prefix(bot, message):
     except Exception as e:
         return commands.when_mentioned_or(var.prefix, var.prefix.upper(), var.prefix.capitalize())(bot, message)
 
-bot = commands.Bot(command_prefix=get_prefix, case_insensitive=True, intents=intents, debug_guilds=[447702058162978827])
+bot : discord.Client = commands.Bot(command_prefix=get_prefix, case_insensitive=True, intents=intents, debug_guilds=[447702058162978827])
 
 extensions = [file.replace(".py", "") for file in os.listdir('./cogs') if file.endswith(".py")]
 
@@ -32,7 +32,7 @@ async def on_ready():
 
     var.get_client(bot)
     
-    await bot.change_presence(activity=discord.Game(name=f"/help | v{var.version} | {len(bot.guilds)} servers"))
+    await bot.change_presence(activity=discord.Game(name=f"/help | b{var.version} | {len(bot.guilds)} servers"))
     ping_files.start()
 
     if var.reload_slash_commands:
@@ -42,7 +42,7 @@ async def on_ready():
             for guild in var.guilds:
                 await tree.sync(guild=guild)
 
-    await customCommands.sync_custom_commands(bot)
+    #await customCommands.sync_custom_commands(bot)
 
 @tasks.loop(seconds=10)
 async def ping_files():

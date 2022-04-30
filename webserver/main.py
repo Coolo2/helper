@@ -43,6 +43,10 @@ def about():
 def changelogs():
     return render_template('changelogs.html', last_updated=dir_last_updated('/static'))
 
+@app.route('/terms')
+def terms():
+    return render_template('terms_and_privacy.html', last_updated=dir_last_updated('/static'))
+
 @app.route('/invite')
 def invite():
     return redirect(var.invite)
@@ -74,7 +78,7 @@ def commandsAPI():
 
     tree : app_commands.CommandTree = bot.tree
 
-    if var.production:
+    if not var.guilds:
         commandsList = tree.walk_commands()
     else:
         commandsList = tree.walk_commands(guild=var.guilds[0])
@@ -502,7 +506,7 @@ def setCustomCommands():
         functions.read_load_sync("databases/commands.json", commands)
 
         
-        bot.loop.create_task(customCommands.sync_custom_commands(bot))
+        bot.loop.create_task(customCommands.sync_custom_commands(bot, guild=guild))
 
         # Log update if available
         embed = discord.Embed(title="Custom Commands updated", color=var.embed, timestamp=datetime.datetime.now())
