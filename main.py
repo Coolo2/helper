@@ -42,7 +42,7 @@ async def on_ready():
             for guild in var.guilds:
                 await tree.sync(guild=guild)
 
-    #await customCommands.sync_custom_commands(bot)
+    await customCommands.sync_custom_commands(bot)
 
 @tasks.loop(seconds=10)
 async def ping_files():

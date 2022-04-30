@@ -1,13 +1,17 @@
-from turtle import update
+
 import discord, json, re, random
 
 from discord.ext import commands
+
+from discord import app_commands
+
+from setup import var
 
 n = None
 
 def testFunc(cmdGuild, cmdName, cmdValue):
 
-    async def testFuncInside(ctx, arg1=n, arg2=n, arg3=n, arg4=n, arg5=n, arg6=n, arg7=n, arg8=n, arg9=n, arg10=n):
+    async def testFuncInside(ctx, arg1 : str =n, arg2 : str =n, arg3 : str =n, arg4 : str =n, arg5 : str =n, arg6 : str =n, arg7 : str =n, arg8 : str =n, arg9 : str =n, arg10 : str =n):
         with open("databases/commands.json") as f:
             data = json.load(f)
         
@@ -54,6 +58,7 @@ class CustomCommand():
         self.name = name 
         self.value = value 
         self.rawOptions = []
+        
         self.options = self.generate_options()
         
     
@@ -68,71 +73,73 @@ class CustomCommand():
                 if f"{argAlias}/{i}" in self.value:
                     
                     counter += 1
-                    opt = discord.Option(str, name=f"arg{counter}", required=True)
-                    opt.__setattr__("_parameter_name", f"arg{counter}")
+                    opt = {"type":str, "name":f"arg{counter}", "required":True}
+
+                    #opt.__setattr__("_parameter_name", f"arg{counter}")
                     options.append(opt)
                     rawOptions.append(f"arg{counter}")
+
         self.options = options
         self.rawOptions = rawOptions
+
         return self.options
 
 
 async def sync_custom_commands(bot : commands.Bot):
+    tree : app_commands.CommandTree = bot.tree
 
     print("Custom commands syncing...")
-    unregister_guilds = []
 
     with open("databases/commands.json") as f:
         data = json.load(f)
-    
-    toRemove = []
-    update_commands = []
 
-    for guild_id in data:
-        if not bot.get_guild(int(guild_id)):
-            toRemove.append(guild_id)
-    
-    for removeable in toRemove:
-        del data[removeable]
-    
     for guild_id in data:
         await doGuildCustomCommands(bot, int(guild_id), data[guild_id])
 
-    for command in bot.commands:
-        if command.guild_ids and len(command.guild_ids) > 0 and (str(command.guild_ids[0]) in data and command.name not in data[str(command.guild_ids[0])]) and "Helper Bot Custom Command" in command.description:
-            unregister_guilds.append(command.guild_ids[0])
-            bot.remove_application_command(command)
+    cmds = tree._guild_commands
 
-    
+    for guild_id, guild_cmds in cmds.items():
+        for name, cmd in guild_cmds.items():
 
-    for command in bot.pending_application_commands:
-        if 'Helper Bot Custom Command' in command.description:
-            update_commands.append(command)
+            if cmd.description and "Helper Bot Custom Command" in cmd.description:
 
-    #await bot.sync_commands(unregister_guilds=unregister_guilds)
-
-    #print("Custom commands synced...")
+                if str(guild_id) not in data or name not in data[str(guild_id)]:
+                    tree.remove_command(name, guild=discord.Object(guild_id))
+        if var.reload_custom_commands:
+            try:
+                await tree.sync(guild=discord.Object(guild_id))
+            except:
+                print("Couldnt sync commands to guild")
+        else:
+            print("Warning: custom command reloading is disabled!")
 
 async def doGuildCustomCommands(bot : commands.Bot, guild_id : int, pendingCommands : dict):
-
-    #bot._pending_application_commands = []
+    tree : app_commands.CommandTree = bot.tree
 
     for pendingCommand in pendingCommands:
         command = CustomCommand(pendingCommand, pendingCommands[pendingCommand])
 
         func = testFunc(guild_id, command.name, command.value)
 
-        cmd = discord.SlashCommand(
-            func=func, 
+        for option in command.options:
+            print(option)
+
+        cmd = app_commands.Command(
             callback=func, 
             name=command.name, 
-            description=f"Helper Bot Custom Command: {command.name}", 
-            options=command.options,
-            guild_ids=[guild_id]
+            description=f"Helper Bot Custom Command: {command.name}"
         )
 
+        for i, (name, param) in enumerate(cmd._params.items()):
+            if len(command.options) > i:
+
+                cmd._params[name].required = True
         
 
-        bot.add_application_command(cmd)
+        try:
+            tree.add_command(cmd, guild=discord.Object(guild_id))
+        except app_commands.errors.CommandAlreadyRegistered:
+            tree.remove_command(cmd, guild=discord.Object(guild_id))
+            tree.add_command(cmd, guild=discord.Object(guild_id))
         
 

@@ -34,6 +34,7 @@ botAdmins = [368071242189897728, 444176530357354527, 378189620288159754]
 production = False
 guilds = [discord.Object(447702058162978827)]
 reload_slash_commands = False
+reload_custom_commands = False
 
 def get_client(client):
     global login 
