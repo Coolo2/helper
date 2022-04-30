@@ -1065,8 +1065,8 @@ async function command_filter(interaction) {
     guilds[interaction.guild.id].queue[0].seek = 0
 
     filtersStr = ``
-    if (guilds[interaction.guild.id].filters.bass) filtersStr += `Bass: **${guilds[interaction.guild.id].filters.bass}%**`
-    if (guilds[interaction.guild.id].filters.speed) filtersStr += `Speed: **${guilds[interaction.guild.id].filters.speed}%**`
+    if (guilds[interaction.guild.id].filters.bass) filtersStr += `Bass: **${guilds[interaction.guild.id].filters.bass}%**\n`
+    if (guilds[interaction.guild.id].filters.speed) filtersStr += `Speed: **${guilds[interaction.guild.id].filters.speed}%**\n`
     if (guilds[interaction.guild.id].filters.pitch) filtersStr += `Pitch: **${guilds[interaction.guild.id].filters.pitch}**`
 
     return interaction.reply({embeds:[functions.getSuccessEmbed("Set filters", `Successfully set filters:\n${filtersStr}`)]})

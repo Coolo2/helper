@@ -22,8 +22,7 @@ def get_prefix(bot, message):
     except Exception as e:
         return commands.when_mentioned_or(var.prefix, var.prefix.upper(), var.prefix.capitalize())(bot, message)
 
-bot = discord.Bot(command_prefix=get_prefix, case_insensitive=True, intents=intents, debug_guilds=[447702058162978827])
-bot.auto_sync_commands = False
+bot = commands.Bot(command_prefix=get_prefix, case_insensitive=True, intents=intents, debug_guilds=[447702058162978827])
 
 extensions = [file.replace(".py", "") for file in os.listdir('./cogs') if file.endswith(".py")]
 
@@ -36,7 +35,14 @@ async def on_ready():
     await bot.change_presence(activity=discord.Game(name=f"/help | v{var.version} | {len(bot.guilds)} servers"))
     ping_files.start()
 
-    await customCommands.sync_custom_commands(bot)
+    if var.reload_slash_commands:
+        if var.production:
+            await tree.sync()
+        else:
+            for guild in var.guilds:
+                await tree.sync(guild=guild)
+
+    #await customCommands.sync_custom_commands(bot)
 
 @tasks.loop(seconds=10)
 async def ping_files():
@@ -63,19 +69,26 @@ async def globally_blacklist_roles(ctx):
 
 #extensions.remove("Handling1")
 
-if __name__ == '__main__':
+tree : discord.app_commands.CommandTree = bot.tree
+
+async def setup_hook():
     print(f'\n--- Extensions {", ".join(extensions)} ---')
 
     for extension in extensions:
         try:
-            bot.load_extension('cogs.'+ extension)
+            await bot.load_extension('cogs.'+ extension)
 
             print('{}Loaded {}{}'.format(c.green, 'cogs.'+extension, c.end))
         except Exception as error:
+            
             print('{}{} cannot be loaded. [{}]{}'.format(c.red, 'cogs.'+extension, error, c.end))
 
     print('---\n ' + c.red)
     main.webserver_run(bot)
+
+    
+
+bot.setup_hook = setup_hook
 
 bot.run(os.getenv("token"))
     

@@ -6,7 +6,7 @@ from setup import var
 from functions import customerror
 from functions import functions
 
-from discord.commands import slash_command, Option
+from discord import app_commands
 
 class Setup1(commands.Cog):
     def __init__(self, bot):
@@ -18,7 +18,7 @@ class Setup1(commands.Cog):
         currentPrefix = functions.prefix(ctx.guild)
         data = await functions.read_data("databases/prefixes.json")
         if prefix == None:
-            return await ctx.respond(
+            return await ctx.response.send_message(
                     embed=discord.Embed(
                         title=random.choice([f"Here's the prefix for {ctx.guild.name}", "Here's the prefix", f"Here's my prefix for {ctx.guild.name}"]), 
                         description=f"The prefix for {ctx.guild.name} is **{currentPrefix}**",
@@ -30,7 +30,7 @@ class Setup1(commands.Cog):
         elif prefix in ['reset', var.prefix]:
             if str(ctx.guild.id) in data:
                 del data[str(ctx.guild.id)]
-                await ctx.respond(
+                await ctx.response.send_message(
                     embed=discord.Embed(
                         title=random.choice([f"Resetted the prefix for {ctx.guild.name}", "Resetted your prefix!", "Complete!", "Successfully resetted!"]),
                         description=f"Successfully resetted the prefix for **{ctx.guild.name}** to **{var.prefix}**",
@@ -41,7 +41,7 @@ class Setup1(commands.Cog):
                 raise customerror.MildErr(f"The prefix for **{ctx.guild.name}** is already reset to **{var.prefix}**!")
         else:
             data[str(ctx.guild.id)] = prefix
-            await ctx.respond(
+            await ctx.response.send_message(
                 embed=discord.Embed(
                     title=random.choice([f"Set the prefix for {ctx.guild.name}", "Set your prefix!", "Complete!", "Successfully set!"]),
                     description=f"Successfully set the prefix for **{ctx.guild.name}** to **{prefix}**",
@@ -52,15 +52,15 @@ class Setup1(commands.Cog):
 
         await functions.read_load("databases/prefixes.json", data)"""
     
-    @slash_command(name="setup")
+    @app_commands.command(name="setup")
     async def setup(self, ctx):
-        return await ctx.respond(embed=discord.Embed(
+        return await ctx.response.send_message(embed=discord.Embed(
             title="Setup has moved!",
             description=f"Setup has moved to the [web dashboard]({var.website}/dashboard#{ctx.guild.id})!",
             colour=var.embed
         ))
     
-    @slash_command(name="customcommands", description="View all custom commands for the server", aliases=['ccs'])
+    @app_commands.command(name="customcommands", description="View all custom commands for the server")
     async def customcommands(self, ctx):
         embed = discord.Embed(title=f"Custom commands for {ctx.guild.name}", color=var.embed)
         
@@ -68,7 +68,7 @@ class Setup1(commands.Cog):
             customCommands = json.load(f)
 
         if str(ctx.guild.id) not in customCommands:
-            return await ctx.respond(f"This server does not have any custom commands! Add some on the web dashboard (`{functions.prefix(ctx.guild)}dashboard`)!")
+            return await ctx.response.send_message(f"This server does not have any custom commands! Add some on the web dashboard (`{functions.prefix(ctx.guild)}dashboard`)!")
 
         for command in customCommands[str(ctx.guild.id)]:
             value = customCommands[str(ctx.guild.id)][command][0:60] + ("..." if len(customCommands[str(ctx.guild.id)][command][0:60]) >= 60 else "")
@@ -77,9 +77,9 @@ class Setup1(commands.Cog):
         
         embed.add_field(name="More", value=f"View more and edit custom commands on the [Web Dashboard]({var.address}/dashboard)", inline=False)
 
-        await ctx.respond(embed=embed)
+        await ctx.response.send_message(embed=embed)
             
         
 
-def setup(bot):
-    bot.add_cog(Setup1(bot))
+async def setup(bot):
+    await bot.add_cog(Setup1(bot), guilds=var.guilds)

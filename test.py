@@ -1,3 +1,9 @@
-import requests
 
-requests.post("https://discord.com/api/webhooks/931256903651188746/NE0tKV0ZNoRKoCgcIsueK1z4AXpWl6U4yo9oBF4ioZsIUPLcQB054YsnT6IU_ilB6bAC", {"content":"h"})
+async def test(a, b):
+    print("H")
+
+fname = test("1", "2").__qualname__
+
+# Get the argument values
+frame = test("1", "2").cr_frame
+args = frame.f_locals  # dict object

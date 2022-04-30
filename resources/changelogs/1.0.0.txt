@@ -1,4 +1,4 @@
-[19th Feb 2022] 1.0.0 - The long awaited rewrite is finally out!
+[20th March 2022] 1.0.0 - The long awaited rewrite is finally out!
 
 A complete rewrite of every command and event, this fixes bugs and comes with slash command support
 

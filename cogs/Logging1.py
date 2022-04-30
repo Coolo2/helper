@@ -93,5 +93,5 @@ class Logging1(commands.Cog):
             await functions.log(self.bot, "nicknameChange", after.guild, embed)
 
 
-def setup(bot):
-    bot.add_cog(Logging1(bot))
+async def setup(bot):
+    await bot.add_cog(Logging1(bot))

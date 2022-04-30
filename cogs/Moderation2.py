@@ -7,35 +7,41 @@ from functions import customerror
 from functions import functions
 from datetime import datetime, timedelta
 
-from discord.commands import slash_command, Option
+from discord import app_commands
 
 class Moderation2(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
-    @slash_command(name="mute", description="Mute a member")
-    @commands.guild_only()
+    @app_commands.command(name="mute", description="Mute a member")
+    @app_commands.guild_only()
+    @app_commands.default_permissions(manage_messages=True)
     @commands.has_permissions(manage_messages=True)
+    @app_commands.describe(member="The member to mute", length="The duration of the mute (leave blank for infinite)")
     async def mute(
         self, 
-        ctx, 
-        member : Option(discord.Member, description="The member to mute"), 
-        length : Option(str, description="The time to mute for (leave blank for infinite)", required=False) = None
+        ctx : discord.Interaction, 
+        member : discord.Member, 
+        length : str = None
     ):
+        await ctx.response.defer()
         embed = await functions.mute(self.bot, ctx.guild, member, length)
-        await ctx.respond(embed=embed)
+        await ctx.followup.send(embed=embed)
         
     
-    @slash_command(name="unmute", description="Unmute a member")
-    @commands.guild_only()
+    @app_commands.command(name="unmute", description="Unmute a member")
+    @app_commands.guild_only()
+    @app_commands.default_permissions(manage_messages=True)
     @commands.has_permissions(manage_messages=True)
+    @app_commands.describe(member="The member to unmute")
     async def unmute(
         self, 
-        ctx, 
-        member : Option(discord.Member, description="The member to unmute")
+        ctx : discord.Interaction, 
+        member : discord.Member
     ):
+        await ctx.response.defer()
         embed = await functions.unmute(ctx.guild, member)
-        await ctx.respond(embed=embed)
+        await ctx.followup.send(embed=embed)
 
-def setup(bot):
-    bot.add_cog(Moderation2(bot))
+async def setup(bot):
+    await bot.add_cog(Moderation2(bot), guilds=var.guilds)

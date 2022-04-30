@@ -113,5 +113,5 @@ See my commands with `/help`
             async with aiohttp.ClientSession() as aioclient:
                 await aioclient.post("https://discordbots.org/api/bots/486180321444888586/stats", data=payload, headers={"Authorization" : var.dblToken})
 
-def setup(bot):
-    bot.add_cog(Handling(bot))
+async def setup(bot):
+    await bot.add_cog(Handling(bot))

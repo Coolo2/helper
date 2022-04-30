@@ -151,7 +151,7 @@ async def mute (bot, guild, member : discord.Member, length):
     embed.add_field(name="Errors", value=f"{errors-1} errors")
     return embed
 
-async def check_events(bot : discord.Bot, warns : dict, guild : discord.Guild, member : discord.Member):
+async def check_events(bot : commands.Bot, warns : dict, guild : discord.Guild, member : discord.Member):
 
     events = await read_data("databases/events.json")
     
@@ -201,7 +201,7 @@ async def is_url_image(image_url, image_formats):
     except Exception as e:
         return False
 
-async def imageFromArg(ctx, args, imgTuple, imgList):
+async def imageFromArg(ctx : discord.Interaction, args, imgTuple, imgList):
     imgURL = ""
     
     if args != None and await is_url_image(args, imgTuple):
@@ -215,7 +215,7 @@ async def imageFromArg(ctx, args, imgTuple, imgList):
             if member.name.lower() == args.lower() or member.display_name.lower() == args.lower() or str(member.id) == args or member.mention.replace("!", "") == args.replace("!", ""):
                 imgURL = member.avatar.url if member.avatar else None
     else:
-        imgURL = ctx.author.avatar.url if ctx.author.avatar else None
+        imgURL = ctx.user.avatar.url if ctx.user.avatar else None
     if imgURL == "":
         return False
     return imgURL
@@ -328,7 +328,7 @@ def checkList(iterable, check):
                 return command
     return None
 
-async def log(bot : discord.Bot, type : str, guild : discord.Guild, embed : discord.Embed):
+async def log(bot : commands.Bot, type : str, guild : discord.Guild, embed : discord.Embed):
     with open("databases/setup.json") as f:
         data = json.load(f)
     

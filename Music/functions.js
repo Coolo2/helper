@@ -40,7 +40,7 @@ module.exports.Errors = class {
                 this.MissingPermissions = "You are missing `move_members` permissions to run this command."
 
                 this.missingPermissions = function (permission) {
-                    return `You are missing \`${permission}\` permissions to run this command.`
+                    return `You are missing \`${permission}\` permissions to run this command. Edit server permissions on the [web dashboard](https://helper.coolo2.repl.co/)`
                 }
         }
 

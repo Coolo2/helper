@@ -7,28 +7,32 @@ from functions import customerror
 from functions import functions
 import resources.commands
 
-from discord.commands import slash_command, Option
+from discord import app_commands
+
+import inspect
 
 start_time = time.time()
 starttime2 = time.ctime(int(time.time()))
 
-async def help_autocomplete(ctx : discord.AutocompleteContext):
+async def help_autocomplete(ctx : discord.Interaction, current : str):
     cmds = []
     for category, commandNames in resources.commands.json.items():
         for commandName in commandNames:
-            if ctx.focused and ctx.options[ctx.focused.name].lower() in commandName.lower():
-                cmds.append(commandName)
-            elif not ctx.focused:
-                cmds.append(commandName)
+            if current and current in commandName.lower():
+                cmds.append(app_commands.Choice(name=commandName.title(), value=commandName))
+            elif not current:
+                cmds.append(app_commands.Choice(name=commandName.title(), value=commandName))
     
-    return cmds
+    return cmds[:25]
 
 class Information1(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot : commands.Bot):
         self.bot = bot
     
-    @slash_command(name="help", description="Get help on the bot and it's commands", aliases=['cmds', 'commands', 'hlp', 'botcommands', 'bot-commands'])
-    async def help(self, ctx, command : Option(str, description="Specific command help", required=False, autocomplete=help_autocomplete) = None):
+    @app_commands.command(name="help", description="Get help on the bot and it's commands")
+    @app_commands.describe(command="A specific command to get help for")
+    @app_commands.autocomplete(command=help_autocomplete)
+    async def help(self, ctx : discord.Interaction, command : str = None):
         prefix = "/"
         if command == None:
             embed = discord.Embed(
@@ -38,13 +42,19 @@ class Information1(commands.Cog):
             )
             for section in resources.commands.json:
                 embed.add_field(name=section.capitalize(), value="`" + "`, `".join(resources.commands.json[section]) + "`", inline=False)
-            return await ctx.respond(embed=embed)
+            return await ctx.response.send_message(embed=embed)
         else:
             found = False
             data = resources.commands.json
             cmdCategory = "_ _"
 
-            for cmd in self.bot.commands:
+            tree : app_commands.CommandTree = self.bot.tree
+            if var.production:
+                commands = tree.walk_commands()
+            else:
+                commands = tree.walk_commands(guild=var.guilds[0])
+
+            for cmd in commands:
                 if cmd.name.lower() == command.lower().replace(prefix, ""):
                     if cmd.name.lower() == command.lower().replace(prefix, ""):
                         found = True
@@ -67,8 +77,8 @@ class Information1(commands.Cog):
                         )
 
                         optionString = ""
-                        for option in cmd.options:
-                            optionString += (" *[" if option.required == False else " [") + option.name + "]"
+                        for option_name, option in cmd._params.items():
+                            optionString += (" *[" if option.required == False else " [") + f"{option_name}" + "]"
 
                         embed.add_field(name="Category", value=cmdCategory, inline=False)
                         embed.add_field(name="Description", value=cmd.description, inline=False)
@@ -77,13 +87,13 @@ class Information1(commands.Cog):
                             embed.add_field(name="Aliases", value="`" + "`, `".join(cmd.aliases) + "`", inline=False)
                         except Exception as e:
                             pass
-                        return await ctx.respond(embed=embed)
+                        return await ctx.response.send_message(embed=embed)
             
             if not found:
                 raise customerror.MildErr(f"Could not find a command with search '{command}'")
     
-    @slash_command(name="botinfo", description="Fetches information on the bot", aliases = ['info', 'about'])
-    async def botinfo(self, ctx):
+    @app_commands.command(name="botinfo", description="Fetches information on the bot")
+    async def botinfo(self, ctx : discord.Interaction):
         second = time.time() - start_time
         minute, second = divmod(second, 60)
         hour, minute = divmod(minute, 60)
@@ -102,12 +112,12 @@ class Information1(commands.Cog):
         embed.add_field(name="Uptime", value="%dd %dh %dm %ds"% (day, hour, minute, second), inline=False)
         embed.add_field(name="Links", value=f"[Invite]({var.invite}) | [Support server]({var.server}) | [Vote]({var.topgg}/vote/) | [Website]({var.website})", inline=False)
         
-        return await ctx.respond(embed=embed)
+        return await ctx.response.send_message(embed=embed)
     
-    @slash_command(name="ping", description="Fetches the bot's response latency", aliases=["getping"])
-    async def ping(self, ctx):
+    @app_commands.command(name="ping", description="Fetches the bot's response latency")
+    async def ping(self, ctx : discord.Interaction):
         t1 = time.perf_counter()
-        message = await ctx.respond("Pinging...")
+        await ctx.response.defer()
         t2 = time.perf_counter()
         ping = round((t2-t1)*1000)
         pingme = str(ping)
@@ -115,10 +125,10 @@ class Information1(commands.Cog):
             description="Bot: `" + pingme + "`" + " ms\nDiscord: `{}`ms".format(round(self.bot.latency*1000)), 
             colour=var.embed
         )
-        message = await message.original_message()
-        await message.edit(embed=embed)
+        
+        await ctx.followup.send(embed=embed)
     
-    async def link_command(self, ctx, m=""):
+    async def link_command(self, ctx : discord.Interaction, m=""):
         embed = discord.Embed(title=random.choice(["My links", "My web links", "Bot links", "Check them out!"]), 
         description=f"""
         {'**' if 'invite' in m else ''}[Invite]({var.invite}){'** <--' if 'invite' in m else ''} 
@@ -127,35 +137,37 @@ class Information1(commands.Cog):
         {'**' if 'website' in m or 'page' in m else ''}[Website]({var.website}){'** <--' if 'website' in m or 'page' in m else ''}
         {'**' if 'dashboard' in m or 'setup' in m else ''}[Dashboard]({var.website}/dashboard/{(str(ctx.guild.id)) if ctx.guild else ''}){'** <--' if 'dashboard' in m or 'setup' in m else ''}
     """, color=var.embed)
-        await ctx.respond(embed=embed)
+        await ctx.response.send_message(embed=embed)
 
-    @slash_command(name="links", description="Get bot links")
+    @app_commands.command(name="links", description="Get bot links")
     async def links(self, ctx):
         await self.link_command(ctx)
     
-    @slash_command(name="website", description="Get bot links")
+    @app_commands.command(name="website", description="Get bot links")
     async def website(self, ctx):
         await self.link_command(ctx, "website")
     
-    @slash_command(name="dashboard", description="Get bot links")
+    @app_commands.command(name="dashboard", description="Get bot links")
     async def dashboard(self, ctx):
         await self.link_command(ctx, "dashboard")
     
-    @slash_command(name="support", description="Get bot links")
+    @app_commands.command(name="support", description="Get bot links")
     async def support(self, ctx):
         await self.link_command(ctx, "support")
     
-    @slash_command(name="vote", description="Get bot links")
+    @app_commands.command(name="vote", description="Get bot links")
     async def vote(self, ctx):
         await self.link_command(ctx, "vote")
     
-    @slash_command(name="invite", description="Get bot links")
+    @app_commands.command(name="invite", description="Get bot links")
     async def invite(self, ctx):
         await self.link_command(ctx, "invite")
         
     
-    @slash_command(name="randomcommand", description="Get a random bot command", aliases=["random-command", "random-cmd", "randomcmd"])
-    async def randomcommand(self, ctx, section : Option(str, description="Command section", required=False, choices=list(resources.commands.json))=None):
+    @app_commands.command(name="randomcommand", description="Get a random bot command")
+    @app_commands.describe(section="Command section to get a random command from")
+    @app_commands.choices(section=[app_commands.Choice(name=x, value=x) for x in resources.commands.json])
+    async def randomcommand(self, ctx : discord.Interaction, section : str = None):
         data = resources.commands.json
         
         if section != None and section.lower() in data:
@@ -165,25 +177,25 @@ class Information1(commands.Cog):
             section = None
             choice = random.choice(list(data[random.choice(list(data))]))
 
-        return await ctx.respond(f"> Random {f'`{section}` ' if section != None else ''}command: `{functions.prefix(ctx.guild)}{choice}`")
+        return await ctx.response.send_message(f"> Random {f'`{section}` ' if section != None else ''}command: `{functions.prefix(ctx.guild)}{choice}`")
     
-    @slash_command(name="uptime", description="Gets the bot uptime", aliases=["up-time", "up"])
-    async def uptime(self, ctx):
+    @app_commands.command(name="uptime", description="Gets the bot uptime")
+    async def uptime(self, ctx : discord.Interaction):
         second = time.time() - start_time
         minute, second = divmod(second, 60)
         hour, minute = divmod(minute, 60)
         day, hour = divmod(hour, 24)
         embed = discord.Embed(title="Uptime", description="%dd %dh %dm %ds"% (day, hour, minute, second), color=var.embed)
         embed.set_footer(text="The uptime is the time since the bot was last restarted")
-        await ctx.respond(embed=embed)
+        await ctx.response.send_message(embed=embed)
     
-    @slash_command(name="changelog", description="Gets the bot changelog for the current version", aliases=["changelogs", "change-log", "change-logs"])
-    async def changelog(self, ctx):
+    @app_commands.command(name="changelog", description="Gets the bot changelog for the current version")
+    async def changelog(self, ctx : discord.Interaction):
         embed = discord.Embed(title=f"Changelog for version {var.version}", description=f"View the changelog on [the website]({var.address}/changelogs)", color=var.embed)
 
         await ctx.response.send_message(embed=embed)
 
 
 
-def setup(bot):
-    bot.add_cog(Information1(bot))
+async def setup(bot):
+    await bot.add_cog(Information1(bot), guilds=var.guilds)

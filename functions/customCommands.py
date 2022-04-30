@@ -1,6 +1,8 @@
 from turtle import update
 import discord, json, re, random
 
+from discord.ext import commands
+
 n = None
 
 def testFunc(cmdGuild, cmdName, cmdValue):
@@ -12,7 +14,7 @@ def testFunc(cmdGuild, cmdName, cmdValue):
         if str(ctx.guild.id) not in data:
             return 
         if cmdName not in data[str(ctx.guild.id)]:
-            return await ctx.respond("`Command no longer exists and will be removed on next sync`")
+            return await ctx.response.send_message("`Command no longer exists and will be removed on next sync`")
         
         resp = data[str(ctx.guild.id)][cmdName] 
 
@@ -43,7 +45,7 @@ def testFunc(cmdGuild, cmdName, cmdValue):
             if bracketType.lower() in ["server", "guild", "servername", "guildname", "server-name", "guild-name"]:
                 resp = resp.replace("{" + bracket + "}", ctx.guild.name)
 
-        return await ctx.respond(resp)
+        return await ctx.response.send_message(resp)
     
     return testFuncInside
 
@@ -75,7 +77,7 @@ class CustomCommand():
         return self.options
 
 
-async def sync_custom_commands(bot : discord.Bot):
+async def sync_custom_commands(bot : commands.Bot):
 
     print("Custom commands syncing...")
     unregister_guilds = []
@@ -107,11 +109,11 @@ async def sync_custom_commands(bot : discord.Bot):
         if 'Helper Bot Custom Command' in command.description:
             update_commands.append(command)
 
-    await bot.sync_commands(unregister_guilds=unregister_guilds)
+    #await bot.sync_commands(unregister_guilds=unregister_guilds)
 
-    print("Custom commands synced...")
+    #print("Custom commands synced...")
 
-async def doGuildCustomCommands(bot : discord.Bot, guild_id : int, pendingCommands : dict):
+async def doGuildCustomCommands(bot : commands.Bot, guild_id : int, pendingCommands : dict):
 
     #bot._pending_application_commands = []
 

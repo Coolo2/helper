@@ -7,21 +7,24 @@ from functions import customerror
 from functions import functions
 from datetime import datetime
 
-from discord.commands import slash_command, Option
+from discord import app_commands
 
 class Moderation1(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
-    @slash_command(name="kick", description="Kick a member", aliases=['kickmember', 'kick-member'])
-    @commands.guild_only()
+    @app_commands.command(name="kick", description="Kick a member")
+    @app_commands.guild_only()
+    @app_commands.default_permissions(kick_members=True)
+    @app_commands.checks.has_permissions(kick_members=True)
+    @app_commands.describe(member="The member to kick", reason="The reason to be added to audit logs")
     async def kick(
         self, 
-        ctx, 
-        member : Option(discord.Member, description="The member to kick"), 
-        reason : Option(str, description="The reason to go in audit logs", required=False) = None
+        ctx : discord.Interaction, 
+        member : discord.Member, 
+        reason : str = None
     ):
-        if ctx.author.guild_permissions.kick_members and ctx.author.top_role.position > member.top_role.position or ctx.guild.owner == ctx.author:
+        if ctx.user.guild_permissions.kick_members and ctx.user.top_role.position > member.top_role.position or ctx.guild.owner == ctx.user:
             try:
                 if reason == None:
                     await member.kick()
@@ -30,53 +33,60 @@ class Moderation1(commands.Cog):
             except Exception as e:
                 raise commands.BotMissingPermissions(["kick_members"])
             embed = discord.Embed(title=random.choice(["Kicked successfully!", "Kicked!", "Successfully kicked!"]), description=f"Successfully kicked **{member.display_name}**{' with reason **' if reason != None else ''}{reason + '**' if reason != None else ''}", colour=var.embedSuccess)
-            return await ctx.respond(embed=embed)
+            return await ctx.response.send_message(embed=embed)
         else:
             raise commands.MissingPermissions(["kick_members"])
     
-    @slash_command(name="ban", description="Ban a member", aliases=['banmember', 'ban-member'])
-    @commands.guild_only()
-    async def ban(self, ctx, 
-        member : Option(discord.Member, description="The member to ban"), 
-        delete_message_days : Option(int, description="The amount of days of messages to delete (defaults to 0)", min_value=0, required=False) = 0,
-        reason : Option(str, description="The reason to show in audit logs", required=False) = None
+    @app_commands.command(name="ban", description="Ban a member")
+    @app_commands.guild_only()
+    @app_commands.default_permissions(ban_members=True)
+    @app_commands.checks.has_permissions(ban_members=True)
+    @app_commands.describe(member="The member to ban", delete_message_days="Amount of days to delete message history of the banned user", reason="A reason to be added to audit logs")
+    async def ban(self, ctx : discord.Interaction, 
+        member : discord.Member, 
+        delete_message_days : app_commands.Range[int, 0] = 0,
+        reason : str = None
     ):
-        if ctx.author.guild_permissions.ban_members and ctx.author.top_role.position > member.top_role.position or ctx.guild.owner == ctx.author:
+        if ctx.user.guild_permissions.ban_members and ctx.user.top_role.position > member.top_role.position or ctx.guild.owner == ctx.user:
             try:
                 await member.ban(reason=reason, delete_message_days=delete_message_days)
             except Exception as e:
                 raise commands.BotMissingPermissions(["ban_members"])
             embed = discord.Embed(title=random.choice(["Banned successfully!", "Banned!", "Successfully banned!"]), description=f"Successfully banned **{member.display_name}**{' with reason **' if reason != None else ''}{reason + '**' if reason != None else ''}", colour=var.embedSuccess)
-            return await ctx.respond(embed=embed)
+            return await ctx.response.send_message(embed=embed)
         else:
             raise commands.MissingPermissions(["ban_members"])  
     
-    @slash_command(name="purge", description="Purge a specified amount of messages in a channel", aliases=['nuke', 'massdelete', 'clear', 'clearmessages'])
-    @commands.guild_only()
-    @commands.has_permissions(manage_messages=True)
-    async def purge(self, ctx, 
-        amount : Option(int, description="The amount of messages to purge", min_value=1), 
-        member : Option(discord.Member, description="The user filter to remove messages from", required=False) = None
+    @app_commands.command(name="purge", description="Purge a specified amount of messages in a channel")
+    @app_commands.guild_only()
+    @app_commands.default_permissions(manage_messages=True)
+    @app_commands.checks.has_permissions(manage_messages=True)
+    @app_commands.describe(amount="The amount of messages to purge", member="The user filter to remove messages from")
+    async def purge(self, ctx : discord.Interaction, 
+        amount : app_commands.Range[int, 0], 
+        member : discord.Member = None
     ):
+        await ctx.response.defer()
         if member == None:
             deleted = await ctx.channel.purge(limit=int(amount) + 1)
-            await ctx.respond(f"> Deleted {len(deleted) - 1} messages")
+            await ctx.followup.send(f"> Deleted {len(deleted) - 1} messages")
         else:
             def is_me(m):
-                return m.author == member
+                return m.user == member
             deleted = await ctx.channel.purge(limit=int(amount) + 1, check=is_me)
-            await ctx.respond(f"> Deleted {len(deleted) - 1} messages from {member.display_name}")
+            await ctx.followup.send(f"> Deleted {len(deleted) - 1} messages from {member.display_name}")
     
-    @slash_command(name='createinvite', description="Simple way to create an invite to the server", aliases=["create-invite"])
-    @commands.guild_only()
-    @commands.has_permissions(create_instant_invite=True)
-    async def createinvite(self, ctx):
-        invite = await ctx.channel.create_invite(destination = ctx.channel, xkcd = True)
+    @app_commands.command(name='createinvite', description="Simple way to create an invite to the server")
+    @app_commands.guild_only()
+    @app_commands.default_permissions(create_instant_invite=True)
+    @app_commands.checks.has_permissions(create_instant_invite=True)
+    async def createinvite(self, ctx : discord.Interaction):
+        invite = await ctx.channel.create_invite()
 
         embed = discord.Embed(title=random.choice(["I created a new invite!", "Created a new invite", "Created an invite"]), description=str(invite), color=var.embed)
-        await ctx.respond(embed=embed)
+        await ctx.response.send_message(embed=embed)
         
 
 
-def setup(bot):
-    bot.add_cog(Moderation1(bot))
+async def setup(bot):
+    await bot.add_cog(Moderation1(bot), guilds=var.guilds)

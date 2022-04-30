@@ -10,10 +10,14 @@ import datetime
 import resources
 from gevent.pywsgi import WSGIServer
 
+from discord.ext import commands
+
+from discord import app_commands
+
 loggingOptions = ["channelCreate", "channelDelete", "roleCreate", "roleDelete", "nicknameChange", "dashboardUse", "warns"]
 encryptionKey = os.environ.get("encryptionKey")
 
-bot : discord.Bot = None
+bot : commands.Bot = None
 
 def webserver_run(client):
     t = Thread(target=run)
@@ -22,8 +26,10 @@ def webserver_run(client):
     bot = client
 
 app = Flask("", template_folder=os.path.abspath('./webserver/HTML'), static_folder="webserver/static/")
-app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
-app.config["TEMPLATES_AUTO_RELOAD"] = True
+
+if not var.production:
+    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+    app.config["TEMPLATES_AUTO_RELOAD"] = True
 
 @app.route('/')
 def home():
@@ -66,7 +72,14 @@ def commandsAPI():
     commands = []
     done = []
 
-    for command in bot.commands:
+    tree : app_commands.CommandTree = bot.tree
+
+    if var.production:
+        commandsList = tree.walk_commands()
+    else:
+        commandsList = tree.walk_commands(guild=var.guilds[0])
+
+    for command in commandsList:
         if command.name not in done:
             done.append(command.name)
             category = None 
@@ -74,7 +87,7 @@ def commandsAPI():
                 if command.name in resources.commands.json[categoryIter]:
                     category = categoryIter
 
-            options = [{"name":option.name, "description":option.description, "required":option.required} for option in command.options]
+            options = [{"name":name, "description":option.description, "required":option.required} for name, option in command._params.items()]
 
             if category:
                 commands.append({"name":command.name, "description":command.description, "options":options, "category":category})

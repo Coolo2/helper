@@ -7,7 +7,7 @@ from setup import var
 
 import datetime
 
-from discord.commands import slash_command, Option
+from discord import app_commands
 
 cooldown = cooldowns.Cooldowns()
 
@@ -15,9 +15,10 @@ class Economy1(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @slash_command(name="work", description="Get money every 30 seconds", aliases=["getmoney"])
-    async def work(self, ctx):
-        cd = cooldown.doCooldown(datetime.timedelta(seconds=30), "work", ctx.author)
+    @app_commands.command(name="work", description="Get money every 30 seconds")
+    @app_commands.guild_only()
+    async def work(self, ctx : discord.Interaction):
+        cd = cooldown.doCooldown(datetime.timedelta(seconds=30), "work", ctx.user)
         if cd != True:
             raise customerror.CooldownError(f"You are on cooldown! Please wait **{round(cd.total_seconds())}** seconds to work again.")
 
@@ -26,22 +27,26 @@ class Economy1(commands.Cog):
 
         if str(ctx.guild.id) not in balances:
             balances[str(ctx.guild.id)] = {}
-        if str(ctx.author.id) not in balances[str(ctx.guild.id)]:
-            balances[str(ctx.guild.id)][str(ctx.author.id)] = {"balance":0}
+        if str(ctx.user.id) not in balances[str(ctx.guild.id)]:
+            balances[str(ctx.guild.id)][str(ctx.user.id)] = {"balance":0}
 
-        balances[str(ctx.guild.id)][str(ctx.author.id)]["balance"] += money
+        balances[str(ctx.guild.id)][str(ctx.user.id)]["balance"] += money
 
         with open(r'resources/workreplies.json') as f:
             reply = random.choice(json.load(f)).replace("{amount}", "**" + str(money) + "**")
 
         embed = discord.Embed(title=random.choice(["You got money!", "Your paycheck...", "You worked!"]), 
-            description="{}! You are now on **{}** credits!".format(reply, balances[str(ctx.guild.id)][str(ctx.author.id)]["balance"]), color=var.embed)
-        await ctx.respond(embed=embed)
+            description="{}! You are now on **{}** credits!".format(reply, balances[str(ctx.guild.id)][str(ctx.user.id)]["balance"]), color=var.embed)
+        
+        await ctx.response.send_message(embed=embed)
 
         await functions.save_data("databases/economy.json", balances)
     
-    @slash_command(name='flip', description="Predict a coin flip correctly and you get credits! Otherwise...", aliases=['coin'])
-    async def flip(self, ctx, guess : Option(str, description="heads or tails", choices=["heads", "tails"])):
+    @app_commands.command(name='flip', description="Predict a coin flip correctly and you get credits! Otherwise...")
+    @app_commands.describe(guess="Heads or Tails")
+    @app_commands.choices(guess=[app_commands.Choice(name="Heads", value="heads"), app_commands.Choice(name="Tails", value="tails")])
+    @app_commands.guild_only()
+    async def flip(self, ctx : discord.Interaction, guess : str):
 
         if guess.lower() != "heads" and guess.lower() != "tails":
             raise customerror.MildErr(f"Your guess must be 'heads' or 'tails', not '{guess}'")
@@ -59,24 +64,26 @@ class Economy1(commands.Cog):
         
         if str(ctx.guild.id) not in balances:
             balances[str(ctx.guild.id)] = {}
-        if str(ctx.author.id) not in balances[str(ctx.guild.id)]:
-            balances[str(ctx.guild.id)][str(ctx.author.id)] = {"balance":0}
+        if str(ctx.user.id) not in balances[str(ctx.guild.id)]:
+            balances[str(ctx.guild.id)][str(ctx.user.id)] = {"balance":0}
 
-        balances[str(ctx.guild.id)][str(ctx.author.id)]["balance"] += returnCredits
+        balances[str(ctx.guild.id)][str(ctx.user.id)]["balance"] += returnCredits
 
         if ans == guess:
             embed = discord.Embed(title="You win!", description=f"I got: **{ans}**, You chose: **{guess}**", color=var.embedSuccess)
-            embed.add_field(name="Credits", value= f"You got **{returnCredits}** credits! You are now on **{balances[str(ctx.guild.id)][str(ctx.author.id)]['balance']}** credits!", inline = False)
+            embed.add_field(name="Credits", value= f"You got **{returnCredits}** credits! You are now on **{balances[str(ctx.guild.id)][str(ctx.user.id)]['balance']}** credits!", inline = False)
         
         else:
             embed = discord.Embed(title="You lose!", description=f"I got: **{ans}**, You chose: **{guess}**", color=var.embedFail)
-            embed.add_field(name="Credits", value= f"You lost **{0-returnCredits}** credits! You are now on **{balances[str(ctx.guild.id)][str(ctx.author.id)]['balance']}** credits!", inline = False)
+            embed.add_field(name="Credits", value= f"You lost **{0-returnCredits}** credits! You are now on **{balances[str(ctx.guild.id)][str(ctx.user.id)]['balance']}** credits!", inline = False)
                                         
-        await ctx.respond(embed=embed)
+        await ctx.response.send_message(embed=embed)
         await functions.save_data("databases/economy.json", balances)
     
-    @slash_command(name='roll', description="Predict a dice roll correctly and you get credits! Otherwise...", aliases=['dice'])
-    async def roll(self, ctx, guess : Option(int, description="Your guess from 1-6", min_value=1, max_value=6)):
+    @app_commands.command(name='roll', description="Predict a dice roll correctly and you get credits! Otherwise...")
+    @app_commands.describe(guess="Your dice roll guess from 1-6")
+    @app_commands.guild_only()
+    async def roll(self, ctx : discord.Interaction, guess : app_commands.Range[int, 1, 6]):
 
         botChoice = random.randint(1,6)
 
@@ -84,35 +91,42 @@ class Economy1(commands.Cog):
         
         if str(ctx.guild.id) not in balances:
             balances[str(ctx.guild.id)] = {}
-        if str(ctx.author.id) not in balances[str(ctx.guild.id)]:
-            balances[str(ctx.guild.id)][str(ctx.author.id)] = {"balance":0}
+        if str(ctx.user.id) not in balances[str(ctx.guild.id)]:
+            balances[str(ctx.guild.id)][str(ctx.user.id)] = {"balance":0}
 
-        if str(botChoice) == guess:
+        if botChoice == guess:
             returnCredits = random.randint(25, 200)
 
-            balances[str(ctx.guild.id)][str(ctx.author.id)]['balance'] += returnCredits
+            balances[str(ctx.guild.id)][str(ctx.user.id)]['balance'] += returnCredits
 
             embed = discord.Embed(title="You win!", description=f"I got: **{botChoice}**, You chose: **{guess}**", color=var.embedSuccess)
-            embed.add_field(name="Credits", value= f"You got **{returnCredits}** credits! You are now on **{balances[str(ctx.guild.id)][str(ctx.author.id)]['balance']}** credits!", inline = False)
+            embed.add_field(name="Credits", value= f"You got **{returnCredits}** credits! You are now on **{balances[str(ctx.guild.id)][str(ctx.user.id)]['balance']}** credits!", inline = False)
         else:
             returnCredits = random.randint(-65, -25)
 
-            balances[str(ctx.guild.id)][str(ctx.author.id)]['balance'] += returnCredits
+            balances[str(ctx.guild.id)][str(ctx.user.id)]['balance'] += returnCredits
 
             embed = discord.Embed(title="You lost!", description=f"I got: **{botChoice}**, You chose: **{guess}**", color=var.embedFail)
-            embed.add_field(name="Credits", value= f"You lost **{0-returnCredits}** credits. You are now on **{balances[str(ctx.guild.id)][str(ctx.author.id)]['balance']}** credits.", inline = False)
+            embed.add_field(name="Credits", value= f"You lost **{0-returnCredits}** credits. You are now on **{balances[str(ctx.guild.id)][str(ctx.user.id)]['balance']}** credits.", inline = False)
         
-        await ctx.respond(embed=embed)
+        await ctx.response.send_message(embed=embed)
         await functions.save_data("databases/economy.json", balances)
     
-    @slash_command(name='rps', description="Play rock, paper, scissors!", aliases=['rock-paper-scissors', "rockpaperscissors", "rsp", "spr"])
-    async def rps(self, ctx, choice : Option(str, description="Rock, paper or scissors", choices=["rock", "paper", "scissors"])):
+    @app_commands.command(name='rps', description="Play rock, paper, scissors!")
+    @app_commands.describe(choice="Your choice for rock, paper or scissors")
+    @app_commands.choices(choice=[
+            app_commands.Choice(name="Rock", value="rock"), 
+            app_commands.Choice(name="Paper", value="paper"), 
+            app_commands.Choice(name="Scissors", value="scissors")
+    ])
+    @app_commands.guild_only()
+    async def rps(self, ctx : discord.Interaction, choice : str):
         balances = await functions.read_data("databases/economy.json")
         
         if str(ctx.guild.id) not in balances:
             balances[str(ctx.guild.id)] = {}
-        if str(ctx.author.id) not in balances[str(ctx.guild.id)]:
-            balances[str(ctx.guild.id)][str(ctx.author.id)] = {"balance":0}
+        if str(ctx.user.id) not in balances[str(ctx.guild.id)]:
+            balances[str(ctx.guild.id)][str(ctx.user.id)] = {"balance":0}
 
         choices = {"1":"rock","2":"paper","3":"scissors"}
         correct = [ [2, 1], [3, 2], [1, 3] ]
@@ -128,28 +142,28 @@ class Economy1(commands.Cog):
                 if valid[0] == guess and valid[1] == botChoice:
                     returnCredits = random.randint(25, 200)
 
-                    embed = discord.Embed(title="You win!", description=f"I got: **{choices[str(botChoice)].title()}**, You chose: **{originalGuess.title()}**", color=var.embedSuccess)
-                    embed.add_field(name="Credits", value= f"You got **{returnCredits}** credits! You are now on **{balances[str(ctx.guild.id)][str(ctx.author.id)]['balance'] + returnCredits}** credits!", inline = False)
+                    embed = discord.Embed(title="You win!", description=f"I chose: **{choices[str(botChoice)].title()}**, You chose: **{originalGuess.title()}**", color=var.embedSuccess)
+                    embed.add_field(name="Credits", value= f"You got **{returnCredits}** credits! You are now on **{balances[str(ctx.guild.id)][str(ctx.user.id)]['balance'] + returnCredits}** credits!", inline = False)
                 elif guess == botChoice:
-                    embed = discord.Embed(title="Draw!", description=f"I got: **{choices[str(botChoice)].title()}**, You chose: **{originalGuess.title()}**", color=var.embed)
+                    embed = discord.Embed(title="Draw!", description=f"I chose: **{choices[str(botChoice)].title()}**, You chose: **{originalGuess.title()}**", color=var.embed)
                     embed.add_field(name="Credits", value= f"You did not gain or lose any credits.", inline = False)
                 else:
                     returnCredits = random.randint(-65, -25)
 
-                    embed = discord.Embed(title="You lost!", description=f"I got: **{choices[str(botChoice)].title()}**, You chose: **{originalGuess.title()}**", color=var.embedFail)
-                    embed.add_field(name="Credits", value= f"You lost **{0-returnCredits}** credits. You are now on **{balances[str(ctx.guild.id)][str(ctx.author.id)]['balance'] + returnCredits}** credits.", inline = False)
+                    embed = discord.Embed(title="You lost!", description=f"I chose: **{choices[str(botChoice)].title()}**, You chose: **{originalGuess.title()}**", color=var.embedFail)
+                    embed.add_field(name="Credits", value= f"You lost **{0-returnCredits}** credits. You are now on **{balances[str(ctx.guild.id)][str(ctx.user.id)]['balance'] + returnCredits}** credits.", inline = False)
                 
                 if embed != "":
-                    return await ctx.respond(embed=embed)
+                    return await ctx.response.send_message(embed=embed)
         
-        balances[str(ctx.guild.id)][str(ctx.author.id)]['balance'] += returnCredits
+        balances[str(ctx.guild.id)][str(ctx.user.id)]['balance'] += returnCredits
         await functions.save_data("databases/economy.json", balances)
 
     
-    @slash_command(name="extrawork", description="Work once every 10 minutes and get big rewards!")
-    @commands.cooldown(1, 600, commands.BucketType.user)
-    async def extrawork(self, ctx):
-        cd = cooldown.doCooldown(datetime.timedelta(minutes=10), "extrawork", ctx.author)
+    @app_commands.command(name="extrawork", description="Work once every 10 minutes and get big rewards!")
+    @app_commands.guild_only()
+    async def extrawork(self, ctx : discord.Interaction):
+        cd = cooldown.doCooldown(datetime.timedelta(minutes=10), "extrawork", ctx.user)
         if cd != True:
             raise customerror.CooldownError(f"You are on cooldown! Please wait **{round(cd.total_seconds())}** seconds to work again.")
         
@@ -158,23 +172,23 @@ class Economy1(commands.Cog):
         
         if str(ctx.guild.id) not in balances:
             balances[str(ctx.guild.id)] = {}
-        if str(ctx.author.id) not in balances[str(ctx.guild.id)]:
-            balances[str(ctx.guild.id)][str(ctx.author.id)] = {"balance":0}
+        if str(ctx.user.id) not in balances[str(ctx.guild.id)]:
+            balances[str(ctx.guild.id)][str(ctx.user.id)] = {"balance":0}
 
-        balances[str(ctx.guild.id)][str(ctx.author.id)]['balance'] += money
+        balances[str(ctx.guild.id)][str(ctx.user.id)]['balance'] += money
 
         with open(r'resources/workreplies.json') as f:
             reply = random.choice(json.load(f)).replace("{amount}", "**" + str(money) + "**")
 
-        embed = discord.Embed(title="You got money!", description=f"{reply}! You are now on **{balances[str(ctx.guild.id)][str(ctx.author.id)]['balance']}** credits!", color=var.embed)
-        await ctx.respond(embed=embed)
+        embed = discord.Embed(title="You got money!", description=f"{reply}! You are now on **{balances[str(ctx.guild.id)][str(ctx.user.id)]['balance']}** credits!", color=var.embed)
+        await ctx.response.send_message(embed=embed)
 
         await functions.save_data("databases/economy.json", balances)
     
-    @slash_command(name="slots", description="Play slots", aliases=["slot", "slot-machine"])
-    @commands.cooldown(1, 5, commands.BucketType.user)
-    async def slots(self, ctx):
-        cd = cooldown.doCooldown(datetime.timedelta(seconds=5), "slots", ctx.author)
+    @app_commands.command(name="slots", description="Play slots")
+    @app_commands.guild_only()
+    async def slots(self, ctx : discord.Interaction):
+        cd = cooldown.doCooldown(datetime.timedelta(seconds=5), "slots", ctx.user)
         if cd != True:
             raise customerror.CooldownError(f"You are on cooldown! Please wait **{round(cd.total_seconds())}** seconds to use the slot machine again.")
         choices=["", "🍌", "🍉", "🍒", "🍏"]
@@ -187,30 +201,32 @@ class Economy1(commands.Cog):
         
         if str(ctx.guild.id) not in balances:
             balances[str(ctx.guild.id)] = {}
-        if str(ctx.author.id) not in balances[str(ctx.guild.id)]:
-            balances[str(ctx.guild.id)][str(ctx.author.id)] = {"balance":0}
+        if str(ctx.user.id) not in balances[str(ctx.guild.id)]:
+            balances[str(ctx.guild.id)][str(ctx.user.id)] = {"balance":0}
 
         losses = random.randint(-75, -15) 
         money = random.randint(60, 325)
 
         if choice1 == choice2 and choice2 == choice3:
-            balances[str(ctx.guild.id)][str(ctx.author.id)]['balance'] += money
+            balances[str(ctx.guild.id)][str(ctx.user.id)]['balance'] += money
 
             embed = discord.Embed(title="You win!", description=f"{choice1}|{choice2}|{choice3}", color=var.embedSuccess)
-            embed.add_field(name="Credits", value= f"You won **{money}** credits. You are now on **{balances[str(ctx.guild.id)][str(ctx.author.id)]['balance']}** credits.", inline = False)
+            embed.add_field(name="Credits", value= f"You won **{money}** credits. You are now on **{balances[str(ctx.guild.id)][str(ctx.user.id)]['balance']}** credits.", inline = False)
         else:
-            balances[str(ctx.guild.id)][str(ctx.author.id)]['balance'] += losses
+            balances[str(ctx.guild.id)][str(ctx.user.id)]['balance'] += losses
 
             embed = discord.Embed(title="You lose.", description=f"{choice1}|{choice2}|{choice3}", color=var.embedFail)
-            embed.add_field(name="Credits", value= f"You lost **{0-losses}** credits. You are now on **{balances[str(ctx.guild.id)][str(ctx.author.id)]['balance']}** credits.", inline = False)
+            embed.add_field(name="Credits", value= f"You lost **{0-losses}** credits. You are now on **{balances[str(ctx.guild.id)][str(ctx.user.id)]['balance']}** credits.", inline = False)
             
-        await ctx.respond(embed=embed)
+        await ctx.response.send_message(embed=embed)
 
         await functions.save_data("databases/economy.json", balances)
     
-    @slash_command(name="rob", description="Rob a user", aliases=["steal"])
-    async def rob(self, ctx, member : Option(discord.Member)):
-        cd = cooldown.doCooldown(datetime.timedelta(hours=1), "rob", ctx.author)
+    @app_commands.command(name="rob", description="Rob a user")
+    @app_commands.describe(member="The member to attempt a robbery on")
+    @app_commands.guild_only()
+    async def rob(self, ctx : discord.Interaction, member : discord.Member):
+        cd = cooldown.doCooldown(datetime.timedelta(hours=1), "rob", ctx.user)
         if cd != True:
             raise customerror.CooldownError(f"You are on cooldown! Please wait **{round(cd.total_seconds())}** seconds to rob again.")
         
@@ -218,14 +234,14 @@ class Economy1(commands.Cog):
         
         if str(ctx.guild.id) not in balances:
             balances[str(ctx.guild.id)] = {}
-        if str(ctx.author.id) not in balances[str(ctx.guild.id)]:
-            balances[str(ctx.guild.id)][str(ctx.author.id)] = {"balance":0}
+        if str(ctx.user.id) not in balances[str(ctx.guild.id)]:
+            balances[str(ctx.guild.id)][str(ctx.user.id)] = {"balance":0}
 
         if str(member.id) not in balances[str(ctx.guild.id)] or balances[str(ctx.guild.id)][str(member.id)]['balance'] <= 0:
-            cooldown.clearCooldown("rob", ctx.author)
+            cooldown.clearCooldown("rob", ctx.user)
             raise customerror.MildErr(f"**{member}** has no money, you can't rob them!")
-        if member == ctx.author:
-            cooldown.clearCooldown("rob", ctx.author)
+        if member == ctx.user:
+            cooldown.clearCooldown("rob", ctx.user)
             raise customerror.MildErr("You can't rob yourself.")
 
         successfulChance = random.randint(1,3)
@@ -233,11 +249,11 @@ class Economy1(commands.Cog):
         fine = round(removeAmount / random.randint(1,3))
 
         if successfulChance == 1:
-            balances[str(ctx.guild.id)][str(ctx.author.id)]['balance'] += removeAmount
+            balances[str(ctx.guild.id)][str(ctx.user.id)]['balance'] += removeAmount
             balances[str(ctx.guild.id)][str(member.id)]['balance'] -= removeAmount
 
-            embed = discord.Embed(title="You robbed successfully!", description=f"You robbed **{removeAmount}** credits, you are now on **{balances[str(ctx.guild.id)][str(ctx.author.id)]['balance']}** credits, they are now on **{balances[str(ctx.guild.id)][str(member.id)]['balance']}** credits.", color=var.embedSuccess)
-            await ctx.respond(embed=embed)
+            embed = discord.Embed(title="You robbed successfully!", description=f"You robbed **{removeAmount}** credits, you are now on **{balances[str(ctx.guild.id)][str(ctx.user.id)]['balance']}** credits, they are now on **{balances[str(ctx.guild.id)][str(member.id)]['balance']}** credits.", color=var.embedSuccess)
+            await ctx.response.send_message(embed=embed)
 
             try:
                 embed = discord.Embed(title="Uh-oh! You have been robbed!", description=f"You got robbed **{removeAmount}** credits, you are now on **{balances[str(ctx.guild.id)][str(member.id)]['balance']}** credits.", color=var.embedFail)
@@ -245,12 +261,12 @@ class Economy1(commands.Cog):
             except Exception as e:
                 pass
         else:
-            balances[str(ctx.author.id)] -= fine
+            balances[str(ctx.user.id)] -= fine
 
-            embed = discord.Embed(title="You got fined!", description=f"You got fined **{fine}** credits, you are now on **{balances[str(ctx.guild.id)][str(ctx.author.id)]['balance']}** credits.", color=var.embedFail)
-            await ctx.respond(embed=embed)
+            embed = discord.Embed(title="You got fined!", description=f"You got fined **{fine}** credits, you are now on **{balances[str(ctx.guild.id)][str(ctx.user.id)]['balance']}** credits.", color=var.embedFail)
+            await ctx.response.send_message(embed=embed)
         
         await functions.save_data("databases/economy.json", balances)
 
-def setup(bot):
-    bot.add_cog(Economy1(bot))
+async def setup(bot : commands.Bot):
+    await bot.add_cog(Economy1(bot), guilds=var.guilds)

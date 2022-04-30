@@ -7,38 +7,39 @@ from functions import customerror
 from functions import functions
 from datetime import datetime
 
-from discord.commands import slash_command, Option, permissions
+from discord import app_commands
 
 class Interaction(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot : discord.Client):
         self.bot = bot
         
-    @slash_command(name="suggest", description = "Suggest something to add to the bot")
-    async def suggest(self, ctx, suggestion : Option(str, description="The suggestion to send")):
+    @app_commands.command(name="suggest", description = "Suggest something to add to the bot")
+    @app_commands.describe(suggestion="The suggestion to send")
+    async def suggest(self, ctx : discord.Interaction, suggestion : str):
 
-        await ctx.respond(f"> **Thanks for suggesting!** You will recieve a DM if your suggestion is verified (allowed to be voted on) in the Discord <{var.server}>")
+        await ctx.response.send_message(f"> **Thanks for suggesting!** You will recieve a DM if your suggestion is verified (allowed to be voted on) in the Discord <{var.server}>")
 
-        embed = discord.Embed(title=f"New suggestion {ctx.author.id}", color=var.embed)
-        embed.add_field(name="From user: {}".format(ctx.author), value=suggestion, inline = False)
+        embed = discord.Embed(title=f"New suggestion {ctx.user.id}", color=var.embed)
+        embed.add_field(name="From user: {}".format(ctx.user), value=suggestion, inline = False)
         embed.set_footer(text=f"Remember to add a response with your {var.prefix}verifySuggestion command.")
 
         suggestmessage = await self.bot.get_channel(832906475529043978).send(embed=embed)
-        await suggestmessage.edit(content=f"Verify this suggestion with `{var.prefix}verifySuggestion {suggestmessage.id}`")
+        await suggestmessage.edit(content=f"Verify this suggestion with `{var.prefix}verifysuggestion {suggestmessage.id}`")
 
         await suggestmessage.add_reaction("👍")
         await suggestmessage.add_reaction("👎")
 
-    @slash_command(
+    @app_commands.command(
         name="verifysuggestion", 
-        description = "[suggestionID]|ADMIN ONLY", 
-        guild_ids=var.guilds, 
-        default_permission=False, 
-        permissions=[permissions.CommandPermission(id=userid, type=2, permission=True) for userid in var.botAdmins]
+        description = "[suggestionID]|ADMIN ONLY"
     )
-    async def verifysuggestion(self, ctx, suggestionID : Option(str, name="suggestion_id"), response : Option(str, description="The response to add", required=False)=None):
-        if ctx.author.id in var.botAdmins:
+    @app_commands.guilds(discord.Object(var.support_guild_id))
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.describe(suggestion_id="The suggestion ID to verify", response="A response to attach")
+    async def verifysuggestion(self, ctx : discord.Interaction, suggestion_id : int, response : str = None):
+        if ctx.user.id in var.botAdmins:
             chnl = self.bot.get_channel(832906475529043978)
-            msg = await chnl.fetch_message(int(suggestionID))
+            msg = await chnl.fetch_message(int(suggestion_id))
             embed = msg.embeds[0]
             oldTitle = msg.embeds[0].title
 
@@ -52,36 +53,37 @@ class Interaction(commands.Cog):
 
             try:
                 user = self.bot.get_user(int(oldTitle.split(" ")[2]))
-                await user.send(f"> One of your suggestions was verified by bot admin `{ctx.author}` with {f'response: **{response}**' if response != None else 'no response.'}")
+                await user.send(f"> One of your suggestions was verified by bot admin `{ctx.user}` with {f'response: **{response}**' if response != None else 'no response.'}")
             except Exception as e:
                 print(e)
-            await ctx.respond("Suggestion verified.")
+            await ctx.response.send_message("Suggestion verified.")
         else:
-            await ctx.respond('> This command is for bot admins only')
+            await ctx.response.send_message('> This command is for bot admins only')
 
-    @slash_command(name="report", description = "Report a bug or issue")
-    async def report(self, ctx, issue : Option(str, description="The issue to report")):
+    @app_commands.command(name="report", description = "Report a bug or issue")
+    @app_commands.describe(issue="The issue to report")
+    async def report(self, ctx : discord.Interaction, issue : str):
 
-        await ctx.respond("> **Thanks for reporting!**")
+        await ctx.response.send_message("> **Thanks for reporting!**")
 
         embed = discord.Embed(title="New report", color=var.embed)
-        embed.add_field(name="From user: {}".format(ctx.author), value=issue, inline = False)
-        embed.set_footer(text=f"Reply with hb/dm {ctx.author.id} [message]")
+        embed.add_field(name="From user: {}".format(ctx.user), value=issue, inline = False)
+        embed.set_footer(text=f"Reply with hb/dm {ctx.user.id} [message]")
 
         await self.bot.get_channel(832906537822584843).send(embed=embed)
             
-    @slash_command(name='dm', description = 'ADMIN ONLY', 
-        guild_ids=var.guilds, 
-        default_permission=False, 
-        permissions=[permissions.CommandPermission(id=userid, type=2, permission=True) for userid in var.botAdmins])
-    async def dm(self, ctx, member: discord.User, message):
-        if ctx.author.id in var.botAdmins:
-            await member.send('[Message from bot admin {}] {}'.format(ctx.author, message))
-            await ctx.respond("> Successfully sent a message to **{}**".format(member))
+    @app_commands.command(name='dm', description = 'ADMIN ONLY'
+    )
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.guilds(discord.Object(var.support_guild_id))
+    async def dm(self, ctx : discord.Interaction, member: discord.User, message : str):
+        if ctx.user.id in var.botAdmins:
+            await member.send('[Message from bot admin {}] {}'.format(ctx.user, message))
+            await ctx.response.send_message("> Successfully sent a message to **{}**".format(member))
             dm = self.bot.get_user(368071242189897728)
-            await dm.send("> <@368071242189897728> DM From admin {} to {}: **{}**".format(ctx.author, member, message))
+            await dm.send("> <@368071242189897728> DM From admin {} to {}: **{}**".format(ctx.user, member, message))
         else:
-            await ctx.respond('> This command is for bot admins only')
+            await ctx.response.send_message('> This command is for bot admins only')
         
-def setup(bot):
-    bot.add_cog(Interaction(bot))
+async def setup(bot):
+    await bot.add_cog(Interaction(bot), guilds=var.guilds)
