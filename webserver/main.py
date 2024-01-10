@@ -15,7 +15,6 @@ from discord.ext import commands
 from discord import app_commands
 
 loggingOptions = ["channelCreate", "channelDelete", "roleCreate", "roleDelete", "nicknameChange", "dashboardUse", "warns"]
-encryptionKey = os.environ.get("encryptionKey")
 
 bot : commands.Bot = None
 
@@ -67,7 +66,7 @@ def changelogsAPI():
     changelogs = {}
     for file in [f for f in os.listdir("./resources/changelogs/") if os.path.isfile(os.path.join("./resources/changelogs/", f))]:
         with open("resources/changelogs/" + file) as f:
-            changelogs[file.replace(".txt", "")] = f.read()
+            changelogs[file.replace(".html", "")] = f.read()
 
     return jsonify(changelogs)
 
@@ -78,23 +77,32 @@ def commandsAPI():
 
     tree : app_commands.CommandTree = bot.tree
 
-    if not var.guilds:
-        commandsList = tree.walk_commands()
-    else:
-        commandsList = tree.walk_commands(guild=var.guilds[0])
+    commandsList = tree.walk_commands()
 
+    cmdIter : list[app_commands.Command] = []
     for command in commandsList:
-        if command.name not in done:
-            done.append(command.name)
+        if type(command) == app_commands.Group:
+            for command1 in command.commands:
+                if type(command1) == app_commands.Group:
+                    for command2 in command1.commands:
+                        cmdIter.append(command2)
+                else:
+                    cmdIter.append(command1)
+        else:
+            cmdIter.append(command)
+    
+    for command in cmdIter:
+        
+        if command.qualified_name not in done:
+            done.append(command.qualified_name)
             category = None 
             for categoryIter in resources.commands.json:
                 if command.name in resources.commands.json[categoryIter]:
                     category = categoryIter
 
-            options = [{"name":name, "description":option.description, "required":option.required} for name, option in command._params.items()]
+            options = [{"name":name, "description":str(option.description), "required":option.required} for name, option in command._params.items()]
 
-            if category:
-                commands.append({"name":command.name, "description":command.description, "options":options, "category":category})
+            commands.append({"name":command.qualified_name, "description":str(command.description), "options":options, "category":category})
     
     return jsonify(commands)
 
@@ -102,9 +110,9 @@ def commandsAPI():
 def userinfoAPI():
     try:
         user = request.cookies.get('user').split(";;;;")
-        user_id = encryption.decode(user[1], encryptionKey)
-        name = encryption.decode(user[2], encryptionKey)
-        avatar = encryption.decode(user[3], encryptionKey)
+        user_id = encryption.decode(user[1], var.encryption_key)
+        name = encryption.decode(user[2], var.encryption_key)
+        avatar = encryption.decode(user[3], var.encryption_key)
         user = bot.get_user(int(user_id))
     except AttributeError:
         return jsonify({"user":None, "type":"unknown"})
@@ -141,14 +149,13 @@ def admin():
         print(e)
         return redirect(var.login)
     try:
-        
         user_id = user_json["id"]
         user = bot.get_user(int(user_id))
         resp = make_response(redirect("/#dashboard"))
         cookiestring = ''
-        cookiestring = cookiestring + ';;;;' + encryption.encode(str(user_json['id']), encryptionKey).decode("utf-8")
-        cookiestring = cookiestring + ';;;;' + encryption.encode(str(user_json['username']), encryptionKey).decode("utf-8")
-        cookiestring = cookiestring + ';;;;' + encryption.encode(str(user_json['avatar']), encryptionKey).decode("utf-8")
+        cookiestring = cookiestring + ';;;;' + encryption.encode(str(user_json['id']), var.encryption_key).decode("utf-8")
+        cookiestring = cookiestring + ';;;;' + encryption.encode(str(user_json['username']), var.encryption_key).decode("utf-8")
+        cookiestring = cookiestring + ';;;;' + encryption.encode(str(user_json['avatar']), var.encryption_key).decode("utf-8")
         resp.set_cookie('user', cookiestring, max_age=8_760*3600)
         return resp
     except AttributeError as e:
@@ -159,7 +166,7 @@ def admin():
 def dashboard():
     try:
         user = request.cookies.get('user').split(";;;;")
-        user_id = encryption.decode(user[1], encryptionKey)
+        user_id = encryption.decode(user[1], var.encryption_key)
     except AttributeError:
         resp = make_response(redirect("/login"))
         resp.set_cookie('user', '', expires=0)
@@ -170,7 +177,7 @@ def dashboard():
 def dashboardWith(server):
     try:
         user = request.cookies.get('user').split(";;;;")
-        user_id = encryption.decode(user[1], encryptionKey)
+        user_id = encryption.decode(user[1], var.encryption_key)
     except AttributeError:
         return redirect("/login")
     return render_template('dashboard.html', last_updated=dir_last_updated('/static'))
@@ -189,13 +196,12 @@ def serverDataAPI():
     value = {}
     try:
         user = request.cookies.get('user').split(";;;;")
-        user_id = encryption.decode(user[1], encryptionKey)
+        user_id = encryption.decode(user[1], var.encryption_key)
     except AttributeError:
         return redirect("/login")
     warns = functions.read_data_sync('databases/warns.json')
     warnsString = json.dumps(warns)
     events = functions.read_data_sync("databases/events.json")
-    music = functions.read_data_sync("databases/music.json")
     
     with open("databases/commands.json") as f:
         commands = json.load(f)
@@ -213,9 +219,7 @@ def serverDataAPI():
                 "id":str(guild.id),
                 "icon":guild.icon.key if guild.icon else "undefined",
                 "has_permissions":{"manage_messages":member.guild_permissions.manage_messages, "manage_guild":member.guild_permissions.manage_guild},
-                "prefix":functions.prefix(guild),
                 "joinleave":joinleaveData[str(guild.id)] if str(guild.id) in joinleaveData else {},
-                "music":music[str(guild.id)] if str(guild.id) in music else {},
                 "warns":warns[str(guild.id)] if str(guild.id) in warns else {},
                 "owner":str(guild.owner_id),
                 "roles":[{"name":role.name,"id":str(role.id),"color":str(role.color)} for role in guild.roles],
@@ -244,7 +248,7 @@ def serverDataAPI():
 def setAutorole():
     try:
         user = request.cookies.get('user').split(";;;;")
-        user_id = encryption.decode(user[1], encryptionKey)
+        user_id = encryption.decode(user[1], var.encryption_key)
     except AttributeError:
         return redirect("/login")
 
@@ -289,7 +293,7 @@ def setAutorole():
 def setLogging():
     try:
         user = request.cookies.get('user').split(";;;;")
-        user_id = encryption.decode(user[1], encryptionKey)
+        user_id = encryption.decode(user[1], var.encryption_key)
     except AttributeError:
         return redirect("/login")
 
@@ -342,7 +346,7 @@ def setLogging():
 def setMessage():
     try:
         user = request.cookies.get('user').split(";;;;")
-        user_id = encryption.decode(user[1], encryptionKey)
+        user_id = encryption.decode(user[1], var.encryption_key)
     except AttributeError:
         return redirect("/login")
     
@@ -389,45 +393,12 @@ def setMessage():
         return jsonify({"data":joinleave[str(guild.id)], "returnMessage":f"Successfully set {choice} message to '{data['message']}'"})
 
     return jsonify({"error":"Missing perms"})
-        
-
-@app.route('/api/dashboard/setPrefix', methods=['POST'])
-def setPrefix():
-    try:
-        user = request.cookies.get('user').split(";;;;")
-        user_id = encryption.decode(user[1], encryptionKey)
-    except AttributeError:
-        return redirect("/login")
-    prefixes = functions.read_data_sync("databases/prefixes.json")
-    data = request.json
-    guild = bot.get_guild(int(data['guild']))
-    member = guild.get_member(int(user_id))
-    if member.guild_permissions.manage_guild:
-        if len(data['prefix']) > 50:
-            return jsonify({"error":"Prefix must be under 50 characters"})
-        if data['prefix'] != var.prefix and data['prefix'] != 'reset' and data['prefix'].replace(" ", "") != "":
-            prefixes[str(guild.id)] = data['prefix']
-            returnPrefix = data['prefix']
-            returnMess = f"Successfully set prefix to {data['prefix']}"
-        elif str(guild.id) in prefixes:
-            del prefixes[str(guild.id)]
-            returnPrefix = var.prefix
-            returnMess = "Successfully reset prefix"
-        else:
-            returnPrefix = var.prefix
-            returnMess = "Successfully reset prefix"
-        functions.save_data_sync("databases/prefixes.json", prefixes)
-        functions.read_load_sync("databases/prefixes.json", prefixes)
-
-        return jsonify({"prefix":returnPrefix, "returnMessage":returnMess})
-
-    return jsonify({"error":"Missing perms"})
 
 @app.route('/api/dashboard/setEvents', methods=['POST'])
 def setEvents():
     try:
         user = request.cookies.get('user').split(";;;;")
-        user_id = encryption.decode(user[1], encryptionKey)
+        user_id = encryption.decode(user[1], var.encryption_key)
     except AttributeError:
         return redirect("/login")
     events = functions.read_data_sync("databases/events.json")
@@ -461,7 +432,7 @@ def setEvents():
 def setCustomCommands():
     try:
         user = request.cookies.get('user').split(";;;;")
-        user_id = encryption.decode(user[1], encryptionKey)
+        user_id = encryption.decode(user[1], var.encryption_key)
     except AttributeError:
         return redirect("/login")
 
@@ -487,9 +458,6 @@ def setCustomCommands():
                 elif cmd == command.name:
                     delList.append(cmd)
                     did = True
-            if cmd in var.musicCommands:
-                delList.append(cmd)
-                did = True
             
             if cmd.replace(" ", "") == "" or data["commands"][cmd].replace(" ", "") == "":
                 delList.append(cmd)
@@ -530,7 +498,7 @@ def setCustomCommands():
 def delWarn():
     try:
         user = request.cookies.get('user').split(";;;;")
-        user_id = encryption.decode(user[1], encryptionKey)
+        user_id = encryption.decode(user[1], var.encryption_key)
     except AttributeError:
         return redirect("/login")
     warns = functions.read_data_sync("databases/warns.json")
@@ -554,30 +522,6 @@ def delWarn():
 
     return jsonify({"error":"Missing perms"})
 
-@app.route('/api/dashboard/setMusic', methods=['POST'])
-def setMusic():
-    try:
-        user = request.cookies.get('user').split(";;;;")
-        user_id = encryption.decode(user[1], encryptionKey)
-    except AttributeError:
-        return redirect("/login")
-    music = functions.read_data_sync("databases/music.json")
-    data = request.json
-    guild = bot.get_guild(int(data['guild']))
-    member = guild.get_member(int(user_id))
-    del data["guild"]
-
-    if member.guild_permissions.manage_guild:
-        if str(guild.id) not in music:
-            music[str(guild.id)] = {}
-        music[str(guild.id)] = data 
-
-        functions.save_data_sync("databases/music.json", music)
-
-        return jsonify({"returnMessage":"Successfully set music permissions"})
-
-    return jsonify({"error":"Missing perms"})
-
 
 def dir_last_updated(folder):
     try:
@@ -586,6 +530,6 @@ def dir_last_updated(folder):
         pass
 
 def run():
-    http = WSGIServer(('0.0.0.0', 5000), app) 
+    http = WSGIServer(('0.0.0.0', var.port), app) 
     http.serve_forever()
     #app.run(host='0.0.0.0',port=5000)

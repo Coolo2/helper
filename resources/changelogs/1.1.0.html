@@ -1,0 +1,51 @@
+[10th January 2024] 1.1.0 - Return & Fixes!
+The Helper rewrite has been out for almost two years now and nothing has changed. Many parts of the bot have got slow and buggy, which this update aims to fix.
+In this update, the bot has been promoted into a stable "v" release!
+
+<u>Updated commands:</u>
+- /customcommands now displays a "/" before command names
+- /ban now supports hackbans. You also cannot remove yourself with /kick and /ban anymore
+- /changelogs now shows changelogs directly rather than linking to the website
+- /blurpify and /deepfry arguments have been seperated so that the UI is easier to use. They also display in an embed once again with tips in the footer
+- /wikipedia has been rewritten, and now:
+ - has an autocomplete which shows articles before you hit enter;
+ - shows more text and formats it properly;
+ - includes a link at the bottom to read more;
+- /mimic has had an overhaul:
+ - It has been split into two commands, /mimic mimic and /mimic toggle to simplify experience
+ - All members will now show in the user field as it is easier to browse
+ - Fixed some occasional bugs
+- /warns 
+ - now doesn't require you to add a member argument. If left blank will show your own warns
+ - has been split into sub commands /warns, /warns_add, /warns_remove, which makes browsing easier;
+
+- /minecraft renamed to /minecraft_achievement
+- /mute and /unmute have been replaced with /timeout add and /timeout remove
+- Bot information commands have been put under subcommand "/bot"
+
+- "duplicate" commands (eg /links and /website and /dashboard) have been merged
+- /covid removed
+
+<u>Improvements:</u>
+
+- Uptime should be much higher, the bot should rarely be offline now 
+- Most commands will be faster 
+- Website much faster
+- All references to text prefixes have been removed (slash commands have been forced for a while now)
+
+<u>Bug fixes:</u>
+
+- Music commands are no longer displayed as existing around the bot, since the commands haven't existed for many months 
+- Music section of the dashboard removed for the same reason
+- Fixed commands section of the about page on the website
+- Fixed /cat
+- Fixed /poll and /question not adding reactions
+- Fixed bot not syncing removed commands
+
+<u>Website changes:</u>
+
+- Fixed certain commands missing from about section
+
+<u>Development changes:</u>
+
+- Some simplifcations made to configuration

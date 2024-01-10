@@ -11,19 +11,6 @@ class Handling(commands.Cog):
     
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        data = await functions.read_data("databases/mutes.json")
-        
-        for guild in data:
-            for memberJ in data[guild]:
-                if memberJ == str(member.id):
-                    for memberRole in member.roles:
-                        try:
-                            await member.remove_roles(memberRole)
-                        except Exception as e:
-                            pass
-                    for guildRole in member.guild.roles:
-                        if guildRole.name == "Muted":
-                            await member.add_roles(guildRole)
         data = await functions.read_data("databases/setup.json")
         if str(member.guild.id) in data:
             if "join" in data[str(member.guild.id)]:
@@ -58,7 +45,7 @@ class Handling(commands.Cog):
 
         for channel in guild.text_channels:
 
-            if ("chat" in channel.name or "general" in channel.name or "commands" in channel.name or "lounge" in channel.name or "bot" in channel.name) and channel.can_send():
+            if ("chat" in channel.name or "general" in channel.name or "commands" in channel.name or "lounge" in channel.name or "bot" in channel.name) and channel.permissions_for(guild.me).send_messages:
                 suitable_channel = channel 
         
         if suitable_channel == None:
@@ -88,7 +75,7 @@ See my commands with `/help`
         em.add_field(name="Servers: ", value=f"I am now in **{len(self.bot.guilds)}** servers!")
         await server_channel.send(embed=em)
 
-        await self.bot.change_presence(activity=discord.Game(name=f"/help | b{var.version} | {len(self.bot.guilds)} servers"))
+        await self.bot.change_presence(activity=discord.Game(name=f"/help | {var.version} | {len(self.bot.guilds)} servers"))
         
         if var.production:
             payload = {"server_count"  : len(self.bot.guilds)}
@@ -106,7 +93,7 @@ See my commands with `/help`
         em.add_field(name="Servers: ", value=f"I am now in **{len(self.bot.guilds)}** servers!")
         await server_channel.send(embed=em)
 
-        await self.bot.change_presence(activity=discord.Game(name=f"/help | b{var.version} | {len(self.bot.guilds)} servers"))
+        await self.bot.change_presence(activity=discord.Game(name=f"/help | {var.version} | {len(self.bot.guilds)} servers"))
         
         if var.production:
             payload = {"server_count"  : len(self.bot.guilds)}

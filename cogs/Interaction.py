@@ -21,10 +21,10 @@ class Interaction(commands.Cog):
 
         embed = discord.Embed(title=f"New suggestion {ctx.user.id}", color=var.embed)
         embed.add_field(name="From user: {}".format(ctx.user), value=suggestion, inline = False)
-        embed.set_footer(text=f"Remember to add a response with your {var.prefix}verifySuggestion command.")
+        embed.set_footer(text=f"Remember to add a response with your /verifySuggestion command.")
 
         suggestmessage = await self.bot.get_channel(832906475529043978).send(embed=embed)
-        await suggestmessage.edit(content=f"Verify this suggestion with `{var.prefix}verifysuggestion {suggestmessage.id}`")
+        await suggestmessage.edit(content=f"Verify this suggestion with `/verifysuggestion {suggestmessage.id}`")
 
         await suggestmessage.add_reaction("👍")
         await suggestmessage.add_reaction("👎")
@@ -46,4 +46,4 @@ class Interaction(commands.Cog):
     
         
 async def setup(bot):
-    await bot.add_cog(Interaction(bot), guilds=var.guilds)
+    await bot.add_cog(Interaction(bot))

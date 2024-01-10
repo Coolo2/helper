@@ -5,16 +5,19 @@ import random, os, json
 from functions import customerror, functions, google
 from setup import var
 from datetime import datetime, timedelta
-import wikipedia
 from EasyConversion import convert, info
-from googletrans import Translator
 import asyncio, re
 
 from discord import app_commands
 
+from wikipya import Wikipya
+from wikipya.exceptions import NotFound
+
 class Utility1(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
+        self.wiki = Wikipya(lang="en").get_instance()
 
     @app_commands.command(name="poll", description="Make a poll")
     @app_commands.describe(question="The question to ask")
@@ -22,8 +25,7 @@ class Utility1(commands.Cog):
         embed = discord.Embed(color=var.embed)
         embed.add_field(name="Poll from {}".format(ctx.user), value= question)
         reactthis = await ctx.response.send_message(embed=embed)
-
-        msg = await ctx.original_message()
+        msg = await ctx.original_response()
 
         await msg.add_reaction("✅")
         await msg.add_reaction("<:red_cross:858621367053975562>")
@@ -82,13 +84,30 @@ Random number from **1** to **1,000,000**: {random.randint(1, 1000000)}""")
     @app_commands.command(name="wikipedia", description="Search wikipedia for an article")
     @app_commands.describe(query="The query to search wikipedia for")
     async def wikipedia(self, ctx, query : str):
+        
         try:
-            summary = wikipedia.summary(query, sentences=5, auto_suggest=False)
-        except Exception as e:
-            summary = "Could not find article! Did you mean: \n`" + ("`, `".join(str(e).split("\n")[1:20])) + "`"
+            search = await self.wiki.search(query)
+        except NotFound:
+            raise customerror.MildErr("Couldn't find any results for this query!")
 
-        embed = discord.Embed(title=f"Here is a wikipedia article for {query}.", description=summary, colour=var.embed)
+        page = await self.wiki.page(search[0].page_id)
+        
+        parsed = functions.format_html_basic(page.parsed)[:4095]
+
+        embed = discord.Embed(title=f"Here is a wikipedia article for {query}.", description=parsed, colour=var.embed)
+        embed.add_field(name="Read more", value=f"https://en.wikipedia.org/wiki/{page.title.replace(' ', '_')}")
         await ctx.response.send_message(embed=embed)
+    
+    @wikipedia.autocomplete("query")
+    async def _autocomplete(self, interaction : discord.Interaction, namespace : str):
+        pages = []
+        if namespace:
+            try:
+                pages = await self.wiki.search(namespace, limit=25)
+            except NotFound:
+                pass
+
+        return [app_commands.Choice(name=p.title, value=p.title) for p in pages]
     
     @app_commands.command(name="userinfo", description="Check info for a user")
     @app_commands.describe(user="The user to get info for")
@@ -120,7 +139,7 @@ Random number from **1** to **1,000,000**: {random.randint(1, 1000000)}""")
         embed.add_field(name="Verification level", value= str(ctx.guild.verification_level))
         embed.add_field(name="Owner", value= ctx.guild.owner.mention)
         embed.set_thumbnail(url=ctx.guild.icon.url if ctx.guild.icon else None)
-        embed.set_footer(text=f"See more info with {functions.prefix(ctx.guild)}serverstats")
+        embed.set_footer(text=f"See more info with /serverstats")
         
         await ctx.response.send_message(embed=embed)
     
@@ -135,7 +154,7 @@ Random number from **1** to **1,000,000**: {random.randint(1, 1000000)}""")
         embed.add_field(name="Roles", value=len(ctx.guild.roles))
         embed.add_field(name="Channels", value=len(ctx.guild.channels))
         embed.add_field(name="Age", value=f"{(datetime.now() - ctx.guild.created_at.replace(tzinfo=None)).days} days")
-        embed.set_footer(text=f"See more info with {functions.prefix(ctx.guild)}serverinfo")
+        embed.set_footer(text=f"See more info with /serverinfo")
 
         await ctx.response.send_message(embed=embed)
     
@@ -149,14 +168,14 @@ Random number from **1** to **1,000,000**: {random.randint(1, 1000000)}""")
         text : str
     ):
         if convert_type.lower() not in ["morse", "morsecode", "morse-code"] + ["ascii", "binary"]:
-            raise customerror.CustomErr(f"Invalid convert type! Please use {functions.prefix(ctx.guild)}convert [ascii/morse] [input to convert]")
+            raise customerror.CustomErr(f"Invalid convert type! Please use /convert [ascii/morse] [input to convert]")
 
         embed = discord.Embed(
             title="Converted successfully!", 
             description=
                 "```" + 
                 (convert.detect.morsestring(convert_type) if convert_type.lower() in ["morse", "morsecode", "morse-code"] else convert.detect.asciistring(text, return_type=str) if convert_type.lower() in ["ascii", "binary"] else "_ _") + 
-                f"```\nConvert it back with `{functions.prefix(ctx.guild)}convert {convert_type} [input]`", 
+                f"```\nConvert it back with `/convert {convert_type} [input]`", 
             color=var.embed
         )
         embed.set_footer(text="Command made with EasyConversion {} | tiny.cc/EasyConversion".format(info.version.current.name))
@@ -238,4 +257,4 @@ Random number from **1** to **1,000,000**: {random.randint(1, 1000000)}""")
 
         
 async def setup(bot):
-    await bot.add_cog(Utility1(bot), guilds=var.guilds)
+    await bot.add_cog(Utility1(bot))

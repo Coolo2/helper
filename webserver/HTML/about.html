@@ -50,7 +50,7 @@
                 <th class="td">Dyno</th>
             </tr>
             <tr class="tr">
-                <td class="td">Simple mute and moderation</td>
+                <td class="td">Simple moderation</td>
                 <td class="td"><img width="50" src="/static/images/white_check.svg"></td>
                 <td class="td"><img width="50" src="/static/images/red_cross.png"></td>
                 <td class="td"><img width="50" src="/static/images/white_check.svg"></td>
@@ -81,12 +81,6 @@
             </tr>
             <tr class="tr">
                 <td class="td">Open source</td>
-                <td class="td"><img width="50" src="/static/images/white_check.svg"></td>
-                <td class="td"><img width="50" src="/static/images/red_cross.png"></td>
-                <td class="td"><img width="50" src="/static/images/red_cross.png"></td>
-            </tr>
-            <tr class="tr">
-                <td class="td">Free music effects</td>
                 <td class="td"><img width="50" src="/static/images/white_check.svg"></td>
                 <td class="td"><img width="50" src="/static/images/red_cross.png"></td>
                 <td class="td"><img width="50" src="/static/images/red_cross.png"></td>
@@ -184,6 +178,8 @@
                         opts += ` ${required}{${option.name}}`
                     }
 
+                    if (!command.category) {command.category = "None"}
+
                     setPopUpHTML(`<div style="padding-left:10px;color:white"><h1>/${command.name}</h1> <h3 style="padding-left:25px">Category: ${command.category.charAt(0).toUpperCase() + command.category.slice(1)} </h3><h3 style="padding-left:25px">Usage: /${command.name} ${opts}</h3> ${command.description}</div>`)
                 }
             }
@@ -197,10 +193,8 @@
 
             counter = 0
             for (command of commands) {
-                if (command.category) {
-                    counter += 1
-                    commandsDiv.innerHTML += `<div class="command" onclick="commandInfo('${command.name}')"><center class="noselect">${command.name}</center></div>`
-                }
+                counter += 1
+                commandsDiv.innerHTML += `<div class="command" onclick="commandInfo('${command.name}')"><center class="noselect">${command.name}</center></div>`
                 
             }
             document.getElementById("commands-count").innerText = `(${counter})`

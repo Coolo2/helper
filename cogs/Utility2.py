@@ -118,7 +118,6 @@ class Utility2(commands.Cog):
         choice9 : str = None,
         choice10 : str = None
     ):
-        prefix = functions.prefix(ctx.guild)
         
         choices = [choice1, choice2, choice3, choice4, choice5, choice6, choice7, choice8, choice9, choice10]
         emojis = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"]
@@ -134,72 +133,12 @@ class Utility2(commands.Cog):
             except Exception as e:
                 pass
 
-                
-        org = await ctx.response.send_message(embed=embed)
+        await ctx.response.send_message(embed=embed)
 
-        re = await ctx.original_message()
+        re = await ctx.original_response()
         
         for i in range(len(choices)):
             await re.add_reaction(emojis[i])
-    
-    @app_commands.command(name="covid", description="Get coronavirus statistics for a country")
-    @app_commands.describe(country="Country to get stats for")
-    async def covid(self, ctx : discord.Interaction, country : str = None):
-        if (country != None):
-            async with aiohttp.ClientSession() as session:
-                async with session.get("http://country.io/names.json") as r:
-                    names = await r.json()
-                    reverse = {}
-                    for item in names:
-                        reverse[names[item].lower()] = item.lower()
-            async with aiohttp.ClientSession() as session:
-                async with session.get("https://api.apify.com/v2/key-value-stores/SmuuI0oebnTWjRTUh/records/LATEST?disableRedirect=true") as r:
-                    rs = await r.json()
-                    done = False
-                    for country2 in rs["regionData"]:
-                        if country2["country"].lower() == country.lower():
-                            done = True
-                            final = country2
-                        else:
-                            try:
-                                if reverse[country2["country"].lower()] == country.lower():
-                                    final = country2
-                                    done = True
-                            except Exception as e:
-                                pass
-                    
-                    if done == False:
-                        embed = discord.Embed(title="Available countries", 
-                            description=", ".join([item for item in names]),
-                            color=var.embed)
-                        return await ctx.response.send_message(embed=embed)
-
-                    embed = discord.Embed(title="Summary", 
-                        description="Coronavirus summary for " + final["country"],
-                        color=var.embed)
-                    if final['country'].lower() in reverse:
-                        embed.set_thumbnail(url=f"https://www.countryflags.io/{reverse[final['country'].lower()]}/flat/64.png")
-                    embed.add_field(name='Total cases', value=format(final["totalCases"], ',d'))
-                    embed.add_field(name='New daily cases', value=str(final["newCases"]).replace("0", "No data currently") if str(final["newCases"]) == "0" else format(final["newCases"], ',d'))
-                    embed.add_field(name='Total deaths', value=format(final["totalDeaths"], ',d'))
-                    embed.add_field(name='New daily deaths', value=str(final["newDeaths"]).replace("0", "No data currently") if str(final["newDeaths"]) == "0" else format(final["newDeaths"], ',d'))
-                    embed.add_field(name='Total recovered', value=str(final["totalRecovered"]).replace("None", "No data") if str(final["totalRecovered"]) == "None" else format(final["totalRecovered"], ',d'))
-                    embed.add_field(name='Active cases', value=str(final["activeCases"]).replace("None", "No data") if str(final["activeCases"]) == "None" else format(final["activeCases"], ',d'))
-                    return await ctx.response.send_message(embed=embed)
-        else:
-            async with aiohttp.ClientSession() as session:
-                async with session.get("https://api.apify.com/v2/key-value-stores/SmuuI0oebnTWjRTUh/records/LATEST?disableRedirect=true") as r:
-                    rs = await r.json()
-                    embed = discord.Embed(title="Global summary", 
-                        description="A summary of all global statistics",
-                        color=var.embed)
-                    embed.add_field(name='Total cases', value=format(rs["regionData"][0]["totalCases"], ',d'))
-                    embed.add_field(name='New daily cases', value=format(rs["regionData"][0]["newCases"], ',d'))
-                    embed.add_field(name='Total deaths', value=format(rs["regionData"][0]["totalDeaths"], ',d'))
-                    embed.add_field(name='New daily deaths', value=format(rs["regionData"][0]["newDeaths"], ',d'))
-                    embed.add_field(name='Total recovered', value=format(rs["regionData"][0]["totalRecovered"], ',d'))
-                    embed.add_field(name='New daily recovered', value=format(rs["regionData"][0]["activeCases"], ',d'))
-                    return await ctx.response.send_message(embed=embed)
         
 async def setup(bot):
-    await bot.add_cog(Utility2(bot), guilds=var.guilds)
+    await bot.add_cog(Utility2(bot))

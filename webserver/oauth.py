@@ -6,7 +6,6 @@ class Oauth(object):
     client_secret = var.client_secret
     scope = "identify%20guilds"
     redirect_uri = var.address + "/login"
-    discord_login_url = var.login
     discord_token_url = "https://discord.com/api/oauth2/token"
     discord_api_url = "https://discord.com/api"
 

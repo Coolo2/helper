@@ -269,4 +269,4 @@ class Economy1(commands.Cog):
         await functions.save_data("databases/economy.json", balances)
 
 async def setup(bot : commands.Bot):
-    await bot.add_cog(Economy1(bot), guilds=var.guilds)
+    await bot.add_cog(Economy1(bot))

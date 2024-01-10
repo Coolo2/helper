@@ -29,19 +29,7 @@
             <span style="display:table;margin:0 auto;" id="postMessage-box"></span>
         </div>
         <div style="overscroll-behavior: none;position: relative;height:calc(100% - 350px);padding-top:50px;top:50px;width:100%;overflow-x:auto;overflow-y:auto;transition:top 0.8s, height 0.8s" id="dashboardDiv">
-            <div style="position:absolute;left:500px" id="serverSettings-music">
-                <div class="serverSettings-style-sectionTitle" style="padding:25px 0px 25px 0px">Music Permissions and Voting</div>
-                <span style="color:white">Permissions</span>
-                <button class="button" style="top:75px;right:10px;position:absolute" onclick="setMusicDefault()" id="resetMusic">Reset to default</button>
-                <span>
-                    <select class="input" oninput="submitMusic()" id="serverSettings-music-permissions">
-                    </select>
-                </span>
-                <br>
-                <div id ="serverSettings-music-commands-left" style="top:150px;width:230px;position:absolute"></div>
-                <div id ="serverSettings-music-commands-right" style="left:260px;top:150px;width:300px;position:absolute"></div>
-            </div>
-            <div style="position:absolute;left:500px;margin-top:800px" id="serverSettings-joinleave">
+            <div style="position:absolute;left:500px;margin-top:0" id="serverSettings-joinleave">
                 <div class="serverSettings-style-sectionTitle" style="padding:25px 0px 25px 0px">Server Join/Leave events</div>
                 <div style="color:#a3a3a3;font-size:20px;padding-left:5px;padding-bottom:5px">Join Message</div>
                 <select id="serverSettings-joinleave-join-select" class="input"></select>
@@ -71,7 +59,7 @@
                 </div>
             </div>
 
-            <div style="position:absolute;left:500px;margin-top:1500px" id="serverSettings-customcommands">
+            <div style="position:absolute;left:500px;margin-top:700px" id="serverSettings-customcommands">
                 <div class="serverSettings-style-sectionTitle" style="padding:25px 0px 25px 0px">Custom Commands</div>
                 <div style="height:490px;overflow-y:scroll">
                     <div style="background-color:rgb(82, 82, 82);border:1px solid white;">
@@ -213,10 +201,10 @@
 
         address = location.origin
         items = []
-        itemsOnly = ["music", "warns", "joinleave", "events", "customcommands", "logging"]
+        itemsOnly = ["warns", "joinleave", "events", "customcommands", "logging"]
 
-        itemsLeft = ["music", "joinleave", "customcommands"]
-        itemsRight = [["warns", 2350, 50], ["events", 3100, 800], ["logging", 3850, 1550]]
+        itemsLeft = ["joinleave", "customcommands"]
+        itemsRight = [["warns", 1750, 50], ["events", 2400, 800], ["logging", 3150, 1550]]
 
         allItems = items.concat(itemsOnly)
         currentGuild = null
@@ -382,7 +370,7 @@
             newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><select oninput="updateTable()" id="serverSettings-events-table-row-${table.rows.length}-amount" class="input">${numbers}</select></th>`
             newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><select oninput="updateTable()" id="serverSettings-events-table-row-${table.rows.length}-what" class="input"><option value="warns">Warn(s)</option></select></th>`
             newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"> = </th>`
-            newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><select oninput="updateTable()" id="serverSettings-events-table-row-${table.rows.length}-action" class="input"><option value="1hMute">1h Mute</option><option value="3hMute">3h Mute</option><option value="6hMute">6h Mute</option><option value="12hMute">12h Mute</option><option value="24hMute">24h Mute</option><option value="kick">Kick</option><option value="ban">Ban</option></select></th>`
+            newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><select oninput="updateTable()" id="serverSettings-events-table-row-${table.rows.length}-action" class="input"><option value="kick">Kick</option><option value="ban">Ban</option></select></th>`
             newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><i onclick="table=document.getElementById('serverSettings-events-table').getElementsByTagName('tbody')[0];try{table.deleteRow(${table.rows.length-1})}catch{table.deleteRow(0)};updateTable()" id="serverSettings-events-table-row-delete" class="fa fa-times" aria-hidden="true"></i></th>`
             updateTable(guildData)
         }
@@ -465,8 +453,6 @@
                     
                     getWarns(guildData)
                     getJoinLeave(guildData)
-                    //doPrefix(guildData)
-                    doMusic(guildData)
                     doEvents(guildData)
                     doCustomCommands(guildData)
                     doLogging(guildData)
@@ -479,115 +465,6 @@
         String.prototype.toProperCase = function () {
             return this.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
         };
-
-        musicPermissions = [
-            "MOVE_MEMBERS",
-            "CREATE_INSTANT_INVITE",
-            "KICK_MEMBERS",
-            "BAN_MEMBERS",
-            "ADMINISTRATOR",
-            "MANAGE_CHANNELS",
-            "MANAGE_GUILD",
-            "ADD_REACTIONS",
-            "MENTION_EVERYONE",
-            "MUTE_MEMBERS",
-            "DEAFEN_MEMBERS",
-            "MANAGE_NICKNAMES",
-            "CHANGE_NICKNAME"
-        ]
-
-        musicCommands = {
-            "play":{types:["none", "permissions"], default:"permissions"},
-            "stop":{types:["none", "permissions", "voting"], default:"voting"},
-            "skip":{types:["none", "permissions", "voting"], default:"voting"},
-            "back":{types:["none", "permissions", "voting"], default:"voting"},
-            "volume":{types:["none", "permissions"], default:"permissions"},
-            "pause":{types:["none", "permissions", "voting"], default:"permissions"},
-            "resume":{types:["none", "permissions", "voting"], default:"permissions"},
-            "seek":{types:["none", "permissions"], default:"permissions"},
-            "restart":{types:["none", "permissions", "voting"], default:"permissions"},
-            "skipto":{types:["none", "permissions"], default:"permissions"},
-            "remove":{types:["none", "permissions"], default:"permissions"},
-            "loop":{types:["none", "permissions"], default:"permissions"}
-        }
-
-        // structure {"permissions":"MOVE_MEMBERS", "commands":["play":"none"]}
-
-        async function setMusicDefault() {
-            for (command in musicCommands) {
-                document.getElementById(`serverSettings-music-commands-${command}`).value = musicCommands[command].default
-            }
-            document.getElementById("serverSettings-music-permissions").value = "MOVE_MEMBERS"
-            await submitMusic()
-        }
-
-        async function doMusic(guildData) {
-            document.getElementById("serverSettings-music-commands-left").innerHTML = ``
-            document.getElementById("serverSettings-music-commands-right").innerHTML = ``
-            document.getElementById("serverSettings-music-permissions").innerHTML = ``
-            
-            if (guildData.has_permissions.manage_guild) {
-                disabled = ``
-                document.getElementById("serverSettings-music-permissions").disabled = false
-                document.getElementById("serverSettings-music-permissions").classList = "input"
-                document.getElementById("resetMusic").disabled = false 
-                document.getElementById("resetMusic").classList = "button"
-            } else {
-                disabled = `disabled`
-                document.getElementById("serverSettings-music-permissions").disabled = true
-                document.getElementById("serverSettings-music-permissions").classList = "inputdisabled"
-                document.getElementById("resetMusic").disabled = true 
-                document.getElementById("resetMusic").classList = "buttondisabled"
-            }
-
-            counter = 0
-            for (command in musicCommands) {
-                counter += 1
-                options =""
-                for (option of musicCommands[command].types) {
-                    yes = ""
-                    if (guildData.music.commands && guildData.music.commands[command] && guildData.music.commands[command] == [option]) {
-                        yes = " selected"
-                    } 
-                    if ((!guildData.music.commands || !guildData.music.commands[command]) && option == musicCommands[command].default) {
-                        yes = " selected"
-                    }
-
-                    options += `<option value="${option}"${yes}>${option.toProperCase()}</option>`
-                }
-                
-                if (counter < (7)) {
-                    section = document.getElementById("serverSettings-music-commands-left")
-                } else {section = document.getElementById("serverSettings-music-commands-right")}
-                section.innerHTML += `<br><br><span style="color:#a3a3a3">${command.toProperCase()}</span><span>  </span><span><select oninput="submitMusic()" id="serverSettings-music-commands-${command}" class="input${disabled}" ${disabled}>${options}</select></span>`
-            }
-
-            for (permission of musicPermissions) {
-                selected = ""
-                if (guildData.music.permissions && guildData.music.permissions == permission) {
-                    selected = " selected"
-                }
-                document.getElementById("serverSettings-music-permissions").innerHTML += `<option value="${permission}"${selected}>${permission.toLowerCase().split("_").join(" ").toProperCase()}</option>`
-                
-            }
-        } 
-
-        async function submitMusic() {
-            toSubmit = {}
-
-            for (command in musicCommands) {
-                element = document.getElementById(`serverSettings-music-commands-${command}`)
-
-                if (element.value != musicCommands[command].default) {
-                    if (!toSubmit.commands) {toSubmit.commands = {}}
-                    toSubmit.commands[command] = element.value
-                }
-            }
-
-            toSubmit.permissions = document.getElementById(`serverSettings-music-permissions`).value
-
-            await postData("/api/dashboard/setMusic", toSubmit)
-        }
 
         loggingOptions = ["messageDelete", "channelCreate", "channelDelete", "roleCreate", "roleDelete", "nicknameChange", "dashboardUse", "warns"]
 
@@ -688,13 +565,13 @@
                     newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><select oninput="updateTable()" id="serverSettings-events-table-row-${table.rows.length}-amount" class="input">${numbers}</select></th>`
                     newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><select oninput="updateTable()" id="serverSettings-events-table-row-${table.rows.length}-what" class="input"><option value="warns">Warn(s)</option></select></th>`
                     newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"> = </th>`
-                    newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><select oninput="updateTable()" id="serverSettings-events-table-row-${table.rows.length}-action" class="input"><option value="1hMute">1h Mute</option><option value="3hMute">3h Mute</option><option value="6hMute">6h Mute</option><option value="12hMute">12h Mute</option><option value="24hMute">24h Mute</option><option value="1hTimeout">1h Timeout</option><option value="3hTimeout">3h Timeout</option><option value="6hTimeout">6h Timeout</option><option value="12hTimeout">12h Timeout</option><option value="24hTimeout">24h Timeout</option><option value="kick">Kick</option><option value="ban">Ban</option></select></th>`
+                    newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><select oninput="updateTable()" id="serverSettings-events-table-row-${table.rows.length}-action" class="input"><option value="1hTimeout">1h Timeout</option><option value="3hTimeout">3h Timeout</option><option value="6hTimeout">6h Timeout</option><option value="12hTimeout">12h Timeout</option><option value="24hTimeout">24h Timeout</option><option value="kick">Kick</option><option value="ban">Ban</option></select></th>`
                     newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><i onclick="table=document.getElementById('serverSettings-events-table').getElementsByTagName('tbody')[0];try{table.deleteRow(${table.rows.length-1})}catch{table.deleteRow(0)};updateTable()" id="serverSettings-events-table-row-delete" class="fa fa-times" aria-hidden="true"></i></th>`
                 } else {
                     newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><select id="serverSettings-events-table-row-${table.rows.length}-amount" class="inputdisabled" disabled>${numbers}</select></th>`
                     newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><select id="serverSettings-events-table-row-${table.rows.length}-what" class="inputdisabled" disabled><option value="warns">Warn(s)</option></select></th>`
                     newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"> = </th>`
-                    newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><select id="serverSettings-events-table-row-${table.rows.length}-action" class="inputdisabled" disabled><option value="1hMute">1h Mute</option><option value="3hMute">3h Mute</option><option value="6hMute">6h Mute</option><option value="12hMute">12h Mute</option><option value="24hMute">24h Mute</option><option value="1hTimeout">1h Timeout</option><option value="3hTimeout">3h Timeout</option><option value="6hTimeout">6h Timeout</option><option value="12hTimeout">12h Timeout</option><option value="24hTimeout">24h Timeout</option><option value="kick">Kick</option><option value="ban">Ban</option></select></th>`
+                    newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><select id="serverSettings-events-table-row-${table.rows.length}-action" class="inputdisabled" disabled><option value="1hTimeout">1h Timeout</option><option value="3hTimeout">3h Timeout</option><option value="6hTimeout">6h Timeout</option><option value="12hTimeout">12h Timeout</option><option value="24hTimeout">24h Timeout</option><option value="kick">Kick</option><option value="ban">Ban</option></select></th>`
                     newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><i id="serverSettings-events-table-row-delete-missingperms" class="fa fa-times" aria-hidden="true"></i></th>`
                 }
                 
@@ -743,22 +620,6 @@
                 document.getElementById("serverSettings-customcommands-table-row-button").setAttribute("class", "button");document.getElementById("serverSettings-customcommands-save").removeAttribute("disabled")
             }
             
-        }
-
-        function doPrefix(guildData) {
-            if (!guildData.has_permissions.manage_guild) {
-                document.getElementById("serverSettings-prefix-button").removeAttribute(`onclick`) 
-                document.getElementById("serverSettings-prefix-button").setAttribute(`class`, `buttondisabled`)
-                document.getElementById("serverSettings-prefix-button").setAttribute(`disabled`, `disabled`)
-                document.getElementById("serverSettings-prefix-input").setAttribute(`class`, `inputdisabled`)
-                document.getElementById("serverSettings-prefix-input").setAttribute(`disabled`, `disabled`)
-            } else {
-                document.getElementById("serverSettings-prefix-button").setAttribute(`onclick`, `postData('/api/dashboard/setPrefix', {prefix:document.getElementById('serverSettings-prefix-input').value})`)
-                document.getElementById("serverSettings-prefix-button").setAttribute(`class`, `button`)
-                document.getElementById("serverSettings-prefix-button").removeAttribute(`disabled`)
-                document.getElementById("serverSettings-prefix-input").setAttribute(`class`, `input`)
-                document.getElementById("serverSettings-prefix-input").removeAttribute(`disabled`)
-            }
         }
 
         function getWarns(guildData) {
@@ -874,7 +735,6 @@
 
                             document.getElementById("postMessage").style.bottom = "0px"
                             if (!msg.error && where == '/api/dashboard/delWarn') {guildDatas[currentGuild.id].warns = msg[currentGuild.id];getWarns(guildDatas[currentGuild.id])}
-                            if (!msg.error && where == '/api/dashboard/setPrefix') {document.getElementById("serverSettings-prefix-input").value = msg.prefix}
                             if (where == '/api/dashboard/setCustomCommands') {guildDatas[currentGuild.id].commands = msg.commands;doCustomCommands(guildDatas[currentGuild.id])}
                             setTimeout(function() {
                                 document.getElementById("postMessage").style.bottom = "-50px"

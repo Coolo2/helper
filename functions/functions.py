@@ -10,6 +10,12 @@ from difflib import SequenceMatcher
 
 from functions import components, classes
 
+import re
+
+def format_html_basic(text : str):
+    replaced = text.replace("<b>", "**").replace("</b>", "**").replace("<i>", "*").replace("</i>", "*").replace("<code>", "`").replace("</code>", "`").replace("<u>", "__").replace("</u>", "__")
+    return re.compile("<.*?>").sub("", replaced)
+
 def get_bot_users(bot):
     servers = list(bot.guilds)
     counter = 0
@@ -17,15 +23,6 @@ def get_bot_users(bot):
         server = servers[x-1]
         counter = counter + len(server.members)
     return counter
-
-def prefix(guild):
-    try:
-        with open('databases/prefixes.json') as f:
-            prefixes = json.load(f)
-            return prefixes[str(guild.id)]
-    except Exception as e:
-        theprefix = var.prefix
-        return theprefix
 
 def oneTime(timeStr):
     if "y" in timeStr:
@@ -55,101 +52,26 @@ def timeToSeconds(timeStr):
 
     return oneTime(timeStr)
 
-async def unmute(guild, member : discord.Member):
-    data = await read_data('databases/mutes.json')
-    embed = discord.Embed(title="Successfully unmuted", description=f"Successfully unmuted **{member.display_name}**", colour=var.embedSuccess)
-    for role in member.roles:
-        if role.name == "Muted":
-            await member.remove_roles(role)
-            if str(guild.id) in data:
-                if str(member.id) in data[str(guild.id)]:
-                    for roleStr in data[str(guild.id)][str(member.id)]["roles"]:
-                        try:
-                            await member.add_roles(guild.get_role(int(roleStr)))
-                        except Exception as e:
-                            print(e)
-                    del data[str(guild.id)][str(member.id)]
-                else:
-                    embed.add_field(name="Error", value=f"However, couldn't find previous roles for **{member.display_name}**")
-            else:
-                embed.add_field(name="Error", value=f"However, couldn't find previous roles for **{member.display_name}**")
-    await save_data('databases/mutes.json', data)
-    return embed
+def time_str_from_seconds(time):
+    timeSeconds = time
+    day = timeSeconds // (24 * 3600)
+    timeSeconds = timeSeconds % (24 * 3600)
+    hour = timeSeconds // 3600
+    timeSeconds %= 3600
+    minutes = timeSeconds // 60
+    timeSeconds %= 60
+    seconds = timeSeconds
 
-async def mute (bot, guild, member : discord.Member, length):
-    errors = ""
+    day = f" {round(day)}d" if day != 0 else ""
+    hour = f" {round(hour)}h" if hour != 0 else ""
+    minutes = f" {round(minutes)}m" if minutes != 0 else ""
 
-    data = await read_data('databases/mutes.json')
-
-    if member == guild.owner:
-        embed = discord.Embed(title="Uh oh!", description="I can't mute the owner of the server", colour=var.embedFail)
-        return embed
-    if member == bot.user:
-        embed = discord.Embed(title="Uh oh!", description="I can't mute myself", colour=var.embedFail)
-        return embed
-
-    hasMuted = False
-    for role in guild.roles:
-        if role.name == "Muted":
-            hasMuted = True
-            mutedRole = role
-    for role in member.roles:
-        if role.name == "Muted":
-            embed = discord.Embed(title="Uh oh!", description=f"**{member.display_name}** is already muted", colour=var.embedFail)
-            return embed
+    if day == "" and hour == "" and minutes == "":
+        return f"{round(seconds)}s"
     
-    lengthOld = length
-    if length != None:
-        try:
-            length = str((datetime.now() + timedelta(seconds=timeToSeconds(length))).strftime("%d-%b-%Y (%H:%M:%S.%f)"))
-        except Exception as e:
-            embed = discord.Embed(title="Uh oh!", description=f"Invalid mute length! Mute Length example: '2h 5m'", colour=var.embedFail)
-            return embed
-    
-    embed = discord.Embed(title="Muted successfully", description=f"Successfully muted **{member.display_name}** " + f"for **{lengthOld}**" if lengthOld != None else "", colour=var.embedSuccess)
+    return f"{day}{hour}{minutes}".lstrip()
 
-    if not hasMuted:
 
-        mutedRole = await guild.create_role(name="Muted")
-
-        for channel in guild.text_channels:
-            try:
-                await channel.set_permissions(mutedRole, send_messages=False, add_reactions=False)
-                errors = errors + "true"
-            except Exception as error:
-                errors = errors + "false"
-        for category in guild.categories:
-            try:
-                await category.set_permissions(mutedRole, send_messages=False, add_reactions=False)
-                errors = errors + "true"
-            except Exception as error:
-                errors = errors + "false"
-        
-        if "true" not in errors:
-            embed = discord.Embed(title="Uh oh!", description="I am missing manage_channels permissions.", colour=var.embedFail)
-            return embed 
-    rolelist = []
-    for memberRole in member.roles:
-        if memberRole.name == '@everyone':
-            pass
-        else:
-            rolelist.append(str(memberRole.id))
-        try:
-            await member.remove_roles(memberRole)
-            errors = errors + "true"
-        except Exception as e:
-            errors = errors + "false"
-    errors = errors.count("false")
-    await member.add_roles(mutedRole)
-    if str(guild.id) not in data:
-        data[str(guild.id)] = {}
-    data[str(guild.id)][str(member.id)] = {
-        "roles":rolelist,
-        "endAt":length
-    }
-    await save_data('databases/mutes.json', data)
-    embed.add_field(name="Errors", value=f"{errors-1} errors")
-    return embed
 
 async def check_events(bot : commands.Bot, warns : dict, guild : discord.Guild, member : discord.Member):
 
@@ -164,16 +86,6 @@ async def check_events(bot : commands.Bot, warns : dict, guild : discord.Guild, 
                 if event["what"] == "warns":
                     if len(warns[str(guild.id)][str(member.id)]) == int(event["amount"]):
 
-                        if event["action"] == "1hMute":
-                            return components.EventConfirmationButton(member, mute(bot, guild, member, "1h"), classes.EventType.mute, "1 Hour Mute")
-                        if event["action"] == "3hMute":
-                            return components.EventConfirmationButton(member, mute(bot, guild, member, "3h"), classes.EventType.mute, "3 Hour Mute")
-                        if event["action"] == "6hMute":
-                            return components.EventConfirmationButton(member, mute(bot, guild, member, "6h"), classes.EventType.mute, "6 Hour Mute")
-                        if event["action"] == "12hMute":
-                            return components.EventConfirmationButton(member, mute(bot, guild, member, "12h"), classes.EventType.mute, "12 Hour Mute")
-                        if event["action"] == "24hMute":
-                            return components.EventConfirmationButton(member, mute(bot, guild, member, "24h"), classes.EventType.mute, "24 Hour Mute")
                         if event["action"] == "1hTimeout":
                             return components.EventConfirmationButton(member, member.timeout_for(timedelta(hours=1)), classes.EventType.timeout, "1 Hour Timeout")
                         if event["action"] == "3hTimeout":
@@ -192,6 +104,8 @@ async def check_events(bot : commands.Bot, warns : dict, guild : discord.Guild, 
 
 
 async def is_url_image(image_url, image_formats):
+    if "http" not in str(image_url):
+        return False
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(image_url) as r:
@@ -235,36 +149,46 @@ def replaceMessage(member, message):
     return message
 
 async def read_data(fileName):
-    async with aiohttp.ClientSession() as session:
-        async with session.get(f"http://helperdata.glitch.me/view{os.getenv('databaseToken')}/{fileName}") as r:
-            json = await r.json()
-            return json
+    with open(fileName, encoding="utf-8") as f:
+        return json.load(f)
+    #async with aiohttp.ClientSession() as session:
+    #    async with session.get(f"http://helperdata.glitch.me/view{os.getenv('databaseToken')}/{fileName}") as r:
+    #        jsond = await r.json()
+    #        return jsond
 
 def read_data_sync(fileName):
-    r = requests.get(f"http://helperdata.glitch.me/view{os.getenv('databaseToken')}/{fileName}")
-    return r.json()
+    with open(fileName, encoding="utf-8") as f:
+        return json.load(f)
+    #r = requests.get(f"http://helperdata.glitch.me/view{os.getenv('databaseToken')}/{fileName}")
+    #return r.json()
 
 
 async def save_data(fileName, data):
-    async with aiohttp.ClientSession() as session:
-        async with session.post(f"http://helperdata.glitch.me/save{os.getenv('databaseToken')}/{fileName}", data={'data':json.dumps(data)}) as r:
-            return json.loads(await r.text())
+    with open(fileName, "w", encoding="utf-8") as f:
+        json.dump(data, f)
+        return data
+    #async with aiohttp.ClientSession() as session:
+    #    async with session.post(f"http://helperdata.glitch.me/save{os.getenv('databaseToken')}/{fileName}", data={'data':json.dumps(data)}) as r:
+    #        return json.loads(await r.text())
 
 def save_data_sync(fileName, data):
-    r = requests.post(f"http://helperdata.glitch.me/save{os.getenv('databaseToken')}/{fileName}", data={'data':json.dumps(data)})
-    return json.loads(r.text)
+    with open(fileName, "w", encoding="utf-8") as f:
+        json.dump(data, f)
+        return data
+    #r = requests.post(f"http://helperdata.glitch.me/save{os.getenv('databaseToken')}/{fileName}", data={'data':json.dumps(data)})
+    #return json.loads(r.text)
 
 async def read_load(where, data=None):
     if data == None:
         data = await read_data(where)
     with open(where, 'w') as f:
-        json.dump(data, f, indent=4)
+        json.dump(data, f)
 
 def read_load_sync(where, data=None):
     if data == None:
         data = read_data_sync(where)
     with open(where, 'w') as f:
-        json.dump(data, f, indent=4)
+        json.dump(data, f)
 
 def uri_validator(x):
     try:
@@ -304,10 +228,6 @@ def calculateTime(argument):
         return str(int(argument.replace("m", "").replace(" ", "").replace(":", "").replace(",", "")) * 60)
     if "s" in argument:
         return argument.replace("s", "").replace(" ", "").replace(":", "").replace(",", "")
-
-def changelog():
-    with open("resources/changelog.txt") as f:
-        return f.read()
 
 def fuzzy_search(search_key, text, strictness):
     lines = text.split("\n")

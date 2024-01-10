@@ -15,8 +15,8 @@ class Images(commands.Cog):
         self.bot = bot
         self.runtimeDadJoke = {}
 
-    @app_commands.command(name="minecraft", description="Make a minecraft achievement")
-    async def minecraft(self, ctx : discord.Interaction, text : str):
+    @app_commands.command(name="minecraft_achievement", description="Make a minecraft achievement")
+    async def minecraft_achievement(self, ctx : discord.Interaction, text : str):
 
         img = Image.open("Images/hqdefault.png")
         draw = ImageDraw.Draw(img)
@@ -68,4 +68,4 @@ class Images(commands.Cog):
         os.remove('Images/ignoreme' + str(randomnumber) + '.png')
 
 async def setup(bot):
-    await bot.add_cog(Images(bot), guilds=var.guilds)
+    await bot.add_cog(Images(bot))

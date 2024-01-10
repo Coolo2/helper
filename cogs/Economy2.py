@@ -67,7 +67,7 @@ class Economy2(commands.Cog):
         if member == ctx.user:
             raise customerror.MildErr("> You cant pay yourself!")
         if int(balances[str(ctx.guild.id)][str(ctx.user.id)]["balance"]) < 1:
-            raise customerror.MildErr(f"> You're below 0 credits! Do **{functions.prefix(ctx.guild)}work** to get some credits!")
+            raise customerror.MildErr(f"> You're below 0 credits! Do **/work** to get some credits!")
         if int(balances[str(ctx.guild.id)][str(ctx.user.id)]["balance"]) < int(amount):
             raise customerror.MildErr(f"> You do not have enough credits! You're on **{balances[str(ctx.guild.id)][str(ctx.user.id)]['balance']}** credits!")
         
@@ -145,4 +145,4 @@ class Economy2(commands.Cog):
 
 
 async def setup(bot):
-    await bot.add_cog(Economy2(bot), guilds=var.guilds)
+    await bot.add_cog(Economy2(bot))

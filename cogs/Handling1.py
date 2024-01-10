@@ -28,7 +28,7 @@ class Handling1(commands.Cog):
             msgUnkown = random.choice(["You've ran into an unknown error!", "You've ran into an error!"])
             
             if isinstance(error, commands.MissingRequiredArgument):
-                embed = discord.Embed(title=msgMild, description=f"```{error}\n{functions.prefix(interaction.guild)}{interaction.command.name} {interaction.command.description.split('|')[0]}```", colour=var.embedFail, timestamp=datetime.datetime.now())
+                embed = discord.Embed(title=msgMild, description=f"```{error}\n/{interaction.command.name} {interaction.command.description.split('|')[0]}```", colour=var.embedFail, timestamp=datetime.datetime.now())
                 return await response(embed=embed, ephemeral=True)
             
             if isinstance(error, commands.NoPrivateMessage):
@@ -45,9 +45,9 @@ class Handling1(commands.Cog):
                 if cc == False:
                     if similar != False:
                         embed = discord.Embed(title=msgMild, 
-                            description=f"Command **{functions.prefix(interaction.guild)}{command}** was not found! You may have meant **{functions.prefix(interaction.guild)}{similar}**.", colour=var.embedFail, timestamp=datetime.datetime.now())
+                            description=f"Command **/{command}** was not found! You may have meant **/{similar}**.", colour=var.embedFail, timestamp=datetime.datetime.now())
                         return await response(embed=embed, ephemeral=True)
-                    return await self.bot.get_user(var.owner).send(f"> Error in **{interaction.guild.name}** from **{interaction.user}**: `{error}`")
+                    return await self.bot.get_user(var.botAdmins[0]).send(f"> Error in **{interaction.guild.name if interaction.guild else '.'}** from **{interaction.user}**: `{error}`")
                 else:
                     return
             if isinstance(error, errors.CheckFailure):
@@ -63,7 +63,7 @@ class Handling1(commands.Cog):
                     return await response(embed=embed, ephemeral=True)
                 if isinstance(error.original, commands.BotMissingPermissions):
                     embed = discord.Embed(title=msgMild, 
-                    description=f"```{error.original}\n\nEnsure that I have the above permissions and my role is high enough to use {functions.prefix(interaction.guild)}{interaction.command.name}```", 
+                    description=f"```{error.original}\n\nEnsure that I have the above permissions and my role is high enough to use /{interaction.command.name}```", 
                     colour=var.embedFail, timestamp=datetime.datetime.now())
                     return await response(embed=embed, ephemeral=True)
                 if isinstance(error.original, errors.CheckFailure):
@@ -82,11 +82,14 @@ class Handling1(commands.Cog):
                 if isinstance(error.original, customerror.CooldownError):
                     embed = discord.Embed(title="You're on cooldown!", description=f"{error.original}", colour=var.embedFail)
                     return await response(embed=embed, ephemeral=True)
-
+            
+            if not var.production:
+                raise error 
+            
             print(f"{textformat.color.red}{error.__class__.__name__}{textformat.color.end} + {error}")
             embed = discord.Embed(title=msgUnkown, description=f"```{error}```\n\nJoin the [Support Server]({var.server}) for support.", colour=var.embedFail, timestamp=datetime.datetime.now())
             await response(embed=embed, ephemeral=True)
-            await self.bot.get_channel(927926604838109215).send(f"> Error in **{interaction.guild.name}** from **{interaction.user}**: `{error}`")
+            await self.bot.get_channel(927926604838109215).send(f"> Error in **{interaction.guild.name if interaction.guild else '.'}** from **{interaction.user}**: `{error}`")
     
     async def getCommandFromError(self, error):
         commands = str(error).replace('Command "', '')
@@ -98,7 +101,6 @@ class Handling1(commands.Cog):
         commands = await self.getCommandFromError(error)
 
         mainCommands = functions.checkList(self.bot.commands, commands)
-        musicCommands = functions.checkList(var.musicCommands, commands)
         customCommands = None
 
         with open("databases/commands.json") as f:
@@ -109,8 +111,6 @@ class Handling1(commands.Cog):
 
         if mainCommands != None:
             return mainCommands
-        if musicCommands != None:
-            return musicCommands
         if customCommands != None:
             return customCommands
         
@@ -118,4 +118,4 @@ class Handling1(commands.Cog):
 
 async def setup(bot):
     
-    await bot.add_cog(Handling1(bot), guilds=var.guilds)
+    await bot.add_cog(Handling1(bot))

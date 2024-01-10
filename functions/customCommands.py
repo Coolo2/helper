@@ -11,7 +11,7 @@ n = None
 
 def testFunc(cmdGuild, cmdName, cmdValue):
 
-    async def testFuncInside(ctx, arg1 : str =n, arg2 : str =n, arg3 : str =n, arg4 : str =n, arg5 : str =n, arg6 : str =n, arg7 : str =n, arg8 : str =n, arg9 : str =n, arg10 : str =n):
+    async def testFuncInside(ctx : discord.Interaction, arg1 : str =n, arg2 : str =n, arg3 : str =n, arg4 : str =n, arg5 : str =n, arg6 : str =n, arg7 : str =n, arg8 : str =n, arg9 : str =n, arg10 : str =n):
         with open("databases/commands.json") as f:
             data = json.load(f)
         
@@ -41,11 +41,11 @@ def testFunc(cmdGuild, cmdName, cmdValue):
                 randomChoice = random.choice(split[1:])     
                 resp = resp.replace("{" + bracket + "}", randomChoice)     
             if bracketType.lower() in ["member", "user", "membername", "username", "member-name", "user-name"]:
-                resp = resp.replace("{" + bracket + "}", ctx.author.name)
+                resp = resp.replace("{" + bracket + "}", ctx.user.name)
             if bracketType.lower() in ["nickname", "nick-name"]:
-                resp = resp.replace("{" + bracket + "}", ctx.author.display_name)
+                resp = resp.replace("{" + bracket + "}", ctx.user.display_name)
             if bracketType.lower() in ["@member", "@user", "@member-name", "@username"]:
-                resp = resp.replace("{" + bracket + "}", ctx.author.mention)
+                resp = resp.replace("{" + bracket + "}", ctx.user.mention)
             if bracketType.lower() in ["server", "guild", "servername", "guildname", "server-name", "guild-name"]:
                 resp = resp.replace("{" + bracket + "}", ctx.guild.name)
 
@@ -100,9 +100,11 @@ async def sync_custom_commands(bot : commands.Bot, guild : discord.Guild = None)
 
     cmds = tree._guild_commands
 
-    to_remove = []
+    
 
     for guild_id, guild_cmds in cmds.items():
+        to_remove = []
+
         if guild and str(guild_id) != str(guild.id):
             continue
 
@@ -112,17 +114,20 @@ async def sync_custom_commands(bot : commands.Bot, guild : discord.Guild = None)
 
                 if str(guild_id) not in data or name not in data[str(guild_id)]:
                     to_remove.append([name, discord.Object(guild_id)])
+        
+        for command in to_remove:
+            tree.remove_command(command[0], guild=command[1])
                     
         if var.reload_custom_commands:
-            try:
+            if bot.get_guild(guild_id):
                 await tree.sync(guild=discord.Object(guild_id))
-            except:
-                print("Couldnt sync commands to guild")
+                print("synced")
+            else:
+                print("missing guild")
         else:
             print("Warning: custom command reloading is disabled!")
     
-    for command in to_remove:
-        tree.remove_command(command[0], guild=command[1])
+    
 
 async def doGuildCustomCommands(bot : commands.Bot, guild_id : int, pendingCommands : dict):
     tree : app_commands.CommandTree = bot.tree

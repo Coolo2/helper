@@ -13,7 +13,7 @@ class Warns(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
-    @app_commands.command(name="warn", description="Warn a member")
+    @app_commands.command(name="warns_add", description="Warn a member")
     @app_commands.guild_only()
     @app_commands.default_permissions(manage_messages=True)
     @app_commands.checks.has_permissions(manage_messages=True)
@@ -47,7 +47,7 @@ class Warns(commands.Cog):
         data = await functions.save_data("databases/warns.json", data)
 
         button = await functions.check_events(self.bot, data, ctx.guild, member)
-        noArg = f"\n\n__Top tip!__ Add a warn reason with `{functions.prefix(ctx.guild)}warn [user] [reason]`!"
+        noArg = f"\n\n__Top tip!__ Add a warn reason with `/warn [user] [reason]`!"
 
         view = discord.ui.View()
         view.timeout = 600
@@ -89,7 +89,7 @@ class Warns(commands.Cog):
     @app_commands.command(name="warns", description="Check a users warns")
     @app_commands.guild_only()
     @app_commands.describe(member="Member to get warns for")
-    async def warns(self, ctx : discord.Interaction, member: discord.Member):
+    async def warns(self, ctx : discord.Interaction, member: discord.Member = None):
         if member == None:
             member = ctx.user
         data = await functions.read_data("databases/warns.json")
@@ -122,7 +122,7 @@ class Warns(commands.Cog):
             )
         return await ctx.response.send_message(embed=embed)
     
-    @app_commands.command(name="delwarn", description="Delete a warn from a user")
+    @app_commands.command(name="warns_remove", description="Delete a warn from a user")
     @app_commands.guild_only()
     @app_commands.default_permissions(manage_messages=True)
     @app_commands.checks.has_permissions(manage_messages=True)
@@ -189,4 +189,4 @@ class Warns(commands.Cog):
     
 
 async def setup(bot):
-    await bot.add_cog(Warns(bot), guilds=var.guilds)
+    await bot.add_cog(Warns(bot))

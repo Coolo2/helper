@@ -18,58 +18,38 @@ from discord import app_commands
 
 guilds = {}
 
-async def mimic_autocomplete(ctx : discord.Interaction, current : str):
-    with open("databases/userSettings.json") as f:
-        options = json.load(f)
-    
-    members = [] 
-    for member in ctx.guild.members:
-        if (
-            str(member.id) not in options 
-            or "disableMimic" not in options[str(member.id)] 
-            or str(ctx.guild.id) not in options[str(member.id)]["disableMimic"]
-            or not options[str(member.id)]["disableMimic"][str(ctx.guild.id)]
-        ):
-
-            if not current or current.lower() in member.name.lower() or current.lower() in str(member.nick).lower():
-                
-                if member.nick:
-                    members.append(app_commands.Choice(name=f"{member.nick} ({member})", value=f"{member.nick} ({member})"))
-                else:
-                    members.append(app_commands.Choice(name=str(member), value=str(member)))
-    
-    if current in "disable enable":
-        members.append(app_commands.Choice(name="Disable", value="disable"))
-        members.append(app_commands.Choice(name="Enable", value="enable"))
-
-    return members[:25]
-
 class Fun1(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.runtimeDadJoke = {}
 
     @app_commands.command(name="deepfry", description="Deepfry an image")
-    @app_commands.describe(user_url="A user or URL to deepfry the image of", attachment="An optional attachment to deepfry")
+    @app_commands.describe(user="A user to deepfry the image of", url="A url-image to deepfry", attachment="An optional attachment to deepfry")
     async def deepfry(
         self, 
         ctx : discord.Interaction, 
-        user_url : str = None,
+        user : discord.User = None,
+        url : str = None,
         attachment : discord.Attachment = None
     ):  
-        args = user_url
+        ourl = url
+        if not url:
+            url = ctx.user.display_avatar.url if ctx.user.display_avatar else None
         if attachment:
-            args = attachment.url
+            url = attachment.url
+        if user and user.display_avatar:
+            url = user.display_avatar.url
         
         await ctx.response.defer()
         
-        imgURL = await functions.imageFromArg(ctx, args, ("image/png", "image/jpeg", "image/jpg"), ["png", "jpg", "jpeg"])
-        if imgURL == False:
-            raise customerror.MildErr("Could not find image! This command support png and jpeg images only.")
+        imgValidation = await functions.is_url_image(url, ("image/png", "image/jpeg", "image/jpg", "image/gif"))
+        if imgValidation == False:
+            raise customerror.MildErr("Could not find image! This command support png, jpeg and gif images only.")
+        
         try:
 
             async with aiohttp.ClientSession() as session:
-                async with session.get(imgURL) as r:
+                async with session.get(url) as r:
 
                     img = Image.open(io.BytesIO(await r.read()))
 
@@ -79,33 +59,42 @@ class Fun1(commands.Cog):
                         img.save(image_binary, 'PNG')
                         image_binary.seek(0)
 
-                        await ctx.followup.send(file=discord.File(fp=image_binary, filename='image.png'))
+                        embed = discord.Embed(title="Deepfried!", color=var.embed)
+                        embed.set_image(url="attachment://image.png")
+                        if user == None and ourl == None and attachment == None:
+                            embed.set_footer(text="Tip! You can attach a user ping, image file or url if you add arguments to the command!")
+
+                        await ctx.followup.send(embed=embed, file=discord.File(fp=image_binary, filename='image.png'))
 
         except Exception as e:
             raise customerror.CustomErr("Unknown image error occurred. Maybe try another image? " + str(e))
     
     @app_commands.command(name="blurpify", description="Blurpify an image")
-    @app_commands.describe(user_url="A user or URL to deepfry the profile picture of", attachment="An optional attachment to replace the user avatar")
+    @app_commands.describe(user="A user or URL to deepfry the profile picture of", url="A url-image to deepfry", attachment="An optional attachment to replace the user avatar")
     async def blurpify(
         self, 
         ctx : discord.Interaction, 
-        user_url : str = None,
+        user : discord.User = None,
+        url : str = None,
         attachment : discord.Attachment = None
     ):  
-        args = user_url
+        ourl = url
+        if not url:
+            url = ctx.user.display_avatar.url if ctx.user.display_avatar else None
         if attachment:
-            args = attachment.url
+            url = attachment.url
+        if user and user.display_avatar:
+            url = user.display_avatar.url
+
+        imgValidation = await functions.is_url_image(url, ("image/png", "image/jpeg", "image/jpg", "image/gif"))
+        if imgValidation == False:
+            raise customerror.MildErr("Could not find image! This command support png, jpeg and gif images only.")
         
         await ctx.response.defer()
 
-        imgURL = await functions.imageFromArg(ctx, args, ("image/png", "image/jpeg", "image/jpg", "image/gif"), ["png", "jpg", "jpeg", "gif"])
-        if imgURL == False:
-            raise customerror.MildErr("Could not find image! This command support png, jpeg and gif images only.")
-
         try:
-
             async with aiohttp.ClientSession() as session:
-                async with session.get(imgURL) as r:
+                async with session.get(url) as r:
 
                     img = Image.open(io.BytesIO(await r.read()))
 
@@ -115,7 +104,12 @@ class Fun1(commands.Cog):
                         img.save(image_binary, 'PNG')
                         image_binary.seek(0)
 
-                        await ctx.followup.send(file=discord.File(fp=image_binary, filename='image.png'))
+                        embed = discord.Embed(title=random.choice(["Blurp!", "Blurpified!"]), color=var.embed)
+                        embed.set_image(url="attachment://image.png")
+                        if user == None and ourl == None and attachment == None:
+                            embed.set_footer(text="Tip! You can attach a user ping, image file or url if you add arguments to the command!")
+
+                        await ctx.followup.send(embed=embed, file=discord.File(fp=image_binary, filename='image.png'))
         except Exception as e:
             raise customerror.CustomErr("Unknown image error occurred. Maybe try another image? " + str(e))
     
@@ -214,12 +208,12 @@ class Fun1(commands.Cog):
     @app_commands.command(name="cat", description="Get a random cat image")
     async def cat(self, ctx : discord.Interaction):
         async with aiohttp.ClientSession() as session:
-            async with session.get('https://cataas.com/cat?json=true') as r:
+            async with session.get('https://api.thecatapi.com/v1/images/search?format=json') as r:
                 data = await r.json()
 
                 if r.status == 200:
                     e = discord.Embed(title=random.choice(["Meow!", "Random cat!"]), colour=var.embed)
-                    e.set_image(url="https://cataas.com" + data["url"])
+                    e.set_image(url=data[0]["url"])
                     await ctx.response.send_message(embed=e)
                 else:
                     raise customerror.CustomErr("Could not access API. Try again?")
@@ -265,66 +259,55 @@ class Fun1(commands.Cog):
         except Exception as e:
             raise customerror.MildErr("Final response too long!")
     
-    class MemberConverterClass():
-        def __init__(self, interaction : discord.Interaction, bot : commands.Bot):
-            self.bot = bot 
 
-            self.author = interaction.user 
-            self.guild = interaction.guild
-            self.user = interaction.user
-            self.channel = interaction.channel
-            self.response = interaction.response
+    
+    mimic = app_commands.Group(name="mimic", description="Mimic another user!", guild_only=True)
 
-    @app_commands.command(name="mimic", description="Mimic another user!")
-    @app_commands.describe(member="The member to mimic (Can be enable/disable to toggle mimicking for yourself)", message="The message to send as the member")
-    @app_commands.autocomplete(member=mimic_autocomplete)
-    async def mimic(
+    @mimic.command(name="toggle", description="Toggle (enable/disable) mimicking for yourself")
+    async def _mimic_toggle(self, interaction : discord.Interaction):
+        data = await functions.read_data("databases/userSettings.json")
+
+        if str(interaction.user.id) not in data:
+            data[str(interaction.user.id)] = {}
+        
+        if "disableMimic" not in data[str(interaction.user.id)]:
+            data[str(interaction.user.id)]["disableMimic"] = {}
+
+        data[str(interaction.user.id)]["disableMimic"][str(interaction.guild.id)] = True if not data[str(interaction.user.id)]["disableMimic"].get(str(interaction.guild.id)) else False
+
+        s = "enabled" if data[str(interaction.user.id)]["disableMimic"][str(interaction.guild.id)] == False else "disabled"
+
+        await interaction.response.send_message(embed=
+            discord.Embed(
+                title=f"Successfully {s}!",
+                description=f"Successfully **{s}** other members mimicking you **in this server**!",
+                color=var.embed
+            )
+        )
+
+        await functions.save_data("databases/userSettings.json", data)
+
+    @mimic.command(name="mimic", description="Mimic another user!")
+    @app_commands.describe(user="The member to mimic (Can be enable/disable to toggle mimicking for yourself)", message="The message to send as the member")
+    async def _mimic(
             self, 
             ctx : discord.Interaction, 
-            member : str, 
+            user : discord.User, 
             message : str
     ):
-        ctx = self.MemberConverterClass(ctx, self.bot)
 
         start_time = datetime.now()
 
-        converter = MemberConverter()
         data = await functions.read_data("databases/userSettings.json")
-
-        if member.lower() not in ["disable", "enable"]:
-            if "(" in member.lower():
-                brackets = re.findall('\(.*?\)', member)
-                member = await converter.convert(ctx, brackets[-1][1:][:-1])
-            else:
-                member = await converter.convert(ctx, member)
-        else:
-            if str(ctx.user.id) not in data:
-                data[str(ctx.user.id)] = {}
-            
-            if "disableMimic" not in data[str(ctx.user.id)]:
-                data[str(ctx.user.id)]["disableMimic"] = {}
-
-            data[str(ctx.user.id)]["disableMimic"][str(ctx.guild.id)] = True if member.lower() == "disable" else False
-
-            await functions.save_data("databases/userSettings.json", data)
-            await functions.read_load("databases/userSettings.json", data)
-
-            return await ctx.response.send_message(embed=
-                discord.Embed(
-                    title="Successfully " + ("enabled" if member.lower() == "enable" else "disabled") + "!",
-                    description="Successfully **" + ("enabled" if member.lower() == "enable" else "disabled") + "** other members mimicking you **in this server**!",
-                    color=var.embed
-                )
-            )
 
         if message == None:
             raise commands.MissingRequiredArgument(inspect.Parameter("message", kind=inspect.Parameter.POSITIONAL_ONLY))
         
-        if str(member.id) in data:
-            if "disableMimic" in data[str(member.id)]:
-                if str(ctx.guild.id) in data[str(member.id)]["disableMimic"]:
-                    if data[str(member.id)]["disableMimic"][str(ctx.guild.id)] == True:
-                        raise customerror.MildErr(member.name + " has disabled mimicking for this server!")
+        if str(user.id) in data:
+            if "disableMimic" in data[str(user.id)]:
+                if str(ctx.guild.id) in data[str(user.id)]["disableMimic"]:
+                    if data[str(user.id)]["disableMimic"][str(ctx.guild.id)] == True:
+                        raise customerror.MildErr(user.mention + " has disabled mimicking for this server!")
         
         if str(ctx.user.id) not in data:
             data[str(ctx.user.id)] = {}
@@ -333,7 +316,7 @@ class Fun1(commands.Cog):
         if "mimicPrompt" not in data[str(ctx.user.id)]["data"]:
             data[str(ctx.user.id)]["data"]["mimicPrompt"] = True
 
-            await ctx.response.send_message(f"Top tip! You can use `{functions.prefix(ctx.guild)}mimic [enable/disable]` to disable/enable someone mimicking you on this server!", ephemeral=True)
+            await ctx.response.send_message(f"Top tip! You can use `/mimic [enable/disable]` to disable/enable someone mimicking you on this server!", ephemeral=True)
         
         try:
             webhooks = await ctx.channel.webhooks()
@@ -353,8 +336,8 @@ class Fun1(commands.Cog):
 
         await webhook.send(
             content=message,
-            avatar_url=str(member.avatar.url) if member.avatar else None,
-            username=member.display_name,
+            avatar_url=str(user.display_avatar.url) if user.display_avatar else None,
+            username=user.display_name,
             allowed_mentions=allowed_mentions,
             wait=False
         )
@@ -362,10 +345,7 @@ class Fun1(commands.Cog):
         timeElapsed = round((datetime.now() - start_time).total_seconds(), 3)
 
         await ctx.response.send_message(f"Complete `{timeElapsed}s`", ephemeral=True)
-
-        await functions.save_data("databases/userSettings.json", data)
-        await functions.read_load("databases/userSettings.json", data)
         
 
 async def setup(bot):
-    await bot.add_cog(Fun1(bot), guilds=var.guilds)
+    await bot.add_cog(Fun1(bot))

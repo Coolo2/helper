@@ -96,15 +96,6 @@ body {
     background-size:300px
 }
 
-#serverSettings-prefix {
-    background-color:#3b3f44;
-    width:25%;
-    height:200px;
-    transition:opacity .5s;
-    opacity:0%;
-    padding:0 25px 25px 25px
-}
-
 #serverSettings-music {
     background-color:#3b3f44;
     width:25%;

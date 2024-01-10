@@ -120,8 +120,10 @@ var OSName = "Unknown";
 
         for (changelog in changelogs) {
             text = changelogs[changelog].split("\n").join("<br>")
+            text = text.split("<br> - ").join("<br><span style='margin-left:15px'>-</span> ")
             title = text.split('<br>')[0]
             text = text.split('<br>').slice(1).join("<br>")
+            
 
             body.innerHTML = `<h1 style="padding-left:50px">${changelog}</h1><h3 style="padding-left:75px">${title}</h3><p style="font-size:15px;padding-left:100px">${text}</p>` + body.innerHTML
         }

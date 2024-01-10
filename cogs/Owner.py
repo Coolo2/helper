@@ -14,88 +14,48 @@ class Owner(commands.Cog):
         self.bot = bot
     
     @app_commands.command(name='load')
-    @app_commands.guilds(discord.Object(var.support_guild_id))
     @app_commands.default_permissions(administrator=True)
     async def cogload(self, ctx : discord.Interaction, cog: str):
-        if ctx.user.id != var.owner:
+        if ctx.user.id != var.botAdmins[0]:
             raise customerror.CustomErr("You do not own the bot")
         cog = "cogs." + cog.replace("cogs.", "")
         try:
-            self.bot.load_extension(cog)
+            await self.bot.load_extension(cog)
         except Exception as e:
             await ctx.response.send_message(f'**`ERROR:`** {type(e).__name__} - {e}')
         else:
             await ctx.response.send_message('**`SUCCESS`**')
 
     @app_commands.command(name='unload')
-    @app_commands.guilds(discord.Object(var.support_guild_id))
     @app_commands.default_permissions(administrator=True)
     async def cogunload(self, ctx, cog: str):
-        if ctx.user.id != var.owner:
+        if ctx.user.id != var.botAdmins[0]:
             raise customerror.CustomErr("You do not own the bot")
         cog = "cogs." + cog.replace("cogs.", "")
         try:
-            self.bot.unload_extension(cog)
+            await self.bot.unload_extension(cog)
         except Exception as e:
             await ctx.response.send_message(f'**`ERROR:`** {type(e).__name__} - {e}')
         else:
             await ctx.response.send_message('**`SUCCESS`**')
 
     @app_commands.command(name='reload')
-    @app_commands.guilds(discord.Object(var.support_guild_id))
     @app_commands.default_permissions(administrator=True)
     async def cogreload(self, ctx, cog: str):
-        if ctx.user.id != var.owner:
+        if ctx.user.id != var.botAdmins[0]:
             raise customerror.CustomErr("You do not own the bot")
         cog = "cogs." + cog.replace("cogs.", "")
         try:
-            self.bot.unload_extension(cog)
-            self.bot.load_extension(cog)
+            await self.bot.unload_extension(cog)
+            await self.bot.load_extension(cog)
         except Exception as e:
             await ctx.response.send_message(f'**`ERROR:`** {type(e).__name__} - {e}')
         else:
             await ctx.response.send_message('**`SUCCESS`**')
-
-
-    @app_commands.command(
-        name="blacklist"
-    )
-    @app_commands.guilds(discord.Object(var.support_guild_id))
-    @app_commands.default_permissions(administrator=True)
-    async def blacklist(self, ctx, member : discord.Member, reason : str):
-        if ctx.user.id in var.botAdmins:
-            if member.id not in var.botAdmins:
-                with open('databases/blacklist.json') as f:
-                    prefixes = json.load(f)
-                prefixes[str(member.id)] = reason 
-                with open('databases/blacklist.json', 'w') as f:
-                    json.dump(prefixes, f, indent=4)
-                await ctx.response.send_message("> Successfully blacklisted {}".format(member))
-            else:
-                raise customerror.MildErr("> You cannot blacklist a bot admin")
-        else:
-            raise customerror.MildErr("> You must be a bot admin to use this command.")
-
-    @app_commands.command(
-        name="whitelist"
-    )
-    @app_commands.guilds(discord.Object(var.support_guild_id))
-    @app_commands.default_permissions(administrator=True)
-    async def unblacklist(self, ctx, member : discord.Member):
-        if ctx.user.id in var.botAdmins:
-            with open('databases/blacklist.json') as f:
-                prefixes = json.load(f)
-            del prefixes[str(member.id)] 
-            with open('databases/blacklist.json', 'w') as f:
-                json.dump(prefixes, f, indent=4)
-            await ctx.response.send_message("> Successfully whitelisted {}".format(member))
-        else:
-            raise customerror.MildErr("> You must be a bot admin to use this command.")
     
     @app_commands.command(name='dm', description = 'ADMIN ONLY'
     )
     @app_commands.default_permissions(administrator=True)
-    @app_commands.guilds(discord.Object(var.support_guild_id))
     async def dm(self, ctx : discord.Interaction, member: discord.User, message : str):
         if ctx.user.id in var.botAdmins:
             await member.send('[Message from bot admin {}] {}'.format(ctx.user, message))
@@ -109,10 +69,9 @@ class Owner(commands.Cog):
         name="verifysuggestion", 
         description = "[suggestionID]|ADMIN ONLY"
     )
-    @app_commands.guilds(discord.Object(var.support_guild_id))
     @app_commands.default_permissions(administrator=True)
     @app_commands.describe(suggestion_id="The suggestion ID to verify", response="A response to attach")
-    async def verifysuggestion(self, ctx : discord.Interaction, suggestion_id : int, response : str = None):
+    async def verifysuggestion(self, ctx : discord.Interaction, suggestion_id : str, response : str = None):
         if ctx.user.id in var.botAdmins:
             chnl = self.bot.get_channel(832906475529043978)
             msg = await chnl.fetch_message(int(suggestion_id))
@@ -120,7 +79,7 @@ class Owner(commands.Cog):
             oldTitle = msg.embeds[0].title
 
             embed.title = "New suggestion!"
-            embed.set_footer(text=f"Make your own suggestion with {var.prefix}suggest!")
+            embed.set_footer(text=f"Make your own suggestion with /suggest!")
 
             suggestMessage = await self.bot.get_channel(725706516451033108).send(embed=embed)
             await suggestMessage.add_reaction("👍")
