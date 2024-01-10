@@ -12,6 +12,9 @@ pycord/
 node_modules/
 package_lock.json
 
+test.py
+databases/*.json
+
 # Distribution / packaging
 .Python
 build/

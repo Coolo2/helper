@@ -218,8 +218,6 @@ def colorfromword(input):
         return 0xFFFF00
     elif input.lower() == "orange":
         return 0xFFA500  
-    else:
-        return ["orange", "yellow", "silver", "gray", "white", "black", "purple", "green", "red", "blue"]
 
 def calculateTime(argument):
     if "h" in argument:

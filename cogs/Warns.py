@@ -1,9 +1,8 @@
 from discord.ext import commands 
 import discord
 
-import random, os, json
+import random
 from setup import var
-from functions import customerror
 from functions import functions
 from datetime import datetime
 
@@ -98,9 +97,7 @@ class Warns(commands.Cog):
             description=f"Could not find any warns for **{member.display_name}** :tada:", 
             colour=var.embed
         )
-        if str(ctx.guild.id) not in data:
-            return await ctx.response.send_message(embed=embedNone)
-        elif str(member.id) not in data[str(ctx.guild.id)]:
+        if str(ctx.guild.id) not in data or str(member.id) not in data[str(ctx.guild.id)] or len(data[str(ctx.guild.id)][str(member.id)]) == 0:
             return await ctx.response.send_message(embed=embedNone)
         
         embed = discord.Embed(

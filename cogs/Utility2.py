@@ -1,12 +1,10 @@
 from discord.ext import commands 
 import discord
 
-import random, os, json
-from discord import webhook
-from functions import customerror, functions, google
+from functions import functions
 from setup import var
-from datetime import datetime, timedelta
-import aiohttp
+from datetime import datetime
+import helper
 
 from discord import app_commands
 
@@ -26,43 +24,42 @@ class Utility2(commands.Cog):
     async def embed(
         self, 
         ctx : discord.Interaction, 
-        description : str,
+        description : str = None,
         me : bool = None,
         title : str = None,
         footer : str = None,
         color : str = None,
         image : str = None
     ):
+        
+        if description == None and title == None and footer == None and image == None:
+            raise helper.errors.MildErr("You must provide some text/imagery!")
+
         start_time = datetime.now()
 
-        embed = None 
-        webhookEmbed = None
+        embed = discord.Embed() 
 
         if color == None:
             color = "None"
 
         color = color.replace("#", "")
-        if color.lower() in functions.colorfromword("getthem"):
-            color = functions.colorfromword(color)
+        colorfromword = functions.colorfromword(color)
+        if colorfromword:
+            embed.color = colorfromword
         else:
             try:
-                color = int(color, 16)
+                embed.color = int(color, 16)
             except Exception as e:
-                color = var.embed
+                pass
 
-        if title and footer:
-            embed = discord.Embed(title=title, description=description, color=color)
-        elif title:
-            embed = discord.Embed(title=title, description=description)
-        else:
-            embed = discord.Embed(description=description)
-        
+        if title:
+            embed.title = title
         if footer:
             embed.set_footer(text=footer)
-            webhookEmbed.set_footer(text=footer)
+        if description:
+            embed.description = description
         if image:
             embed.set_thumbnail(url=image)
-            webhookEmbed.set_thumbnail(url=image)
 
         if me:
 
@@ -79,7 +76,7 @@ class Utility2(commands.Cog):
             
 
             
-            await webhook.send(embed=embed, username=ctx.user.display_name, avatar_url=ctx.user.avatar.url if ctx.user.avatar else None, wait=False)
+            await webhook.send(embed=embed, username=ctx.user.display_name, avatar_url=ctx.user.display_avatar.url if ctx.user.display_avatar else None, wait=False)
 
             timeElapsed = round((datetime.now() - start_time).total_seconds(), 3)
 

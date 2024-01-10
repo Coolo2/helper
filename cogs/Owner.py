@@ -1,10 +1,8 @@
 from discord.ext import commands 
 import discord
 
-import random, os, json
-from functions import customerror, functions, google
 from setup import var
-from datetime import datetime, timedelta
+import helper
 
 from discord import app_commands
 
@@ -17,7 +15,7 @@ class Owner(commands.Cog):
     @app_commands.default_permissions(administrator=True)
     async def cogload(self, ctx : discord.Interaction, cog: str):
         if ctx.user.id != var.botAdmins[0]:
-            raise customerror.CustomErr("You do not own the bot")
+            raise helper.errors.CustomErr("You do not own the bot")
         cog = "cogs." + cog.replace("cogs.", "")
         try:
             await self.bot.load_extension(cog)
@@ -30,7 +28,7 @@ class Owner(commands.Cog):
     @app_commands.default_permissions(administrator=True)
     async def cogunload(self, ctx, cog: str):
         if ctx.user.id != var.botAdmins[0]:
-            raise customerror.CustomErr("You do not own the bot")
+            raise helper.errors.CustomErr("You do not own the bot")
         cog = "cogs." + cog.replace("cogs.", "")
         try:
             await self.bot.unload_extension(cog)
@@ -43,7 +41,7 @@ class Owner(commands.Cog):
     @app_commands.default_permissions(administrator=True)
     async def cogreload(self, ctx, cog: str):
         if ctx.user.id != var.botAdmins[0]:
-            raise customerror.CustomErr("You do not own the bot")
+            raise helper.errors.CustomErr("You do not own the bot")
         cog = "cogs." + cog.replace("cogs.", "")
         try:
             await self.bot.unload_extension(cog)

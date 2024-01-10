@@ -3,14 +3,14 @@ import discord
 
 from discord.ext import commands
 
-import random, os, json, re
+import random, json
 from discord.app_commands import errors
-from functions import customerror, functions
+from functions import functions
 from setup import var
 from EasyConversion import textformat
 
 import datetime
-from discord import app_commands
+import helper
 
 class Handling1(commands.Cog):
     def __init__(self, bot : commands.Bot):
@@ -71,15 +71,15 @@ class Handling1(commands.Cog):
                     return await response(embed=embed, ephemeral=True)
 
                 # Custom errors
-                if isinstance(error.original, customerror.CustomErr):
+                if isinstance(error.original, helper.errors.CustomErr):
                     embed = discord.Embed(title=msgMild, description=f"```{error.original}```", colour=var.embedFail, timestamp=datetime.datetime.now())
                     
                     return await response(embed=embed, ephemeral=True)
-                if isinstance(error.original, customerror.MildErr):
+                if isinstance(error.original, helper.errors.MildErr):
                     embed = discord.Embed(title=msgMild, description=f"{error.original}", colour=var.embedFail)
                     return await response(embed=embed, ephemeral=True)
                 
-                if isinstance(error.original, customerror.CooldownError):
+                if isinstance(error.original, helper.errors.CooldownError):
                     embed = discord.Embed(title="You're on cooldown!", description=f"{error.original}", colour=var.embedFail)
                     return await response(embed=embed, ephemeral=True)
             

@@ -1,11 +1,8 @@
 from discord.ext import commands 
 import discord
 
-import random, os, json
 from setup import var
-from functions import customerror
-from functions import functions
-from datetime import datetime
+import helper
 
 from discord import app_commands
 

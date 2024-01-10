@@ -2,8 +2,9 @@ from discord.ext import commands
 import discord
 
 import random, os, json
-from functions import customerror, functions, cooldowns
+from functions import functions, cooldowns
 from setup import var
+import helper
 
 import datetime
 
@@ -20,7 +21,7 @@ class Economy1(commands.Cog):
     async def work(self, ctx : discord.Interaction):
         cd = cooldown.doCooldown(datetime.timedelta(seconds=30), "work", ctx.user)
         if cd != True:
-            raise customerror.CooldownError(f"You are on cooldown! Please wait **{round(cd.total_seconds())}** seconds to work again.")
+            raise helper.errors.CooldownError(f"You are on cooldown! Please wait **{round(cd.total_seconds())}** seconds to work again.")
 
         balances = await functions.read_data("databases/economy.json")
         money = random.randint(25, 125)
@@ -49,7 +50,7 @@ class Economy1(commands.Cog):
     async def flip(self, ctx : discord.Interaction, guess : str):
 
         if guess.lower() != "heads" and guess.lower() != "tails":
-            raise customerror.MildErr(f"Your guess must be 'heads' or 'tails', not '{guess}'")
+            raise helper.errors.MildErr(f"Your guess must be 'heads' or 'tails', not '{guess}'")
 
         botChoice = random.randint(0,1)
         choices = ["heads", "tails"]
@@ -165,7 +166,7 @@ class Economy1(commands.Cog):
     async def extrawork(self, ctx : discord.Interaction):
         cd = cooldown.doCooldown(datetime.timedelta(minutes=10), "extrawork", ctx.user)
         if cd != True:
-            raise customerror.CooldownError(f"You are on cooldown! Please wait **{round(cd.total_seconds())}** seconds to work again.")
+            raise helper.errors.CooldownError(f"You are on cooldown! Please wait **{round(cd.total_seconds())}** seconds to work again.")
         
         balances = await functions.read_data("databases/economy.json")
         money = random.randint(125, 500)
@@ -190,7 +191,7 @@ class Economy1(commands.Cog):
     async def slots(self, ctx : discord.Interaction):
         cd = cooldown.doCooldown(datetime.timedelta(seconds=5), "slots", ctx.user)
         if cd != True:
-            raise customerror.CooldownError(f"You are on cooldown! Please wait **{round(cd.total_seconds())}** seconds to use the slot machine again.")
+            raise helper.errors.CooldownError(f"You are on cooldown! Please wait **{round(cd.total_seconds())}** seconds to use the slot machine again.")
         choices=["", "🍌", "🍉", "🍒", "🍏"]
 
         choice1 = choices[random.randint(1, 4)]
@@ -228,7 +229,7 @@ class Economy1(commands.Cog):
     async def rob(self, ctx : discord.Interaction, member : discord.Member):
         cd = cooldown.doCooldown(datetime.timedelta(hours=1), "rob", ctx.user)
         if cd != True:
-            raise customerror.CooldownError(f"You are on cooldown! Please wait **{round(cd.total_seconds())}** seconds to rob again.")
+            raise helper.errors.CooldownError(f"You are on cooldown! Please wait **{round(cd.total_seconds())}** seconds to rob again.")
         
         balances = await functions.read_data("databases/economy.json")
         
@@ -239,10 +240,10 @@ class Economy1(commands.Cog):
 
         if str(member.id) not in balances[str(ctx.guild.id)] or balances[str(ctx.guild.id)][str(member.id)]['balance'] <= 0:
             cooldown.clearCooldown("rob", ctx.user)
-            raise customerror.MildErr(f"**{member}** has no money, you can't rob them!")
+            raise helper.errors.MildErr(f"**{member}** has no money, you can't rob them!")
         if member == ctx.user:
             cooldown.clearCooldown("rob", ctx.user)
-            raise customerror.MildErr("You can't rob yourself.")
+            raise helper.errors.MildErr("You can't rob yourself.")
 
         successfulChance = random.randint(1,3)
         removeAmount = round(balances[str(ctx.guild.id)][str(member.id)]['balance'] / random.randint(4,10))

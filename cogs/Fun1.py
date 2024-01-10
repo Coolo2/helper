@@ -1,18 +1,16 @@
 from discord.ext import commands 
 import discord
 
-import random, os, json
+import random, json
 from setup import var
-from functions import customerror, functions, image
-from datetime import datetime, timedelta
-import requests, aiohttp, asyncio
-import emoji as emojis
+from functions import functions, image
+from datetime import datetime
+import aiohttp
 import inspect
-from discord.ext.commands import MemberConverter
-import re
-from PIL import Image, ImageEnhance
+from PIL import Image
 import io
-import threading
+
+import helper
 
 from discord import app_commands
 
@@ -44,7 +42,7 @@ class Fun1(commands.Cog):
         
         imgValidation = await functions.is_url_image(url, ("image/png", "image/jpeg", "image/jpg", "image/gif"))
         if imgValidation == False:
-            raise customerror.MildErr("Could not find image! This command support png, jpeg and gif images only.")
+            raise helper.errors.MildErr("Could not find image! This command support png, jpeg and gif images only.")
         
         try:
 
@@ -67,7 +65,7 @@ class Fun1(commands.Cog):
                         await ctx.followup.send(embed=embed, file=discord.File(fp=image_binary, filename='image.png'))
 
         except Exception as e:
-            raise customerror.CustomErr("Unknown image error occurred. Maybe try another image? " + str(e))
+            raise helper.errors.CustomErr("Unknown image error occurred. Maybe try another image? " + str(e))
     
     @app_commands.command(name="blurpify", description="Blurpify an image")
     @app_commands.describe(user="A user or URL to deepfry the profile picture of", url="A url-image to deepfry", attachment="An optional attachment to replace the user avatar")
@@ -88,7 +86,7 @@ class Fun1(commands.Cog):
 
         imgValidation = await functions.is_url_image(url, ("image/png", "image/jpeg", "image/jpg", "image/gif"))
         if imgValidation == False:
-            raise customerror.MildErr("Could not find image! This command support png, jpeg and gif images only.")
+            raise helper.errors.MildErr("Could not find image! This command support png, jpeg and gif images only.")
         
         await ctx.response.defer()
 
@@ -111,7 +109,7 @@ class Fun1(commands.Cog):
 
                         await ctx.followup.send(embed=embed, file=discord.File(fp=image_binary, filename='image.png'))
         except Exception as e:
-            raise customerror.CustomErr("Unknown image error occurred. Maybe try another image? " + str(e))
+            raise helper.errors.CustomErr("Unknown image error occurred. Maybe try another image? " + str(e))
     
     @app_commands.command(name="randomword", description="Get random words in the English language")
     async def randomword(self, ctx : discord.Interaction):
@@ -175,7 +173,7 @@ class Fun1(commands.Cog):
             while not foundImage:
                 counter += 1
                 if counter >= 10:
-                    raise customerror.MildErr("Couldn't find an image, please try again.")
+                    raise helper.errors.MildErr("Couldn't find an image, please try again.")
                     
                     
                 async with session.get("https://api.reddit.com/r/{}/random?obey_over18=true".format(subreddit)) as r:
@@ -203,7 +201,7 @@ class Fun1(commands.Cog):
                         print(e)
                         if str(e) == "Couldn't find an image, please try again.":
                             raise e
-                        raise customerror.MildErr("Invalid Subreddit or marked NSFW")
+                        raise helper.errors.MildErr("Invalid Subreddit or marked NSFW")
     
     @app_commands.command(name="cat", description="Get a random cat image")
     async def cat(self, ctx : discord.Interaction):
@@ -216,7 +214,7 @@ class Fun1(commands.Cog):
                     e.set_image(url=data[0]["url"])
                     await ctx.response.send_message(embed=e)
                 else:
-                    raise customerror.CustomErr("Could not access API. Try again?")
+                    raise helper.errors.CustomErr("Could not access API. Try again?")
 
     @app_commands.command(name="dog", description="Get a random dog image")
     async def dog(self, ctx : discord.Interaction):
@@ -229,7 +227,7 @@ class Fun1(commands.Cog):
                     e.set_image(url=data["url"])
                     await ctx.response.send_message(embed=e)
                 else:
-                    raise customerror.CustomErr("Could not access API. Try again?")
+                    raise helper.errors.CustomErr("Could not access API. Try again?")
     
     @app_commands.command(name="spoiler", description="Make a message into a special spoiler")
     @app_commands.describe(message="The message to spoil")
@@ -243,7 +241,7 @@ class Fun1(commands.Cog):
         try:
             await ctx.response.send_message(final, ephemeral=True)
         except Exception as e:
-            raise customerror.MildErr("Final response too long!")
+            raise helper.errors.MildErr("Final response too long!")
     
     @app_commands.command(name="emoji", description="Emojify a message")
     @app_commands.describe(message="The message to emojify")
@@ -257,7 +255,7 @@ class Fun1(commands.Cog):
         try:
             await ctx.response.send_message(finalstring, allowed_mentions=discord.AllowedMentions(everyone=False, roles=False))
         except Exception as e:
-            raise customerror.MildErr("Final response too long!")
+            raise helper.errors.MildErr("Final response too long!")
     
 
     
@@ -307,7 +305,7 @@ class Fun1(commands.Cog):
             if "disableMimic" in data[str(user.id)]:
                 if str(ctx.guild.id) in data[str(user.id)]["disableMimic"]:
                     if data[str(user.id)]["disableMimic"][str(ctx.guild.id)] == True:
-                        raise customerror.MildErr(user.mention + " has disabled mimicking for this server!")
+                        raise helper.errors.MildErr(user.mention + " has disabled mimicking for this server!")
         
         if str(ctx.user.id) not in data:
             data[str(ctx.user.id)] = {}

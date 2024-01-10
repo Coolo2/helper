@@ -1,17 +1,18 @@
 from discord.ext import commands 
 import discord
 
-import random, os, json
-from functions import customerror, functions, google
+import random
+from functions import functions, google
 from setup import var
-from datetime import datetime, timedelta
+from datetime import datetime
 from EasyConversion import convert, info
-import asyncio, re
+import asyncio
 
 from discord import app_commands
 
 from wikipya import Wikipya
 from wikipya.exceptions import NotFound
+import helper
 
 class Utility1(commands.Cog):
     def __init__(self, bot):
@@ -88,7 +89,7 @@ Random number from **1** to **1,000,000**: {random.randint(1, 1000000)}""")
         try:
             search = await self.wiki.search(query)
         except NotFound:
-            raise customerror.MildErr("Couldn't find any results for this query!")
+            raise helper.errors.MildErr("Couldn't find any results for this query!")
 
         page = await self.wiki.page(search[0].page_id)
         
@@ -168,7 +169,7 @@ Random number from **1** to **1,000,000**: {random.randint(1, 1000000)}""")
         text : str
     ):
         if convert_type.lower() not in ["morse", "morsecode", "morse-code"] + ["ascii", "binary"]:
-            raise customerror.CustomErr(f"Invalid convert type! Please use /convert [ascii/morse] [input to convert]")
+            raise helper.errors.CustomErr(f"Invalid convert type! Please use /convert [ascii/morse] [input to convert]")
 
         embed = discord.Embed(
             title="Converted successfully!", 
@@ -217,7 +218,7 @@ Random number from **1** to **1,000,000**: {random.randint(1, 1000000)}""")
                 amount = int(functions.calculateTime(time))
                 
         except Exception as e:
-            raise customerror.MildErr("Invalid time! Time must be a number above 1.")
+            raise helper.errors.MildErr("Invalid time! Time must be a number above 1.")
 
         await ctx.response.send_message("> I will remind you in " + str(amount) + " second(s)", ephemeral=True)
 
@@ -245,10 +246,10 @@ Random number from **1** to **1,000,000**: {random.randint(1, 1000000)}""")
                 amount = int(functions.calculateTime(time))
                 
         except Exception as e:
-            raise customerror.MildErr("Invalid time! Time must be a number above 1.")
+            raise helper.errors.MildErr("Invalid time! Time must be a number above 1.")
         
         if amount < 1:
-            raise customerror.MildErr("Invalid time! Time must be a number above 1.")
+            raise helper.errors.MildErr("Invalid time! Time must be a number above 1.")
 
         await ctx.response.send_message("> Started timer for " + str(amount) + " seconds", ephemeral=True)
         await asyncio.sleep(amount)

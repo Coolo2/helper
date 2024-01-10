@@ -1,10 +1,11 @@
 from discord.ext import commands 
 import discord
 
-import random, os, json
-from functions import customerror, functions
+from functions import functions
 from setup import var
-from datetime import datetime, timedelta
+from datetime import datetime
+
+import helper
 
 def getTime():
     return datetime.utcfromtimestamp(int(datetime.now().timestamp()))

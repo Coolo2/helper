@@ -1,11 +1,11 @@
 from discord.ext import commands 
 import discord
 
-import random, os, json
+import random
 from setup import var
-from functions import customerror
 from functions import functions
-from datetime import datetime, timedelta
+from datetime import timedelta
+import helper
 
 from discord import app_commands
 
@@ -25,7 +25,7 @@ class Moderation1(commands.Cog):
         reason : str = None
     ):
         if member == ctx.user:
-            raise customerror.MildErr("You can't ban yourself!")
+            raise helper.errors.MildErr("You can't ban yourself!")
         
         if ctx.user.guild_permissions.kick_members and ctx.user.top_role.position > member.top_role.position or ctx.guild.owner == ctx.user:
             try:
@@ -56,7 +56,7 @@ class Moderation1(commands.Cog):
             member = None
         
         if member == ctx.user:
-            raise customerror.MildErr("You can't ban yourself!")
+            raise helper.errors.MildErr("You can't ban yourself!")
 
         if delete_message_days == None:
             delete_message_days = 0
@@ -105,14 +105,14 @@ class Moderation1(commands.Cog):
     async def _timeout_add(self, interaction : discord.Interaction, member : discord.Member, length : str = None, reason : str = None):
         
         if member.is_timed_out():
-            raise customerror.MildErr(f"{member.mention} is already timed out! Use **/timout remove** to remove it.")
+            raise helper.errors.MildErr(f"{member.mention} is already timed out! Use **/timout remove** to remove it.")
 
         duration = timedelta(days=27)
         if length != None:
             try:
                 duration = timedelta(seconds=functions.timeToSeconds(length))
             except Exception as e:
-                raise customerror.MildErr(f"'{length}' is not in a valid mute length format! Mute length format example: '2h 5m'")
+                raise helper.errors.MildErr(f"'{length}' is not in a valid mute length format! Mute length format example: '2h 5m'")
         
         await member.timeout(duration, reason=reason)
 
@@ -123,7 +123,7 @@ class Moderation1(commands.Cog):
     async def _timeout_remove(self, interaction : discord.Interaction, member : discord.Member):
 
         if not member.is_timed_out():
-            raise customerror.MildErr("This member is not timed out!")
+            raise helper.errors.MildErr("This member is not timed out!")
         
         await member.timeout(None)
 

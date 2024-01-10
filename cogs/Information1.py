@@ -1,14 +1,13 @@
 from discord.ext import commands 
 import discord
 
-import random, os, json, time, asyncio
+import random, os, time
 from setup import var
-from functions import customerror, functions, paginator
+from functions import functions, paginator
 import resources.commands
+import helper
 
 from discord import app_commands
-
-import inspect
 
 start_time = time.time()
 starttime2 = time.ctime(int(time.time()))
@@ -90,7 +89,7 @@ class Information1(commands.Cog):
                         return await ctx.response.send_message(embed=embed)
             
             if not found:
-                raise customerror.MildErr(f"Could not find a command with search '{command}'")
+                raise helper.errors.MildErr(f"Could not find a command with search '{command}'")
     
     @bot.command(name="info", description="Fetches information on the bot")
     async def botinfo(self, ctx : discord.Interaction):
@@ -154,8 +153,10 @@ class Information1(commands.Cog):
         else:
             section = None
             choice = random.choice(list(data[random.choice(list(data))]))
+        
+        embed = discord.Embed(title="Here's your random command!", description=f"/{choice}", color=var.embed)
 
-        return await ctx.response.send_message(f"> Random {f'`{section}` ' if section != None else ''}command: `/{choice}`")
+        return await ctx.response.send_message(embed=embed)
     
     @bot.command(name="changelogs", description="Get a history of the bot")
     async def _changelogs(self, interaction : discord.Interaction):

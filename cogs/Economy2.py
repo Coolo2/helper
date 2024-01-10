@@ -3,8 +3,9 @@ import discord
 import random
 import datetime
 
-from functions import customerror, functions, cooldowns
+from functions import functions, cooldowns
 from setup import var
+import helper
 
 from discord import app_commands
 
@@ -63,13 +64,13 @@ class Economy2(commands.Cog):
             balances[str(ctx.guild.id)] [str(ctx.user.id)] = {"balance":0}
         
         if int(amount) <= 0:
-            raise customerror.MildErr("> You cant pay less than 1 credit!")
+            raise helper.errors.MildErr("> You cant pay less than 1 credit!")
         if member == ctx.user:
-            raise customerror.MildErr("> You cant pay yourself!")
+            raise helper.errors.MildErr("> You cant pay yourself!")
         if int(balances[str(ctx.guild.id)][str(ctx.user.id)]["balance"]) < 1:
-            raise customerror.MildErr(f"> You're below 0 credits! Do **/work** to get some credits!")
+            raise helper.errors.MildErr(f"> You're below 0 credits! Do **/work** to get some credits!")
         if int(balances[str(ctx.guild.id)][str(ctx.user.id)]["balance"]) < int(amount):
-            raise customerror.MildErr(f"> You do not have enough credits! You're on **{balances[str(ctx.guild.id)][str(ctx.user.id)]['balance']}** credits!")
+            raise helper.errors.MildErr(f"> You do not have enough credits! You're on **{balances[str(ctx.guild.id)][str(ctx.user.id)]['balance']}** credits!")
         
         if str(member.id) not in balances[str(ctx.guild.id)]:
             balances[str(ctx.guild.id)][str(member.id)] = {"balance":0}
@@ -112,11 +113,11 @@ class Economy2(commands.Cog):
             price = costs["crate"]
 
             if balances[str(ctx.guild.id)][str(ctx.user.id)]["balance"] < price:
-                raise customerror.MildErr(f"You do not have enough credits for this item. You have **{balances[str(ctx.guild.id)][str(ctx.user.id)]['balance']}** credits")
+                raise helper.errors.MildErr(f"You do not have enough credits for this item. You have **{balances[str(ctx.guild.id)][str(ctx.user.id)]['balance']}** credits")
 
             cd = cooldown.doCooldown(datetime.timedelta(seconds=30), "shop-crate", ctx.user)
             if cd != True:
-                raise customerror.CooldownError(f"You are on cooldown! Please wait **{round(cd.total_seconds())}** seconds to buy a crate from the shop again.")
+                raise helper.errors.CooldownError(f"You are on cooldown! Please wait **{round(cd.total_seconds())}** seconds to buy a crate from the shop again.")
 
             balances[str(ctx.guild.id)][str(ctx.user.id)]["balance"] -= price
 

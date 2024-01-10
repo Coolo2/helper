@@ -1,4 +1,5 @@
-# Helper Bot (Rewrite 1.0)
+# Helper Bot
 
-A multipurpose discord bot which is unfinished and being worked on.
-Should be releasing August 2021
+A multipurpose Discord bot with commands in many categories. Updates to resume in 2024 to bring it up-to-date.
+
+Est. 2018

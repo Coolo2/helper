@@ -4,4 +4,5 @@ EasyConversion
 Pillow
 googletrans
 emoji
-wikipedia
+quart
+Wikipya

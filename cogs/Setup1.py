@@ -1,10 +1,8 @@
 from discord.ext import commands 
 import discord
 
-import random, os, json
+import json
 from setup import var
-from functions import customerror
-from functions import functions
 
 from discord import app_commands
 
