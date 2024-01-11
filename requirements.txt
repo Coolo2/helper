@@ -6,3 +6,4 @@ googletrans
 emoji
 quart
 Wikipya
+googlesearch-python
