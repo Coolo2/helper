@@ -1,4 +1,4 @@
-from discord.ext import commands 
+from discord.ext import commands, tasks
 import discord
 
 import os
@@ -27,6 +27,10 @@ async def on_ready():
     
     await bot.change_presence(activity=discord.CustomActivity(name=f"{var.version} | {len(bot.guilds)} servers | /changelog"))
 
+@tasks.loop(seconds=5 if var.production else 30)
+async def _commit_db():
+    await hc.db.connection.commit()
+
 async def setup_hook():
     print(f'\n--- Extensions {", ".join(extensions)} ---')
 
@@ -44,7 +48,11 @@ async def setup_hook():
     for g in var.guilds: 
         await bot.tree.sync(guild=g)
     await bot.tree.sync(guild=discord.Object(var.support_guild_id))
-        
+    
+    await hc.db.initialise()
+    await hc.db.migrate_old()
+    _commit_db.start()
+
     app = main.generate_app(bot, hc)
     bot.loop.create_task(app.run_task(host="0.0.0.0", port=var.port, debug=False))
 

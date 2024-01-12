@@ -1,11 +1,11 @@
 import typing
 import discord 
 
-from functions import classes
+import helper
 
 class EventConfirmationButton(discord.ui.Button):
 
-    def __init__(self, member : discord.Member, coro : typing.Coroutine, eventType : classes.EventType, name : str):
+    def __init__(self, member : discord.Member, coro : typing.Coroutine, eventType : helper.types.EventType, name : str):
 
         self.member = member 
         self.coro = coro 

@@ -625,24 +625,22 @@
         function getWarns(guildData) {
             var tableRef = document.getElementById('serverSettings-warns-table').getElementsByTagName('tbody')[0];
             tableRef.innerHTML = ``
-            for (warnMember in guildData.warns) {
-                for (warn in guildData.warns[warnMember]) {
-                    warnSelect = guildData.warns[warnMember][warn]
-                    warnMemberName = "Unknown"
-                    warnModName = "Unknown"
-                    for (member of guildData.members) {if (member.id == warnSelect.mod) {warnModName = member.tag};if (member.id == warnMember) {warnMemberName = member.tag}}
-                    var newRow = tableRef.insertRow(tableRef.rows.length);
-                    newRow.id = `serverSettings-warns-table-row`
-                    newRow.innerHTML = `<th id="serverSettings-warns-table-row-item">${warnMemberName}</th>`
-                    newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-warns-table-row-item">${warn}</th>`
-                    newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-warns-table-row-item">${warnSelect.reason}</th>`
-                    newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-warns-table-row-item">${warnModName}</th>`;
-                    if (guildData.has_permissions.manage_messages) newRow.innerHTML = newRow.innerHTML + `<th style="width:50px;color:white"><i onclick="postData('/api/dashboard/delWarn', {member:'${warnMember}',id:'${warn}'})" id="serverSettings-warns-table-row-item-delete" class="fa fa-times" aria-hidden="true"></i></th>`;
-                    else newRow.innerHTML = newRow.innerHTML + `<th style="width:50px;color:white"><i id="serverSettings-warns-table-row-item-delete-missingperms" class="fa fa-times" aria-hidden="true"></i></th>`;
-                    
-                }
-                
+
+            for (warn of guildData.warns) {
+                warnMemberName = "Unknown"
+                warnModName = "Unknown"
+                for (member of guildData.members) {if (member.id == warn[3]) {warnModName = member.tag};if (member.id == warn[1]) {warnMemberName = member.tag}}
+                var newRow = tableRef.insertRow(tableRef.rows.length);
+                newRow.id = `serverSettings-warns-table-row`
+                newRow.innerHTML = `<th id="serverSettings-warns-table-row-item">${warnMemberName}</th>`
+                newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-warns-table-row-item">${warn[0]}</th>`
+                newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-warns-table-row-item">${warn[4]}</th>`
+                newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-warns-table-row-item">${warnModName}</th>`;
+                if (guildData.has_permissions.manage_messages) newRow.innerHTML = newRow.innerHTML + `<th style="width:50px;color:white"><i onclick="postData('/api/dashboard/delWarn', {id:'${warn[0]}', member:'${warn[1]}'})" id="serverSettings-warns-table-row-item-delete" class="fa fa-times" aria-hidden="true"></i></th>`;
+                else newRow.innerHTML = newRow.innerHTML + `<th style="width:50px;color:white"><i id="serverSettings-warns-table-row-item-delete-missingperms" class="fa fa-times" aria-hidden="true"></i></th>`;
             }
+
+            
         }
 
         function getJoinLeave(guildData) {
@@ -738,7 +736,7 @@
                             }
 
                             document.getElementById("postMessage").style.bottom = "0px"
-                            if (!msg.error && where == '/api/dashboard/delWarn') {guildDatas[currentGuild.id].warns = msg[currentGuild.id];getWarns(guildDatas[currentGuild.id])}
+                            if (!msg.error && where == '/api/dashboard/delWarn') {guildDatas[currentGuild.id].warns = msg["warns"];getWarns(guildDatas[currentGuild.id])}
                             if (where == '/api/dashboard/setCustomCommands') {guildDatas[currentGuild.id].commands = msg.commands;doCustomCommands(guildDatas[currentGuild.id])}
                             setTimeout(function() {
                                 document.getElementById("postMessage").style.bottom = "-50px"

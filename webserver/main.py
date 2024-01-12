@@ -193,8 +193,8 @@ def generate_app(bot : commands.Bot, hc : helper.HelperClient):
             user_id = encryption.decode(user[1], var.encryption_key)
         except AttributeError:
             return quart.redirect("/login")
-        warns = functions.read_data_sync('databases/warns.json')
-        warnsString = json.dumps(warns)
+        
+        
         events = functions.read_data_sync("databases/events.json")
         
         with open("databases/commands.json") as f:
@@ -208,17 +208,20 @@ def generate_app(bot : commands.Bot, hc : helper.HelperClient):
                 guild = bot.get_guild(int(args["guild"]))
                 member = guild.get_member(int(user_id))
                 bot_member = guild.get_member(bot.user.id)
+
+                warns_raw = await hc.db.fetchall("SELECT id, user, time, mod, reason FROM warns WHERE guild=?", (guild.id,))
+
                 value[str(guild.id)] = {
                     "name":guild.name,
                     "id":str(guild.id),
                     "icon":guild.icon.key if guild.icon else "undefined",
                     "has_permissions":{"manage_messages":member.guild_permissions.manage_messages, "manage_guild":member.guild_permissions.manage_guild},
                     "joinleave":joinleaveData[str(guild.id)] if str(guild.id) in joinleaveData else {},
-                    "warns":warns[str(guild.id)] if str(guild.id) in warns else {},
+                    "warns":warns_raw,
                     "owner":str(guild.owner_id),
                     "roles":[{"name":role.name,"id":str(role.id),"color":str(role.color)} for role in guild.roles],
                     "events":events[str(guild.id)] if str(guild.id) in events else [],
-                    "members":[{"id":str(member.id),"tag":str(member)} for member in guild.members if str(member.id) in warnsString] if str(guild.id) in warns else {},
+                    "members":[{"id":str(member.id),"tag":str(member)} for member in guild.members if member.id in [w[1] for w in warns_raw]+[w[3] for w in warns_raw]],
                     "text_channels":[{"name":channel.name,"id":str(channel.id), "permissions":{"send_messages":True if channel.permissions_for(bot_member).send_messages else False}} for channel in guild.text_channels],
                     "commands":commands[str(guild.id)] if str(guild.id) in commands else {},
                     "logging":joinleaveData[str(guild.id)]["logging"] if str(guild.id) in joinleaveData and "logging" in joinleaveData[str(guild.id)] else {}
@@ -497,14 +500,17 @@ def generate_app(bot : commands.Bot, hc : helper.HelperClient):
             user_id = encryption.decode(user[1], var.encryption_key)
         except AttributeError:
             return quart.redirect("/login")
-        warns = functions.read_data_sync("databases/warns.json")
+        
         data = await quart.request.json
         guild = bot.get_guild(int(data['guild']))
         member = guild.get_member(int(user_id))
         if member.guild_permissions.manage_messages:
-            del warns[str(guild.id)][data['member']][data['id']]
-            functions.save_data_sync("databases/warns.json", warns)
-            warns["returnMessage"] = f"Successfully deleted warn {data['id']}"
+            await hc.db.execute("DELETE FROM warns WHERE guild=? AND id=?", (guild.id, data["id"]))
+            
+            warns = {
+                "returnMessage":f"Successfully deleted warn {data['id']}",
+                "warns":await hc.db.fetchall("SELECT id, user, time, mod, reason FROM warns WHERE guild=?", (guild.id,))
+            }
 
             # Log update if available
             embed = discord.Embed(title="Warn deleted (from dashboard)", color=var.embedFail, timestamp=datetime.datetime.now())

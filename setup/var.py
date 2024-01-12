@@ -6,7 +6,7 @@ embed=0xFF8700
 embedSuccess=0x00FF00
 embedFail=0xFF0000
 
-version = "a1.2.0"
+version = "a1.3.0"
 
 address = "http://helperbot.ddns.net:35590"
 port = 35590
@@ -26,6 +26,8 @@ support_guild_add_remove_channel = 681410332832563234
 support_guild_id = 447702058162978827
 
 botAdmins = [368071242189897728, 444176530357354527, 378189620288159754]
+
+db_path = ".db"
 
 # Slash Commands
 production = False

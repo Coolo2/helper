@@ -8,7 +8,8 @@ from datetime import datetime, timedelta
 from urllib.parse import urlparse
 from difflib import SequenceMatcher
 
-from functions import components, classes
+from functions import components
+import helper
 
 import re
 
@@ -73,33 +74,34 @@ def time_str_from_seconds(time):
 
 
 
-async def check_events(bot : commands.Bot, warns : dict, guild : discord.Guild, member : discord.Member):
+async def check_events(hc : helper.HelperClient, guild : discord.Guild, member : discord.Member, warn_count : int = None):
 
     events = await read_data("databases/events.json")
+
+    if warn_count == None:
+        warn_count = (await hc.db.fetchone("SELECT COUNT(*) FROM warns WHERE guild=? AND user=?", (guild.id, member.id)))[0]
     
     if str(guild.id) not in events:
         return 
     
-    if str(guild.id) in warns:
-        if str(member.id) in warns[str(guild.id)]:
-            for event in events[str(guild.id)]:
-                if event["what"] == "warns":
-                    if len(warns[str(guild.id)][str(member.id)]) == int(event["amount"]):
+    for event in events[str(guild.id)]:
+        if event["what"] == "warns":
+            if warn_count == int(event["amount"]):
 
-                        if event["action"] == "1hTimeout":
-                            return components.EventConfirmationButton(member, member.timeout_for(timedelta(hours=1)), classes.EventType.timeout, "1 Hour Timeout")
-                        if event["action"] == "3hTimeout":
-                            return components.EventConfirmationButton(member, member.timeout_for(timedelta(hours=3)), classes.EventType.timeout, "3 Hour Timeout")
-                        if event["action"] == "6hTimeout":
-                            return components.EventConfirmationButton(member, member.timeout_for(timedelta(hours=6)), classes.EventType.timeout, "6 Hour Timeout")
-                        if event["action"] == "12hTimeout":
-                            return components.EventConfirmationButton(member, member.timeout_for(timedelta(hours=12)), classes.EventType.timeout, "12 Hour Timeout")
-                        if event["action"] == "24hTimeout":
-                            return components.EventConfirmationButton(member, member.timeout_for(timedelta(hours=24)), classes.EventType.timeout, "24 Hour Timeout")
-                        if event["action"] == "kick":
-                            return components.EventConfirmationButton(member, member.kick(reason=str(len(warns[str(guild.id)][str(member.id)])) + " warns"), classes.EventType.kick, "Kick")
-                        if event["action"] == "ban":
-                            return components.EventConfirmationButton(member, member.ban(reason=str(len(warns[str(guild.id)][str(member.id)])) + " warns"), classes.EventType.kick, "Ban")
+                if event["action"] == "1hTimeout":
+                    return components.EventConfirmationButton(member, member.timeout_for(timedelta(hours=1)), helper.types.EventType.timeout, "1 Hour Timeout")
+                if event["action"] == "3hTimeout":
+                    return components.EventConfirmationButton(member, member.timeout_for(timedelta(hours=3)), helper.types.EventType.timeout, "3 Hour Timeout")
+                if event["action"] == "6hTimeout":
+                    return components.EventConfirmationButton(member, member.timeout_for(timedelta(hours=6)), helper.types.EventType.timeout, "6 Hour Timeout")
+                if event["action"] == "12hTimeout":
+                    return components.EventConfirmationButton(member, member.timeout_for(timedelta(hours=12)), helper.types.EventType.timeout, "12 Hour Timeout")
+                if event["action"] == "24hTimeout":
+                    return components.EventConfirmationButton(member, member.timeout_for(timedelta(hours=24)), helper.types.EventType.timeout, "24 Hour Timeout")
+                if event["action"] == "kick":
+                    return components.EventConfirmationButton(member, member.kick(reason=str(warn_count) + " warns"), helper.types.EventType.kick, "Kick")
+                if event["action"] == "ban":
+                    return components.EventConfirmationButton(member, member.ban(reason=str(warn_count) + " warns"), helper.types.EventType.kick, "Ban")
     return None
 
 
