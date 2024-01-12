@@ -13,16 +13,16 @@ class Images(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-        self.font_pretty_girls_script = ImageFont.truetype("Images/Pretty Girls Script Demo.ttf", 50)
-        self.font_minecraft = ImageFont.truetype("Images/Minecraft.ttf", 23)
-        self.font_american_captain = ImageFont.truetype("Images/American Captain.otf", 50)
+        self.font_pretty_girls_script = ImageFont.truetype("images/Pretty Girls Script Demo.ttf", 50)
+        self.font_minecraft = ImageFont.truetype("images/Minecraft.ttf", 23)
+        self.font_american_captain = ImageFont.truetype("images/American Captain.otf", 50)
 
     @app_commands.command(name="minecraft_achievement", description="Make a minecraft achievement")
     async def minecraft_achievement(self, ctx : discord.Interaction, text : str):
 
         buf = io.BytesIO()
 
-        img = Image.open("Images/hqdefault.png")
+        img = Image.open("images/hqdefault.png")
         draw = ImageDraw.Draw(img)
         
 
@@ -38,7 +38,7 @@ class Images(commands.Cog):
         
         buf = io.BytesIO()
 
-        img = Image.open("Images/Whiteboard.png")
+        img = Image.open("images/Whiteboard.png")
         draw = ImageDraw.Draw(img)
         
 
@@ -70,7 +70,7 @@ class Images(commands.Cog):
         
         buf = io.BytesIO()
         
-        img = Image.open("Images/rip.png")
+        img = Image.open("images/rip.png")
         draw = ImageDraw.Draw(img)
         draw.text((img.width//2, 399), content, (0, 0, 0), font=self.font_american_captain, anchor="mm")
 

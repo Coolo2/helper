@@ -60,7 +60,7 @@ class Moderation1(commands.Cog):
 
         if delete_message_days == None:
             delete_message_days = 0
-        if (ctx.user.guild_permissions.ban_members and (member and ctx.user.top_role.position > member.top_role.position)) or ctx.guild.owner == ctx.user:
+        if (ctx.user.guild_permissions.ban_members and (not member or (ctx.user.top_role.position > member.top_role.position))) or ctx.guild.owner == ctx.user:
             try:
                 await ctx.guild.ban(user, reason=reason, delete_message_days=delete_message_days)
             except Exception as e:

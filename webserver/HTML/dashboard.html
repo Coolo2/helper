@@ -646,45 +646,6 @@
         }
 
         function getJoinLeave(guildData) {
-            joinSelect = document.getElementById("serverSettings-joinleave-join-select")
-            joinInput = document.getElementById("serverSettings-joinleave-join-input")
-            autoroleSelect = document.getElementById("serverSettings-joinleave-autorole-select")
-            joinSelect.innerHTML = ``
-            autoroleSelect.innerHTML = ``
-                
-            for (channel of guildData.text_channels) {
-                if (channel.permissions.send_messages) {
-                    joinSelect.innerHTML = joinSelect.innerHTML + `<option value="${channel.id}">#${channel.name}</option>`
-                }
-            }
-
-            for (role of guildData.roles) {
-                if (role.color == "#000000") role.color = "#FFFFFF"
-                if (role.name == "@everyone") {role = {name:"None",id:"None",color:"#000000;font-size:50px"}}
-                autoroleSelect.innerHTML = autoroleSelect.innerHTML + `<option value="${role.id}" style="color:${role.color}">${role.name}</option>`
-            }
-
-            leaveSelect = document.getElementById("serverSettings-joinleave-leave-select")
-            leaveInput = document.getElementById("serverSettings-joinleave-leave-input")
-            leaveSelect.innerHTML = ``
-                
-            for (channel of guildData.text_channels) {
-                if (channel.permissions.send_messages) {
-                    leaveSelect.innerHTML = leaveSelect.innerHTML + `<option value="${channel.id}">#${channel.name}</option>`
-                }
-            }
-
-            if (guildData.joinleave.join) {
-                joinInput.value = guildData.joinleave.join.message
-                joinSelect.value = guildData.joinleave.join.channel
-            } else {joinInput.value = ``}
-            if (guildData.joinleave.leave) {
-                leaveInput.value = guildData.joinleave.leave.message
-                leaveSelect.value = guildData.joinleave.leave.channel
-            } else {leaveInput.value = ``}
-
-            if (guildData.joinleave.autorole) autoroleSelect.value = guildData.joinleave.autorole
-
             if (!guildData.has_permissions.manage_guild) {
                 for (item of ["leave-input", "leave-select", "join-input", "join-select", "autorole-select"]) {
                     document.getElementById("serverSettings-joinleave-" + item).setAttribute(`class`, `inputdisabled`)
@@ -708,6 +669,49 @@
                 document.getElementById("serverSettings-joinleave-join-button").setAttribute(`onclick`, `postData('/api/dashboard/setMessage', {type:'join',channel:document.getElementById('serverSettings-joinleave-join-select').value,message:document.getElementById('serverSettings-joinleave-join-input').value})`)
                 document.getElementById("serverSettings-joinleave-autorole-button").setAttribute(`onclick`, `postData('/api/dashboard/setAutorole', {role:document.getElementById('serverSettings-joinleave-autorole-select').value})`)
             }
+
+            joinSelect = document.getElementById("serverSettings-joinleave-join-select")
+            joinInput = document.getElementById("serverSettings-joinleave-join-input")
+            autoroleSelect = document.getElementById("serverSettings-joinleave-autorole-select")
+            joinSelect.innerHTML = ``
+            autoroleSelect.innerHTML = ``
+
+            leaveSelect = document.getElementById("serverSettings-joinleave-leave-select")
+            leaveInput = document.getElementById("serverSettings-joinleave-leave-input")
+            leaveSelect.innerHTML = ``
+            
+            joinSelect.innerHTML = joinSelect.innerHTML + `<option value="0">Disabled</option>`
+            leaveSelect.innerHTML = leaveSelect.innerHTML + `<option value="0">Disabled</option>`
+            for (channel of guildData.text_channels) {
+                if (channel.permissions.send_messages) {
+                    joinSelect.innerHTML = joinSelect.innerHTML + `<option value="${channel.id}">#${channel.name}</option>`
+                    leaveSelect.innerHTML = leaveSelect.innerHTML + `<option value="${channel.id}">#${channel.name}</option>`
+                }
+            }
+
+            for (role of guildData.roles) {
+                if (role.color == "#000000") role.color = "#FFFFFF"
+                if (role.name == "@everyone") {role = {name:"None",id:"None",color:"#000000;font-size:50px"}}
+                autoroleSelect.innerHTML = autoroleSelect.innerHTML + `<option value="${role.id}" style="color:${role.color}">${role.name}</option>`
+            }
+
+            if (guildData.joinleave.join) {
+                joinInput.value = guildData.joinleave.join.message
+                joinSelect.value = guildData.joinleave.join.channel
+            } else {
+                joinInput.value = ``
+                joinInput.disabled = true
+            }
+            if (guildData.joinleave.leave) {
+                leaveInput.value = guildData.joinleave.leave.message
+                leaveSelect.value = guildData.joinleave.leave.channel
+            } else {
+                leaveInput.value = ``
+            }
+
+            if (guildData.joinleave.autorole) autoroleSelect.value = guildData.joinleave.autorole
+
+            
         }
 
         async function postData(where, what) {

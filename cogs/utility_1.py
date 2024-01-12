@@ -98,8 +98,14 @@ Random number from **1** to **1,000,000**: {random.randint(1, 1000000)}""")
         page = await self.wiki.page(search[0].page_id)
         
         parsed = functions.format_html_basic(page.parsed)[:4095]
+        
+        if "\n" in parsed:
+            split, parsed = parsed.split("\n"), ""
+            for line in split:
+                if not line.endswith(", see ") and line != ".":
+                    parsed += line + "\n"
 
-        embed = discord.Embed(title=f"Here is a wikipedia article for {query}.", description=parsed, colour=var.embed)
+        embed = discord.Embed(title=f"Here is a wikipedia article for {page.title}.", description=parsed, colour=var.embed)
         embed.add_field(name="Read more", value=f"https://en.wikipedia.org/wiki/{page.title.replace(' ', '_')}")
         await ctx.response.send_message(embed=embed)
     

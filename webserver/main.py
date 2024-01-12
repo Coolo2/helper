@@ -359,9 +359,9 @@ def generate_app(bot : commands.Bot, hc : helper.HelperClient):
             return quart.jsonify({"error":"Invalid channel/message"})
         
         if member.guild_permissions.manage_guild:
-            if message.replace(" ", "") == "" and str(guild.id) in joinleave and choice in joinleave[str(guild.id)]:
+            if (channel == 0 or message.replace(" ", "") == "") and str(guild.id) in joinleave and choice in joinleave[str(guild.id)]:
                 del joinleave[str(guild.id)][choice]
-            elif message.replace(" ", "") == "" and (str(guild.id) not in joinleave or choice not in joinleave[str(guild.id)]):
+            elif (channel == 0 or message.replace(" ", "") == "") and (str(guild.id) not in joinleave or choice not in joinleave[str(guild.id)]):
                 pass
             elif len(message) > 1900:
                 return quart.jsonify({"error":"Message over 1900 characters"})
@@ -384,7 +384,9 @@ def generate_app(bot : commands.Bot, hc : helper.HelperClient):
 
             bot.loop.create_task(functions.log(bot, "dashboardUse", guild, embed))
 
-            return quart.jsonify({"data":joinleave[str(guild.id)], "returnMessage":f"Successfully set {choice} message to '{data['message']}'"})
+            if channel == 0 or message.replace(" ", "") == "":
+                return quart.jsonify({"data":joinleave.get(str(guild.id)) or {}, "returnMessage":f"Successfully disabled {choice} messages"})
+            return quart.jsonify({"data":joinleave.get(str(guild.id)) or {}, "returnMessage":f"Successfully set {choice} message to '{data['message']}'"})
 
         return quart.jsonify({"error":"Missing perms"})
 
