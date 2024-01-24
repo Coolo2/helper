@@ -70,7 +70,7 @@ class Warns(commands.Cog):
         embed.add_field(name="Warn ID", value=str(id), inline=False)
         embed.set_author(name=f"User: {member}", icon_url=member.avatar.url if member.avatar else None)
 
-        await functions.log(self.bot, "warns", interaction.guild, embed)
+        await functions.log(self.hc, "warns", interaction.guild, embed)
     
     @app_commands.command(name="warns", description="Check a users warns")
     @app_commands.guild_only()
@@ -144,7 +144,7 @@ class Warns(commands.Cog):
         embed.add_field(name="ID", value=warnid)
         embed.set_author(name=f"User: {member}", icon_url=member.avatar.url if member.avatar else None)
 
-        await functions.log(self.bot, "warns", interaction.guild, embed)
+        await functions.log(self.hc, "warns", interaction.guild, embed)
     
     @delwarn.autocomplete("warnid")
     async def _delwarn_warnid_autocomplete(self, interaction : discord.Interaction, namespace : str):
@@ -160,10 +160,6 @@ class Warns(commands.Cog):
             
         
         return [app_commands.Choice(name=c, value=c) for c in return_list]
-
-        
-    
-    
 
 async def setup(bot):
     await bot.add_cog(Warns(bot, bot.hc))

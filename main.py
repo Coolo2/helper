@@ -6,6 +6,7 @@ from EasyConversion.textformat import color as c
 from setup import var
 from webserver import main
 import helper
+import datetime
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -29,6 +30,7 @@ async def on_ready():
 
 @tasks.loop(seconds=5 if var.production else 30)
 async def _commit_db():
+    await hc.db.execute("DELETE FROM temp_nick_store WHERE time<?", (datetime.datetime.now()-datetime.timedelta(days=45),))
     await hc.db.connection.commit()
 
 async def setup_hook():
@@ -44,10 +46,7 @@ async def setup_hook():
     print('---\n ' + c.red)
     if var.reload_slash_commands:
         await bot.tree.sync()
-    
-    for g in var.guilds: 
-        await bot.tree.sync(guild=g)
-    await bot.tree.sync(guild=discord.Object(var.support_guild_id))
+        await bot.tree.sync(guild=discord.Object(var.support_guild_id))
     
     await hc.db.initialise()
     await hc.db.migrate_old()

@@ -13,6 +13,7 @@ def getTime():
 class Logging1(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.hc = bot.hc
     
     @commands.Cog.listener()
     async def on_message_delete(self, message):
@@ -28,7 +29,7 @@ class Logging1(commands.Cog):
         embed.set_footer(text="Original message sent at")
         embed.set_author(name="User: " + str(message.author), icon_url=message.author.avatar.url if message.author.avatar else None)
 
-        await functions.log(self.bot, "delete", message.guild, embed)
+        await functions.log(self.hc, "delete", message.guild, embed)
     
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload):
@@ -43,7 +44,7 @@ class Logging1(commands.Cog):
 
                 embed = discord.Embed(title="Message Deleted in #" + channel.name, description=desc, color=var.embedFail, timestamp=getTime())
 
-                await functions.log(self.bot, "delete", guild, embed)
+                await functions.log(self.hc, "delete", guild, embed)
         except Exception as e:
             pass
     
@@ -52,7 +53,7 @@ class Logging1(commands.Cog):
         embed = discord.Embed(title="Channel created", color=var.embedSuccess, timestamp=getTime())
         embed.add_field(name="Channel:", value= "<#" + str(channel.id) + ">", inline=False)
 
-        await functions.log(self.bot, "channelCreate", channel.guild, embed)
+        await functions.log(self.hc, "channelCreate", channel.guild, embed)
     
     @commands.Cog.listener()
     async def on_guild_channel_delete(self, channel):
@@ -60,26 +61,26 @@ class Logging1(commands.Cog):
         embed = discord.Embed(title="Channel deleted", color=var.embedFail, timestamp=getTime())
         embed.add_field(name="Channel:", value= "#" + channel.name, inline=False)
 
-        await functions.log(self.bot, "channelDelete", channel.guild, embed)
+        await functions.log(self.hc, "channelDelete", channel.guild, embed)
     
     @commands.Cog.listener()
     async def on_bulk_message_delete(self, messages):
         embed = discord.Embed(title="Bulk messages deleted", description="Unknown amount of messages deleted", color=var.embedFail, timestamp=getTime())
         embed.add_field(name="Channel:", value= "<#" + str(messages[0].channel.id) + ">", inline=False)
 
-        await functions.log(self.bot, "delete", messages[0].guild, embed)
+        await functions.log(self.hc, "delete", messages[0].guild, embed)
     
     @commands.Cog.listener()
     async def on_guild_role_create(self, role):
         embed = discord.Embed(title="Role created", description="<@&" + str(role.id) + ">", color=var.embedSuccess, timestamp=getTime())
 
-        await functions.log(self.bot, "roleCreate", role.guild, embed)
+        await functions.log(self.hc, "roleCreate", role.guild, embed)
     
     @commands.Cog.listener()
     async def on_guild_role_delete(self, role):
         embed = discord.Embed(title="Role deleted", description=role.name, color=var.embedFail, timestamp=getTime())
 
-        await functions.log(self.bot, "roleDelete", role.guild, embed)
+        await functions.log(self.hc, "roleDelete", role.guild, embed)
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
@@ -91,7 +92,7 @@ class Logging1(commands.Cog):
 
             embed.set_author(name="User: " + str(before), icon_url=after.avatar.url if after.avatar else None)
 
-            await functions.log(self.bot, "nicknameChange", after.guild, embed)
+            await functions.log(self.hc, "nicknameChange", after.guild, embed)
 
 
 async def setup(bot):

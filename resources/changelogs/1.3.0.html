@@ -1,5 +1,5 @@
-[~] 1.3.0 
-
+[24th Jan 2024] 1.3.0 - Backend changes 
+This update has majorly changed the backend of the bot which will make it faster and more reliable. Most changes are small but there are many of them 
 
 <u>Updated commands:</u>
 
@@ -10,15 +10,31 @@
  - Reasons in /warns now say "no reason provided" if there is no reason, rather than "None"
  - Warn logs are now more helpful
  - /warn_remove now has an autocomplete which visualises a user's warn IDs and other ID options
+- Economy backend tweaks 
+ - /leaderboard 
+  - is now vastly faster;
+  - and now has pages.
+ - Improved message formatting
+ - /shop 
+  - Tweaked rewards for /shop crates
+  - Shop error message when you do not have enough money now shows the cost of the item
+- /randomcommand now shows command description
+- /nick renamed to /nickname
 
-<u>Improvements:</u>
+<u>Other changes:</u>
 
-
+- Custom commands have had a backend overhaul meaning they are now faster to refresh and more reliable
 
 <u>Bug fixes:</u>
 
-
+- Command categories now always show on website commands list
+- Root commands with subcommands no longer display in /help 
+- /randomcommand now includes all commands
+- Fixed an issue where you could send messages to a chosen channel through join/leave messages triggered in another server
+- Fixed a bug where nickname and dashboard logging toggles were swapped behind the label
+- Fixed /rps not changing your balance
+- /mimic "enable/disable" tip message now shows the correct command
 
 <u>Website changes:</u>
 
-
+- Dashboard is faster again

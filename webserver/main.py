@@ -67,36 +67,12 @@ def generate_app(bot : commands.Bot, hc : helper.HelperClient):
     @app.route('/api/commands', methods=['GET'])
     async def commandsAPI():
         commands = []
-        done = []
-
-        tree : app_commands.CommandTree = bot.tree
-
-        commandsList = tree.walk_commands()
-
-        cmdIter : list[app_commands.Command] = []
-        for command in commandsList:
-            if type(command) == app_commands.Group:
-                for command1 in command.commands:
-                    if type(command1) == app_commands.Group:
-                        for command2 in command1.commands:
-                            cmdIter.append(command2)
-                    else:
-                        cmdIter.append(command1)
-            else:
-                cmdIter.append(command)
         
-        for command in cmdIter:
-            
-            if command.qualified_name not in done:
-                done.append(command.qualified_name)
-                category = None 
-                for categoryIter in resources.commands.json:
-                    if command.name in resources.commands.json[categoryIter]:
-                        category = categoryIter
+        for command in hc.commands_list:
+            category_name = helper.utils.category_name_from_cog_name(command.module)
+            options = [{"name":name, "description":str(option.description), "required":option.required} for name, option in command._params.items()]
 
-                options = [{"name":name, "description":str(option.description), "required":option.required} for name, option in command._params.items()]
-
-                commands.append({"name":command.qualified_name, "description":str(command.description), "options":options, "category":category})
+            commands.append({"name":command.qualified_name, "description":str(command.description), "options":options, "category":category_name})
         
         return quart.jsonify(commands)
 
@@ -193,15 +169,6 @@ def generate_app(bot : commands.Bot, hc : helper.HelperClient):
             user_id = encryption.decode(user[1], var.encryption_key)
         except AttributeError:
             return quart.redirect("/login")
-        
-        
-        events = functions.read_data_sync("databases/events.json")
-        
-        with open("databases/commands.json") as f:
-            commands = json.load(f)
-        
-        with open("databases/setup.json") as f:
-            joinleaveData = json.load(f)
 
         if "guild" in args:
             if bot.get_guild(int(args["guild"])) != None:
@@ -209,22 +176,33 @@ def generate_app(bot : commands.Bot, hc : helper.HelperClient):
                 member = guild.get_member(int(user_id))
                 bot_member = guild.get_member(bot.user.id)
 
-                warns_raw = await hc.db.fetchall("SELECT id, user, time, mod, reason FROM warns WHERE guild=?", (guild.id,))
+                warns_raw = await hc.db.fetchall("SELECT id, CAST(user AS text), time, CAST(mod AS text), reason FROM warns WHERE guild=?", (guild.id,))
+                commands_raw = await hc.db.fetchall("SELECT name, value FROM custom_commands WHERE guild=?", (guild.id,))
+                joinleave_raw = await hc.db.fetchone("SELECT CAST(join_channel AS text), join_message, CAST(leave_channel AS text), leave_message FROM guildconfig_joinleave WHERE guild=?", (guild.id,))
+                logging_raw = await hc.db.fetchone("SELECT CAST(channel AS text), ignore FROM guildconfig_logging WHERE guild=?", (guild.id,))
+                autorole_raw = await hc.db.fetchone("SELECT CAST(role AS text) FROM guildconfig_autorole WHERE guild=?", (guild.id,))
+                events_raw = await hc.db.fetchall("SELECT amount, what, action FROM events WHERE guild=?", (guild.id,))
+                
+                if logging_raw:
+                    logging_raw = list(logging_raw)
+                    if type(logging_raw[1]) == str and "," in logging_raw[1]:
+                        logging_raw[1] = logging_raw[1].split(",")
 
                 value[str(guild.id)] = {
                     "name":guild.name,
                     "id":str(guild.id),
                     "icon":guild.icon.key if guild.icon else "undefined",
                     "has_permissions":{"manage_messages":member.guild_permissions.manage_messages, "manage_guild":member.guild_permissions.manage_guild},
-                    "joinleave":joinleaveData[str(guild.id)] if str(guild.id) in joinleaveData else {},
+                    "joinleave":joinleave_raw,
                     "warns":warns_raw,
                     "owner":str(guild.owner_id),
                     "roles":[{"name":role.name,"id":str(role.id),"color":str(role.color)} for role in guild.roles],
-                    "events":events[str(guild.id)] if str(guild.id) in events else [],
+                    "events":events_raw,
                     "members":[{"id":str(member.id),"tag":str(member)} for member in guild.members if member.id in [w[1] for w in warns_raw]+[w[3] for w in warns_raw]],
                     "text_channels":[{"name":channel.name,"id":str(channel.id), "permissions":{"send_messages":True if channel.permissions_for(bot_member).send_messages else False}} for channel in guild.text_channels],
-                    "commands":commands[str(guild.id)] if str(guild.id) in commands else {},
-                    "logging":joinleaveData[str(guild.id)]["logging"] if str(guild.id) in joinleaveData and "logging" in joinleaveData[str(guild.id)] else {}
+                    "commands":commands_raw,
+                    "logging":logging_raw,
+                    "autorole":autorole_raw[0] if autorole_raw else None
                 }
         else:
             for guild in bot.guilds:
@@ -249,9 +227,6 @@ def generate_app(bot : commands.Bot, hc : helper.HelperClient):
         except AttributeError:
             return quart.redirect("/login")
 
-        with open("databases/setup.json") as f:
-            joinleave = json.load(f)
-
         data = await quart.request.json
         guild = bot.get_guild(int(data['guild']))
         member = guild.get_member(int(user_id))
@@ -262,27 +237,28 @@ def generate_app(bot : commands.Bot, hc : helper.HelperClient):
             return quart.jsonify({"error":"Invalid role"})
         
         if member.guild_permissions.manage_guild:
-            if str(guild.id) not in joinleave:
-                joinleave[str(guild.id)] = {}
-            if role == "None" and "autorole" in joinleave[str(guild.id)]:
+            exists = await hc.db.fetchone("SELECT guild FROM guildconfig_autorole WHERE guild=?", (guild.id,))
+            
+            if role == "None":
                 what = "removed"
-                del joinleave[str(guild.id)]["autorole"]
-            elif role == "None":
-                what = "removed"
+                await hc.db.execute("DELETE FROM guildconfig_autorole WHERE guild=?", (guild.id,))
             else:
                 what = "set"
-                joinleave[str(guild.id)]["autorole"] = str(role)
-            functions.save_data_sync("databases/setup.json", joinleave)
-            functions.read_load_sync("databases/setup.json", joinleave)
+                if exists:
+                    await hc.db.execute("UPDATE guildconfig_autorole SET role=? WHERE guild=?", (int(role), guild.id))
+                else:
+                    await hc.db.execute("INSERT INTO guildconfig_autorole VALUES (?, ?)", (guild.id, int(role)))
 
             # Log update if available
             embed = discord.Embed(title="Autorole role updated", color=var.embed, timestamp=datetime.datetime.now())
             embed.add_field(name="New:", value=guild.get_role(int(role)).mention, inline=False)
             embed.set_author(name=f"User: {member}", icon_url=member.avatar.url if member.avatar else None)
 
-            bot.loop.create_task(functions.log(bot, "dashboardUse", guild, embed))
+            bot.loop.create_task(functions.log(hc, "dashboardUse", guild, embed))
+
+            autorole_raw = await hc.db.fetchone("SELECT CAST(role AS text) FROM guildconfig_autorole WHERE guild=?", (guild.id,))
                 
-            return quart.jsonify({"data":joinleave[str(guild.id)], "returnMessage":f"Successfully {what} autorole role"})
+            return quart.jsonify({"data":autorole_raw[0] if autorole_raw else None, "returnMessage":f"Successfully {what} autorole role"})
 
         return quart.jsonify({"error":"Missing perms"})
 
@@ -294,27 +270,29 @@ def generate_app(bot : commands.Bot, hc : helper.HelperClient):
         except AttributeError:
             return quart.redirect("/login")
 
-        with open("databases/setup.json") as f:
-            joinleave = json.load(f)
-
         data = await quart.request.json
         guild = bot.get_guild(int(data['guild']))
         member = guild.get_member(int(user_id))
+
+        exists = await hc.db.fetchone("SELECT guild FROM guildconfig_logging WHERE guild=?", (guild.id,))
 
         try:
             loggingData = data["logging"]
         except AttributeError:
             return quart.jsonify({"error":"Invalid role"})
         
-        if "channel" in loggingData:
-            if loggingData["channel"] == "0":
-                del loggingData["channel"]
+        if loggingData.get("channel") == "0":
+            del loggingData["channel"]
+        
+        print(loggingData)
         
         if member.guild_permissions.manage_guild:
-            if str(guild.id) not in joinleave:
-                joinleave[str(guild.id)] = {}
 
-            joinleave[str(guild.id)]["logging"] = loggingData
+            if exists:
+                await hc.db.execute("UPDATE guildconfig_logging SET channel=?, ignore=?", (
+                    int(loggingData.get("channel")) if loggingData.get("channel") else None, ",".join(loggingData.get("ignore")) if loggingData.get("ignore") else None))
+            else:
+                await hc.db.execute("INSERT INTO guildconfig_logging VALUES (?, ?, ?)", (guild.id, int(loggingData.get("channel")) if loggingData.get("channel") else None, ",".join(loggingData.get("ignore")) if loggingData.get("ignore") else None))
 
             loggingSettings = "_ _ "
             
@@ -330,12 +308,12 @@ def generate_app(bot : commands.Bot, hc : helper.HelperClient):
             embed.add_field(name="Settings:", value=loggingSettings, inline=False)
             embed.set_author(name=f"User: {member}", icon_url=member.avatar.url if member.avatar else None)
 
-            bot.loop.create_task(functions.log(bot, "dashboardUse", guild, embed))
+            bot.loop.create_task(functions.log(hc, "dashboardUse", guild, embed))
 
-            functions.save_data_sync("databases/setup.json", joinleave)
-            functions.read_load_sync("databases/setup.json", joinleave)
+            logging_raw = await hc.db.fetchone("SELECT CAST(channel AS text), ignore FROM guildconfig_logging WHERE guild=?", (guild.id,))
+            
                 
-            return quart.jsonify({"data":joinleave[str(guild.id)], "returnMessage":f"Successfully set logging settings"})
+            return quart.jsonify({"data":logging_raw, "returnMessage":f"Successfully set logging settings"})
 
         return quart.jsonify({"error":"Missing perms"})
 
@@ -347,9 +325,6 @@ def generate_app(bot : commands.Bot, hc : helper.HelperClient):
         except AttributeError:
             return quart.redirect("/login")
         
-        with open("databases/setup.json") as f:
-            joinleave = json.load(f)
-
         data = await quart.request.json
         guild = bot.get_guild(int(data['guild']))
         member = guild.get_member(int(user_id))
@@ -358,25 +333,23 @@ def generate_app(bot : commands.Bot, hc : helper.HelperClient):
             channel = int(data["channel"])
             message = data["message"]
             choice = data["type"]
+
+            if choice not in ["join", "leave"]: raise
         except AttributeError:
             return quart.jsonify({"error":"Invalid channel/message"})
         
         if member.guild_permissions.manage_guild:
-            if (channel == 0 or message.replace(" ", "") == "") and str(guild.id) in joinleave and choice in joinleave[str(guild.id)]:
-                del joinleave[str(guild.id)][choice]
-            elif (channel == 0 or message.replace(" ", "") == "") and (str(guild.id) not in joinleave or choice not in joinleave[str(guild.id)]):
-                pass
+            if (channel == 0 or message.replace(" ", "") == ""):
+                await hc.db.execute(f"UPDATE guildconfig_joinleave SET {choice}_channel=?, {choice}_message=?", (None, None))
             elif len(message) > 1900:
                 return quart.jsonify({"error":"Message over 1900 characters"})
             else:
-                if str(guild.id) not in joinleave:
-                    joinleave[str(guild.id)] = {}
-                if choice not in joinleave[str(guild.id)]:
-                    joinleave[str(guild.id)][choice] = {}
-                joinleave[str(guild.id)][choice] = {"channel":str(channel),"message":message}
+                exists = await hc.db.fetchone("SELECT guild FROM guildconfig_joinleave WHERE guild=?", (guild.id,))
 
-            functions.save_data_sync("databases/setup.json", joinleave)
-            functions.read_load_sync("databases/setup.json", joinleave)
+                if exists:
+                    await hc.db.execute(f"UPDATE guildconfig_joinleave SET {choice}_channel=?, {choice}_message=?", (channel, message))
+                else:
+                    await hc.db.execute(f"INSERT INTO guildconfig_joinleave (guild, {choice}_channel, {choice}_message) VALUES (?, ?, ?)", (guild.id, channel, message))
 
             # Log update if available
             embed = discord.Embed(title=f"{choice.title()} message updated", color=var.embed, timestamp=datetime.datetime.now())
@@ -385,11 +358,10 @@ def generate_app(bot : commands.Bot, hc : helper.HelperClient):
             embed.add_field(name="Message:", value=message, inline=False)
             embed.set_author(name=f"User: {member}", icon_url=member.avatar.url)
 
-            bot.loop.create_task(functions.log(bot, "dashboardUse", guild, embed))
+            bot.loop.create_task(functions.log(hc, "dashboardUse", guild, embed))
 
-            if channel == 0 or message.replace(" ", "") == "":
-                return quart.jsonify({"data":joinleave.get(str(guild.id)) or {}, "returnMessage":f"Successfully disabled {choice} messages"})
-            return quart.jsonify({"data":joinleave.get(str(guild.id)) or {}, "returnMessage":f"Successfully set {choice} message to '{data['message']}'"})
+            joinleave_raw = await hc.db.fetchone("SELECT CAST(join_channel AS text), join_message, CAST(leave_channel AS text), leave_message FROM guildconfig_joinleave WHERE guild=?", (guild.id,))
+            return quart.jsonify({"data":joinleave_raw, "returnMessage":f"Successfully disabled {choice} messages" if channel == 0 or message.replace(" ", "") == "" else f"Successfully set {choice} message to '{data['message']}'"})
 
         return quart.jsonify({"error":"Missing perms"})
 
@@ -400,15 +372,27 @@ def generate_app(bot : commands.Bot, hc : helper.HelperClient):
             user_id = encryption.decode(user[1], var.encryption_key)
         except AttributeError:
             return quart.redirect("/login")
-        events = functions.read_data_sync("databases/events.json")
+        
         data = await quart.request.json
         guild = bot.get_guild(int(data['guild']))
         member = guild.get_member(int(user_id))
+
+        print(data)
+
         if member.guild_permissions.manage_guild:
             if len(data["events"]) > 10:
                 return quart.jsonify({"error":"You have hit the maximum amount of events for the server (10)!"})
-            events[str(guild.id)] = data["events"]
-            functions.save_data_sync("databases/events.json", events)
+            
+            for event_raw in data["events"]:
+                exists = await hc.db.fetchone("SELECT what FROM events WHERE guild=? AND amount=? AND what=? AND action=?", (guild.id, int(event_raw["amount"]), event_raw["what"], event_raw["action"]))
+                print(event_raw, exists)
+                if not exists:
+                    await hc.db.execute("INSERT INTO events VALUES(?, ?, ?, ?)", (guild.id, int(event_raw["amount"]), event_raw["what"], event_raw["action"]))
+            
+            for event in await hc.db.fetchall("SELECT amount, what, action FROM events WHERE guild=?", (guild.id,)):
+                if {"amount":str(event[0]), "what":event[1], "action":event[2]} not in data["events"]:
+                    print("not in")
+                    await hc.db.execute("DELETE FROM events WHERE guild=? AND amount=? AND what=? AND action=?", (guild.id, event[0], event[1], event[2])) 
 
             eventsText = "_ _ "
             counter = 0
@@ -421,7 +405,7 @@ def generate_app(bot : commands.Bot, hc : helper.HelperClient):
             embed.add_field(name="Events:", value=eventsText, inline=False)
             embed.set_author(name=f"User: {member}", icon_url=member.avatar.url if member.avatar else None)
 
-            bot.loop.create_task(functions.log(bot, "dashboardUse", guild, embed))
+            bot.loop.create_task(functions.log(hc, "dashboardUse", guild, embed))
 
             return quart.jsonify({"returnMessage":"Successfully set events"})
         
@@ -435,63 +419,54 @@ def generate_app(bot : commands.Bot, hc : helper.HelperClient):
         except AttributeError:
             return quart.redirect("/login")
 
-        commands = functions.read_data_sync("databases/commands.json")
-
         data = await quart.request.json
         guild = bot.get_guild(int(data['guild']))
         member = guild.get_member(int(user_id))
+
+        commands_raw = await hc.db.fetchall("SELECT name, value FROM custom_commands WHERE guild=?", (guild.id,))
 
         if member.guild_permissions.manage_guild:
             if len(data["commands"]) > 10:
                 return quart.jsonify({"error":"You have hit the maximum amount of custom commands for the server (10)!"})
             
-            did = False
-            did2 = False
-            delList = []
+            error_command_empty = False
+            
+            for command_raw in commands_raw:
+                if command_raw not in data["commands"]:
+                    await hc.db.execute("DELETE FROM custom_commands WHERE guild=? AND name=?", (guild.id, command_raw[0]))
 
-            for cmd in data["commands"]:
-                # SlashCommand
-                for command in bot.commands:
-                    if cmd == command.name and command.guild_ids == [guild.id] and "Custom Command" in command.description:
-                        pass
-                    elif cmd == command.name:
-                        delList.append(cmd)
-                        did = True
+            for command_name, command_value in data["commands"].items():
+                if command_name.replace(" ", "") == "" or command_value.replace(" ", "") == "":
+                    error_command_empty = True
+                    continue
+
+                exists = await hc.db.fetchone("SELECT name FROM custom_commands WHERE guild=? AND name=? AND value=?", (guild.id, command_name, command_value))
                 
-                if cmd.replace(" ", "") == "" or data["commands"][cmd].replace(" ", "") == "":
-                    delList.append(cmd)
-                    did2 = True
-            
-            for item in delList:
-                del data["commands"][item]
-            
-            
+                if not exists:
+                    name_exists = await hc.db.fetchone("SELECT name FROM custom_commands WHERE guild=? AND name=?", (guild.id, command_name))
 
-            commands[str(guild.id)] = data["commands"]
+                    if not name_exists:
+                        await hc.db.execute("INSERT INTO custom_commands VALUES (?, ?, ?)", (guild.id, command_name, command_value))
+                    else:
+                        await hc.db.execute("UPDATE custom_commands SET value=? WHERE guild=? AND name=?", (command_value, guild.id, command_name))
 
-            functions.save_data_sync("databases/commands.json", commands)
-            functions.read_load_sync("databases/commands.json", commands)
-
+            commands_raw = await hc.db.fetchall("SELECT name, value FROM custom_commands WHERE guild=?", (guild.id,))
             
-            bot.loop.create_task(customCommands.sync_custom_commands(bot, guild=guild))
+            bot.loop.create_task(customCommands.sync_custom_commands(hc, guild=guild))
 
             # Log update if available
             embed = discord.Embed(title="Custom Commands updated", color=var.embed, timestamp=datetime.datetime.now())
             embed.add_field(name="Commands:", value=f"Too many to send here. View them on the [Web Dashboard]({var.address}#dashboard)", inline=False)
             embed.set_author(name=f"User: {member}", icon_url=member.avatar.url if member.avatar else None)
 
-            bot.loop.create_task(functions.log(bot, "dashboardUse", guild, embed))
+            bot.loop.create_task(functions.log(hc, "dashboardUse", guild, embed))
             
+            if error_command_empty:
+                return quart.jsonify({"error":"One or more of your custom command names or responses were empty! Removed them.", "commands":commands_raw})
 
-            if did == True:
-                return quart.jsonify({"error":"One or more of your custom commands already exist! Removed them.", "commands":commands[str(guild.id)]})
-            if did2 == True:
-                return quart.jsonify({"error":"One or more of your custom commands were empty! Removed them.", "commands":commands[str(guild.id)]})
-
-            return quart.jsonify({"returnMessage":"Successfully set commands. This may take up to a minute to refresh.", "commands":commands[str(guild.id)]})
-
+            return quart.jsonify({"returnMessage":"Successfully set commands. This may take up to a minute to refresh.", "commands":commands_raw})
         
-        return quart.jsonify({"error":"Missing perms", "commands":commands[str(guild.id)]})
+        return quart.jsonify({"error":"Missing perms", "commands":commands_raw})
 
     @app.route('/api/dashboard/delWarn', methods=['POST'])
     async def delWarn():
@@ -518,7 +493,7 @@ def generate_app(bot : commands.Bot, hc : helper.HelperClient):
             embed.add_field(name="Moderator", value=str(member))
             embed.set_author(name=f"User: {member}", icon_url=member.avatar.url if member.avatar else None)
 
-            bot.loop.create_task(functions.log(bot, "warns", guild, embed))
+            bot.loop.create_task(functions.log(hc, "warns", guild, embed))
 
             return quart.jsonify(warns)
 

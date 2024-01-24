@@ -4,41 +4,41 @@ from setup import var
 import discord
 import random
 import aiohttp
+import helper
 
 class Handling(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot : discord.Client):
         self.bot = bot
+        self.hc : helper.HelperClient = bot.hc
     
     @commands.Cog.listener()
-    async def on_member_join(self, member):
-        data = await functions.read_data("databases/setup.json")
-        if str(member.guild.id) in data:
-            if "join" in data[str(member.guild.id)]:
+    async def on_member_join(self, member : discord.Member):
+        joinleave_raw = await self.hc.db.fetchone("SELECT join_channel, join_message, leave_channel, leave_message FROM guildconfig_joinleave WHERE guild=?", (member.guild.id,))
+        if joinleave_raw:
+            if joinleave_raw[0] and joinleave_raw[1]:
                 try:
-                    await self.bot.get_channel(int(data[str(member.guild.id)]["join"]["channel"])).send(functions.replaceMessage(member,data[str(member.guild.id)]["join"]["message"]))
+                    await member.guild.get_channel(joinleave_raw[0]).send(functions.replaceMessage(member, joinleave_raw[1]))
                 except Exception as e:
                     pass
-            if "autorole" in data[str(member.guild.id)]:
-                try:
-                    await member.add_roles(member.guild.get_role(int(data[str(member.guild.id)]["autorole"])))
-                except Exception as e:
-                    print(e)   
+        autorole_raw = await self.hc.db.fetchone("SELECT role FROM guildconfig_autorole WHERE guild=?", (member.guild.id,))
+        if autorole_raw and autorole_raw[0]:
+            try:
+                await member.add_roles(member.guild.get_role(autorole_raw[0]))
+            except Exception as e:
+                print(e)   
     
     @commands.Cog.listener()
-    async def on_member_remove(self, member):
-        data = await functions.read_data("databases/setup.json")
-        if str(member.guild.id) in data:
-            if "leave" in data[str(member.guild.id)]:
+    async def on_member_remove(self, member : discord.Member):
+        joinleave_raw = await self.hc.db.fetchone("SELECT leave_channel, leave_message FROM guildconfig_joinleave WHERE guild=?", (member.guild.id,))
+        if joinleave_raw:
+            if joinleave_raw[0] and joinleave_raw[1]:
                 try:
-                    await self.bot.get_channel(int(data[str(member.guild.id)]["leave"]["channel"])).send(functions.replaceMessage(member,data[str(member.guild.id)]["leave"]["message"]))
+                    await member.guild.get_channel(joinleave_raw[0]).send(functions.replaceMessage(member, joinleave_raw[1]))
                 except Exception as e:
-                    print(e)
+                    pass
     
     @commands.Cog.listener()
     async def on_guild_join(self, guild : discord.Guild):
-
-        # Channel message
-
         print(guild.name)
 
         suitable_channel : discord.TextChannel = None 
@@ -70,7 +70,7 @@ See my commands with `/help`
 
         em = discord.Embed(title="Im In A New Server!", description=f"Server Name: **{guild.name}**", color=var.embedSuccess)
         em.add_field(name="Members: ", value=len(guild.members))
-        em.set_thumbnail(url=guild.icon.url)
+        em.set_thumbnail(url=guild.icon.url if guild.icon else None)
         em.add_field(name="ID: ", value= str(guild.id))
         em.add_field(name="Servers: ", value=f"I am now in **{len(self.bot.guilds)}** servers!")
         await server_channel.send(embed=em)
@@ -88,7 +88,7 @@ See my commands with `/help`
         server_channel = self.bot.get_channel(var.support_guild_add_remove_channel)
 
         em = discord.Embed(title="I Was Removed From A Server.", description=f"Server Name: **{guild.name}**", color=var.embedFail)
-        em.set_thumbnail(url=guild.icon.url)
+        em.set_thumbnail(url=guild.icon.url if guild.icon else None)
         em.add_field(name="ID: ", value= str(guild.id))
         em.add_field(name="Servers: ", value=f"I am now in **{len(self.bot.guilds)}** servers!")
         await server_channel.send(embed=em)

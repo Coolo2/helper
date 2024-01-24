@@ -31,7 +31,6 @@ db_path = ".db"
 
 # Slash Commands
 production = False
-guilds = [discord.Object(450914634963353600)]
 reload_slash_commands = False
 reload_custom_commands = True
 

@@ -20,6 +20,7 @@ class Fun1(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.runtimeDadJoke = {}
+        self.hc : helper.HelperClient = bot.hc
 
     @app_commands.command(name="deepfry", description="Deepfry an image")
     @app_commands.describe(user="A user to deepfry the image of", url="A url-image to deepfry", attachment="An optional attachment to deepfry")
@@ -257,23 +258,19 @@ class Fun1(commands.Cog):
         except Exception as e:
             raise helper.errors.MildErr("Final response too long!")
     
-
-    
     mimic = app_commands.Group(name="mimic", description="Mimic another user!", guild_only=True)
 
     @mimic.command(name="toggle", description="Toggle (enable/disable) mimicking for yourself")
     async def _mimic_toggle(self, interaction : discord.Interaction):
-        data = await functions.read_data("databases/userSettings.json")
 
-        if str(interaction.user.id) not in data:
-            data[str(interaction.user.id)] = {}
-        
-        if "disableMimic" not in data[str(interaction.user.id)]:
-            data[str(interaction.user.id)]["disableMimic"] = {}
+        mimic_disabled = await self.hc.db.fetchone("SELECT flag_value FROM flags_user_guild WHERE user=? AND guild=? AND flag_name='disable_mimic'", (interaction.user.id, interaction.guild.id))
 
-        data[str(interaction.user.id)]["disableMimic"][str(interaction.guild.id)] = True if not data[str(interaction.user.id)]["disableMimic"].get(str(interaction.guild.id)) else False
+        if mimic_disabled:
+            await self.hc.db.execute("DELETE FROM flags_user_guild WHERE user=? AND guild=? AND flag_name='disable_mimic'", (interaction.user.id, interaction.guild.id))
+        else:
+            await self.hc.db.execute("INSERT INTO flags_user_guild VALUES (?, ?, 'disable_mimic', 1)", (interaction.user.id, interaction.guild.id))
 
-        s = "enabled" if data[str(interaction.user.id)]["disableMimic"][str(interaction.guild.id)] == False else "disabled"
+        s = "enabled" if mimic_disabled else "disabled"
 
         await interaction.response.send_message(embed=
             discord.Embed(
@@ -283,51 +280,36 @@ class Fun1(commands.Cog):
             )
         )
 
-        await functions.save_data("databases/userSettings.json", data)
-
     @mimic.command(name="mimic", description="Mimic another user!")
     @app_commands.describe(user="The member to mimic (Can be enable/disable to toggle mimicking for yourself)", message="The message to send as the member")
     async def _mimic(
             self, 
-            ctx : discord.Interaction, 
+            interaction : discord.Interaction, 
             user : discord.User, 
             message : str
     ):
 
         start_time = datetime.now()
 
-        data = await functions.read_data("databases/userSettings.json")
-
         if message == None:
             raise commands.MissingRequiredArgument(inspect.Parameter("message", kind=inspect.Parameter.POSITIONAL_ONLY))
         
-        if str(user.id) in data:
-            if "disableMimic" in data[str(user.id)]:
-                if str(ctx.guild.id) in data[str(user.id)]["disableMimic"]:
-                    if data[str(user.id)]["disableMimic"][str(ctx.guild.id)] == True:
-                        raise helper.errors.MildErr(user.mention + " has disabled mimicking for this server!")
-        
-        if str(ctx.user.id) not in data:
-            data[str(ctx.user.id)] = {}
-        if "data" not in data[str(ctx.user.id)]:
-            data[str(ctx.user.id)]["data"] = {}
-        if "mimicPrompt" not in data[str(ctx.user.id)]["data"]:
-            data[str(ctx.user.id)]["data"]["mimicPrompt"] = True
-
-            await ctx.response.send_message(f"Top tip! You can use `/mimic [enable/disable]` to disable/enable someone mimicking you on this server!", ephemeral=True)
+        mimic_disabled = await self.hc.db.fetchone("SELECT flag_value FROM flags_user_guild WHERE user=? AND guild=? AND flag_name='disable_mimic'", (user.id, interaction.guild.id))
+        if mimic_disabled:
+            raise helper.errors.MildErr(user.mention + " has disabled mimicking for this server!")
         
         try:
-            webhooks = await ctx.channel.webhooks()
+            webhooks = await interaction.channel.webhooks()
 
             if len(webhooks) == 0:
-                webhook = await ctx.channel.create_webhook(name="Helper Webhook")
+                webhook = await interaction.channel.create_webhook(name="Helper Webhook")
             else:
                 webhook = webhooks[0]
         except Exception as e:
             print(e)
             raise commands.BotMissingPermissions(["manage_webhooks"])
 
-        if not ctx.user.guild_permissions.mention_everyone:
+        if not interaction.user.guild_permissions.mention_everyone:
             allowed_mentions = discord.AllowedMentions(everyone=False, roles=False, users=True)
         else:
             allowed_mentions = discord.AllowedMentions(everyone=True, roles=True, users=True)
@@ -342,7 +324,13 @@ class Fun1(commands.Cog):
 
         timeElapsed = round((datetime.now() - start_time).total_seconds(), 3)
 
-        await ctx.response.send_message(f"Complete `{timeElapsed}s`", ephemeral=True)
+        mimic_prompt_seen = await self.hc.db.fetchone("SELECT flag_value FROM flags_user WHERE user=? AND flag_name='mimic_prompt'", (interaction.user.id,))
+        if not mimic_prompt_seen:
+            await self.hc.db.execute("INSERT INTO flags_user VALUES (?, 'mimic_prompt', 1)", (interaction.user.id,))
+
+            return await interaction.response.send_message(f"Top tip! You can use `/mimic toggle` to disable/enable people mimicking you on this server!", ephemeral=True)
+
+        await interaction.response.send_message(f"Complete `{timeElapsed}s`", ephemeral=True)
         
 
 async def setup(bot):

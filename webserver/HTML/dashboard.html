@@ -121,14 +121,14 @@
                 <br><input type="checkbox" id="serverSettings-logging-roleDelete" oninput="saveLogging()" checked>
                 <label for="serverSettings-logging-roleDelete" style="color:white"> Role Delete</label>
 
-                <br><input type="checkbox" id="serverSettings-logging-dashboardUse" oninput="saveLogging()" checked>
-                <label for="serverSettings-logging-dashboardUse" style="color:white"> Nickname Change </label>
+                <br><input type="checkbox" id="serverSettings-logging-nicknameChange" oninput="saveLogging()" checked>
+                <label for="serverSettings-logging-nicknameChange" style="color:white"> Nickname Change </label>
                 
                 <br><input type="checkbox" id="serverSettings-logging-warns" oninput="saveLogging()" checked>
                 <label for="serverSettings-logging-warns" style="color:white"> Warns </label>
 
-                <br><input type="checkbox" id="serverSettings-logging-nicknameChange" oninput="saveLogging()" checked>
-                <label for="serverSettings-logging-nicknameChange" style="color:white"> Dashbord Use </label>
+                <br><input type="checkbox" id="serverSettings-logging-dashboardUse" oninput="saveLogging()" checked>
+                <label for="serverSettings-logging-dashboardUse" style="color:white"> Dashbord Use </label>
 
             </div>
             
@@ -341,7 +341,6 @@
                 document.getElementById("serverSettings-customcommands-save").setAttribute("class", "button");document.getElementById("serverSettings-customcommands-table-row-button").removeAttribute("disabled")
                 document.getElementById("serverSettings-customcommands-table-row-button").setAttribute("class", "button");document.getElementById("serverSettings-customcommands-save").removeAttribute("disabled")
             }
-
             
             final = {}
             
@@ -514,14 +513,14 @@
                 loggingChannel.setAttribute(`class`, `input`)
             }
             if (guildData.logging) {
-                if (guildData.logging.channel) {
-                    loggingChannel.value = guildData.logging.channel
+                if (guildData.logging[0]) {
+                    loggingChannel.value = guildData.logging[0]
                 }
-                if (guildData.logging.ignore) {
+                if (guildData.logging[1]) {
                     for (option of loggingOptions) {
                         element = document.getElementById("serverSettings-logging-" + option)
 
-                        if (guildData.logging.ignore.includes(option)) {
+                        if (guildData.logging[1].includes(option)) {
                             element.checked = false
                         } else element.checked = true
 
@@ -575,9 +574,9 @@
                     newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-events-table-row-item"><i id="serverSettings-events-table-row-delete-missingperms" class="fa fa-times" aria-hidden="true"></i></th>`
                 }
                 
-                document.getElementById(`serverSettings-events-table-row-${table.rows.length}-amount`).value = event.amount
-                document.getElementById(`serverSettings-events-table-row-${table.rows.length}-what`).value = event.what
-                document.getElementById(`serverSettings-events-table-row-${table.rows.length}-action`).value = event.action
+                document.getElementById(`serverSettings-events-table-row-${table.rows.length}-amount`).value = event[0]
+                document.getElementById(`serverSettings-events-table-row-${table.rows.length}-what`).value = event[1]
+                document.getElementById(`serverSettings-events-table-row-${table.rows.length}-action`).value = event[2]
             }
 
             if (table.rows.length == 10 || !guildData.has_permissions.manage_guild) {
@@ -592,7 +591,7 @@
             var table = document.getElementById('serverSettings-customcommands-table').getElementsByTagName('tbody')[0];
             table.innerHTML = ``
             
-            for (command in guildData.commands) {
+            for (command of guildData.commands) {
                 newRow = table.insertRow(table.rows.length);
                 newRow.id = `serverSettings-customcommands-table-row serverSettings-customcommands-table-row-${table.rows.length}`
                 
@@ -606,8 +605,8 @@
                     newRow.innerHTML = newRow.innerHTML + `<th id="serverSettings-customcommands-table-row-item"><i id="serverSettings-customcommands-table-row-delete-missingperms" class="fa fa-times" aria-hidden="true"></i></th>`
                 }
                 
-                document.getElementById(`serverSettings-customcommands-table-row-${table.rows.length}-name`).value = command
-                document.getElementById(`serverSettings-customcommands-table-row-${table.rows.length}-response`).value = guildData.commands[command]
+                document.getElementById(`serverSettings-customcommands-table-row-${table.rows.length}-name`).value = command[0]
+                document.getElementById(`serverSettings-customcommands-table-row-${table.rows.length}-response`).value = command[1]
 
                 document.getElementById(`serverSettings-customcommands-table-row-${table.rows.length}-name`).oninput = onInputCustomCommandName
             }
@@ -668,6 +667,8 @@
                 document.getElementById("serverSettings-joinleave-autorole-button").setAttribute(`onclick`, `postData('/api/dashboard/setAutorole', {role:document.getElementById('serverSettings-joinleave-autorole-select').value})`)
             }
 
+            
+
             joinSelect = document.getElementById("serverSettings-joinleave-join-select")
             joinInput = document.getElementById("serverSettings-joinleave-join-input")
             autoroleSelect = document.getElementById("serverSettings-joinleave-autorole-select")
@@ -693,21 +694,20 @@
                 autoroleSelect.innerHTML = autoroleSelect.innerHTML + `<option value="${role.id}" style="color:${role.color}">${role.name}</option>`
             }
 
-            if (guildData.joinleave.join) {
-                joinInput.value = guildData.joinleave.join.message
-                joinSelect.value = guildData.joinleave.join.channel
+            if (guildData.joinleave && guildData.joinleave[0]) {
+                joinInput.value = guildData.joinleave[1]
+                joinSelect.value = guildData.joinleave[0]
             } else {
                 joinInput.value = ``
-                joinInput.disabled = true
             }
-            if (guildData.joinleave.leave) {
-                leaveInput.value = guildData.joinleave.leave.message
-                leaveSelect.value = guildData.joinleave.leave.channel
+            if (guildData.joinleave && guildData.joinleave[2]) {
+                leaveInput.value = guildData.joinleave[3]
+                leaveSelect.value = guildData.joinleave[2]
             } else {
                 leaveInput.value = ``
             }
 
-            if (guildData.joinleave.autorole) autoroleSelect.value = guildData.joinleave.autorole
+            if (guildData.autorole) autoroleSelect.value = guildData.autorole
 
             
         }

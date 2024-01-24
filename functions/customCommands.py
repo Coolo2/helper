@@ -6,27 +6,25 @@ from discord.ext import commands
 from discord import app_commands
 
 from setup import var
+import helper
 
 n = None
 
-def testFunc(cmdGuild, cmdName, cmdValue):
+def testFunc(hc : helper.HelperClient, guild_id : int, cmdName, cmdValue):
 
     async def testFuncInside(ctx : discord.Interaction, arg1 : str =n, arg2 : str =n, arg3 : str =n, arg4 : str =n, arg5 : str =n, arg6 : str =n, arg7 : str =n, arg8 : str =n, arg9 : str =n, arg10 : str =n):
-        with open("databases/commands.json") as f:
-            data = json.load(f)
+        custom_commands_raw = await hc.db.fetchall("SELECT name, value FROM custom_commands WHERE guild=?", (guild_id,))
+        custom_commands_dict = {c[0]:c[1] for c in custom_commands_raw}
         
-        if str(ctx.guild.id) not in data:
-            return 
-        if cmdName not in data[str(ctx.guild.id)]:
+        if cmdName not in custom_commands_dict:
             return await ctx.response.send_message("`Command no longer exists and will be removed on next sync`")
         
-        resp = data[str(ctx.guild.id)][cmdName] 
+        resp : str = custom_commands_dict[cmdName] 
 
         args = ["", arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10]
         args = [x for x in args if x is not None]
 
         brackets = re.findall(r"\{(.*?)\}",resp)
-        
             
         for bracket in brackets:
 
@@ -85,24 +83,20 @@ class CustomCommand():
         return self.options
 
 
-async def sync_custom_commands(bot : commands.Bot, guild : discord.Guild = None):
-    tree : app_commands.CommandTree = bot.tree
+async def sync_custom_commands(hc : helper.HelperClient, guild : discord.Guild = None):
 
     print("Custom commands syncing...")
 
-    with open("databases/commands.json") as f:
-        data = json.load(f)
+    commands_raw = []
+    if guild:
+        commands_raw = await hc.db.fetchall("SELECT name, value, guild FROM custom_commands WHERE guild=?", (guild.id,))
+    else:
+        commands_raw = await hc.db.fetchall("SELECT name, value, guild FROM custom_commands")
 
-    for guild_id in data:
-        if guild and str(guild_id) != str(guild.id):
-            continue
-        await doGuildCustomCommands(bot, int(guild_id), data[guild_id])
+    for command_raw in commands_raw:
+        await register_guild_custom_command(hc, command_raw[2], command_raw[0], command_raw[1])
 
-    cmds = tree._guild_commands
-
-    
-
-    for guild_id, guild_cmds in cmds.items():
+    for guild_id, guild_cmds in hc.bot.tree._guild_commands.items():
         to_remove = []
 
         if guild and str(guild_id) != str(guild.id):
@@ -112,15 +106,15 @@ async def sync_custom_commands(bot : commands.Bot, guild : discord.Guild = None)
 
             if cmd.description and "Helper Bot Custom Command" in cmd.description:
 
-                if str(guild_id) not in data or name not in data[str(guild_id)]:
+                if name not in [c[0] for c in commands_raw if c[2] == guild_id]:
                     to_remove.append([name, discord.Object(guild_id)])
         
         for command in to_remove:
-            tree.remove_command(command[0], guild=command[1])
+            hc.bot.tree.remove_command(command[0], guild=command[1])
                     
         if var.reload_custom_commands:
-            if bot.get_guild(guild_id):
-                await tree.sync(guild=discord.Object(guild_id))
+            if hc.bot.get_guild(guild_id):
+                await hc.bot.tree.sync(guild=discord.Object(guild_id))
                 print("synced")
             else:
                 print("missing guild")
@@ -129,34 +123,32 @@ async def sync_custom_commands(bot : commands.Bot, guild : discord.Guild = None)
     
     
 
-async def doGuildCustomCommands(bot : commands.Bot, guild_id : int, pendingCommands : dict):
-    tree : app_commands.CommandTree = bot.tree
+async def register_guild_custom_command(hc : helper.HelperClient, guild_id : int, command_name : str, command_value : str):
 
-    for pendingCommand in pendingCommands:
-        command = CustomCommand(pendingCommand, pendingCommands[pendingCommand])
+    command = CustomCommand(command_name, command_value)
 
-        func = testFunc(guild_id, command.name, command.value)
+    func = testFunc(hc, guild_id, command.name, command.value)
 
-        for option in command.options:
-            print(option)
+    for option in command.options:
+        print(option)
 
-        cmd = app_commands.Command(
-            callback=func, 
-            name=command.name, 
-            description=f"Helper Bot Custom Command: {command.name}"
-        )
+    cmd = app_commands.Command(
+        callback=func, 
+        name=command.name, 
+        description=f"Helper Bot Custom Command: {command.name}"
+    )
 
-        for i, (name, param) in enumerate(cmd._params.items()):
-            if len(command.options) > i:
+    for i, (name, param) in enumerate(cmd._params.items()):
+        if len(command.options) > i:
 
-                cmd._params[name].required = True
+            cmd._params[name].required = True
+    
+
+    try:
+        hc.bot.tree.add_command(cmd, guild=discord.Object(guild_id), override=True)
         
-
-        try:
-            tree.add_command(cmd, guild=discord.Object(guild_id), override=True)
-            
-        except app_commands.errors.CommandAlreadyRegistered:
-            tree.remove_command(cmd, guild=discord.Object(guild_id))       
-            tree.add_command(cmd, guild=discord.Object(guild_id))
+    except app_commands.errors.CommandAlreadyRegistered:
+        hc.bot.tree.remove_command(cmd, guild=discord.Object(guild_id))       
+        hc.bot.tree.add_command(cmd, guild=discord.Object(guild_id))
         
 

@@ -76,32 +76,27 @@ def time_str_from_seconds(time):
 
 async def check_events(hc : helper.HelperClient, guild : discord.Guild, member : discord.Member, warn_count : int = None):
 
-    events = await read_data("databases/events.json")
-
     if warn_count == None:
         warn_count = (await hc.db.fetchone("SELECT COUNT(*) FROM warns WHERE guild=? AND user=?", (guild.id, member.id)))[0]
     
-    if str(guild.id) not in events:
-        return 
+    events_raw = await hc.db.fetchall("SELECT amount, what, action FROM events WHERE guild=? AND what='warns' AND amount=?", (guild.id, warn_count))
     
-    for event in events[str(guild.id)]:
-        if event["what"] == "warns":
-            if warn_count == int(event["amount"]):
+    for event in events_raw:
 
-                if event["action"] == "1hTimeout":
-                    return components.EventConfirmationButton(member, member.timeout_for(timedelta(hours=1)), helper.types.EventType.timeout, "1 Hour Timeout")
-                if event["action"] == "3hTimeout":
-                    return components.EventConfirmationButton(member, member.timeout_for(timedelta(hours=3)), helper.types.EventType.timeout, "3 Hour Timeout")
-                if event["action"] == "6hTimeout":
-                    return components.EventConfirmationButton(member, member.timeout_for(timedelta(hours=6)), helper.types.EventType.timeout, "6 Hour Timeout")
-                if event["action"] == "12hTimeout":
-                    return components.EventConfirmationButton(member, member.timeout_for(timedelta(hours=12)), helper.types.EventType.timeout, "12 Hour Timeout")
-                if event["action"] == "24hTimeout":
-                    return components.EventConfirmationButton(member, member.timeout_for(timedelta(hours=24)), helper.types.EventType.timeout, "24 Hour Timeout")
-                if event["action"] == "kick":
-                    return components.EventConfirmationButton(member, member.kick(reason=str(warn_count) + " warns"), helper.types.EventType.kick, "Kick")
-                if event["action"] == "ban":
-                    return components.EventConfirmationButton(member, member.ban(reason=str(warn_count) + " warns"), helper.types.EventType.kick, "Ban")
+        if event[2] == "1hTimeout":
+            return components.EventConfirmationButton(member, member.timeout_for(timedelta(hours=1)), helper.types.EventType.timeout, "1 Hour Timeout")
+        if event[2] == "3hTimeout":
+            return components.EventConfirmationButton(member, member.timeout_for(timedelta(hours=3)), helper.types.EventType.timeout, "3 Hour Timeout")
+        if event[2] == "6hTimeout":
+            return components.EventConfirmationButton(member, member.timeout_for(timedelta(hours=6)), helper.types.EventType.timeout, "6 Hour Timeout")
+        if event[2] == "12hTimeout":
+            return components.EventConfirmationButton(member, member.timeout_for(timedelta(hours=12)), helper.types.EventType.timeout, "12 Hour Timeout")
+        if event[2] == "24hTimeout":
+            return components.EventConfirmationButton(member, member.timeout_for(timedelta(hours=24)), helper.types.EventType.timeout, "24 Hour Timeout")
+        if event[2] == "kick":
+            return components.EventConfirmationButton(member, member.kick(reason=str(warn_count) + " warns"), helper.types.EventType.kick, "Kick")
+        if event[2] == "ban":
+            return components.EventConfirmationButton(member, member.ban(reason=str(warn_count) + " warns"), helper.types.EventType.kick, "Ban")
     return None
 
 
@@ -248,15 +243,16 @@ def checkList(iterable, check):
                 return command
     return None
 
-async def log(bot : commands.Bot, type : str, guild : discord.Guild, embed : discord.Embed):
-    with open("databases/setup.json") as f:
-        data = json.load(f)
+async def log(hc : helper.HelperClient, type : str, guild : discord.Guild, embed : discord.Embed):
     
-    try:
-        ignore = data[str(guild.id)]["logging"]["ignore"]
-        if type not in ignore:
-            logChannel = guild.get_channel(int(data[str(guild.id)]["logging"]["channel"]))
+    raw_l = await hc.db.fetchone("SELECT channel, ignore FROM guildconfig_logging WHERE guild=?", (guild.id,))
+    
+    if raw_l and raw_l[0]:
+        try:
+            ignore = str(raw_l[1]).split(",")
+            if type not in ignore:
+                logChannel = guild.get_channel(raw_l[0])
 
-            await logChannel.send(embed=embed)
-    except Exception as e:
-        pass
+                await logChannel.send(embed=embed)
+        except Exception as e:
+            pass

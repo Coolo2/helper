@@ -3,12 +3,14 @@ import discord
 
 import json
 from setup import var
+import helper
 
 from discord import app_commands
 
 class Moderation2(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.hc : helper.HelperClient = bot.hc
     
     @app_commands.command(name="role", description="Add or remove roles from users")
     @app_commands.guild_only()
@@ -131,7 +133,7 @@ class Moderation2(commands.Cog):
                     except Exception as error:
                         await ctx.response.send_message(f"> I am missing permission to remove role {role}")
     
-    @app_commands.command(name="nick", description="Change the nickname of a user")
+    @app_commands.command(name="nickname", description="Change the nickname of a user")
     @app_commands.guild_only()
     @app_commands.describe(user="The user to change the nickname of. Can also be 'all'", nickname="The nickname to change to. Can be 'reset'")
     async def nick(
@@ -174,65 +176,34 @@ class Moderation2(commands.Cog):
                 else:
                     await ctx.response.send_message(f"> Started resetting {len(ctx.guild.members)} nicknames. This is estimated to take {str(calculation)} seconds.")
 
-                data = {}
-                
-                with open("databases/nicks.json") as f:
-                    nicks = json.load(f)
-
                 for member in ctx.guild.members:
                     try:
-                        try:
-                            if str(member.id) in nicks[str(ctx.guild.id)]:
-                                pass 
-                            else:
-                                data[str(member.id)] = member.display_name
-                        except Exception as e:
-                            data[str(member.id)] = member.display_name
+                        previous_nickname = await self.hc.db.fetchone("SELECT nickname FROM temp_nick_store WHERE guild=? AND user=?", (ctx.guild.id, member.id))
+
                         if nickname == "reset":
-                            try:
-                                prev = nicks[str(ctx.guild.id)][str(member.id)]
-                            except Exception as e:
-                                prev = member.name
-                            await member.edit(nick=prev)
+                            await member.edit(nick=previous_nickname[0] if previous_nickname else None)
                         else:
+                            
+                            if not previous_nickname:
+                                await self.hc.db.execute("INSERT INTO temp_nick_store VALUES (?, ?, ?, CURRENT_TIMESTAMP)", (ctx.guild.id, member.id, member.display_name))
                             await member.edit(nick=nickname)
                         successful = successful + 1
-
-
                     except Exception as error:
                         errors = errors + 1
+                    
                     counter = counter + 1
                     if counter == int(round(int(len(ctx.guild.members)) / 2)):
                         await ctx.channel.send("> **50 percent done**")
                 if nickname == "reset":
-                    data = "none"
-
-                try:
-                    if str(ctx.guild.id) in nicks:
-                        if nicks[str(ctx.guild.id)] != "none":
-                            if nickname == "reset":
-                                nicks[str(ctx.guild.id)] = data
-                                doit=1
-                            else:
-                                doit = 0
-                        else:
-                            nicks[str(ctx.guild.id)] = data
-                            doit =1
-                    else:
-                        nicks[str(ctx.guild.id)] = data
-                        doit = 1
-                except Exception as e:
-                    nicks[str(ctx.guild.id)] = data
-                    doit = 1
-                if doit == 1:
-                    with open("databases/nicks.json", "w") as f:
-                        json.dump(nicks, f)
-                embed = discord.Embed(title=f"Nickname set for **{counter}** users!", 
-                    description=f"Set nickname to {nickname} for {successful} users" if nickname != "reset" else f"Reset {successful} user's nicknames", colour=var.embed) 
+                    await self.hc.db.execute("DELETE FROM temp_nick_store WHERE guild=?", (ctx.guild.id,))
+                
                 if errors == 0:
                     errors = "No errors 🎉"
                 else:
                     errors = f"Could not set nickname **{nickname}** for **{errors}** users `Missing permissions`"
+
+                embed = helper.styling.MainEmbed(f"Nickname set for **{counter}** users!", (f"Set nickname to {nickname} for {successful} users" if nickname != "reset" else f"Reset {successful} user's nicknames") + f"\n\n{errors}") 
+                
                 await ctx.channel.send(embed=embed)
 
 async def setup(bot):

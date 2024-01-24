@@ -3,8 +3,7 @@ import discord
 
 import random, os, time, json
 from setup import var
-from functions import functions, paginator
-import resources.commands
+from functions import functions
 import helper
 
 from discord import app_commands
@@ -12,11 +11,10 @@ from discord import app_commands
 start_time = time.time()
 starttime2 = time.ctime(int(time.time()))
 
-
-
 class Information1(commands.Cog):
     def __init__(self, bot : commands.Bot):
         self.bot = bot
+        self.hc : helper.HelperClient = bot.hc
     
     bot = app_commands.Group(name="bot", description="Bot information commands")
 
@@ -26,8 +24,7 @@ class Information1(commands.Cog):
     @app_commands.rename(_command="command")
     async def _help(self, interaction : discord.Interaction, _command : str = None):
 
-        with open("databases/commands.json") as f:
-            customCommands = json.load(f)
+        custom_commands_raw = await self.hc.db.fetchall("SELECT name FROM custom_commands WHERE guild=?", (interaction.guild.id,))
 
         if _command:
             _command = _command.replace("/", "")
@@ -43,7 +40,7 @@ class Information1(commands.Cog):
             if not command or type(command) == app_commands.Group or command.extras.get("IGNORE_IN_COMMAND_LISTS"):
                 raise helper.errors.MildErr(
                     f"Command not found with name `{_command}`!" + (
-                        " You cannot get extra help for custom commands." if str(interaction.guild.id) in customCommands and _command in customCommands[str(interaction.guild.id)] else ""
+                        " You cannot get extra help for custom commands." if _command in [c[0] for c in custom_commands_raw] else ""
                     )
                 )
 
@@ -61,9 +58,7 @@ class Information1(commands.Cog):
         embed = helper.styling.MainEmbed("Bot help", "Use **/bot help [command]** to get help on a specific command.")
         categories : dict[str, list] = {}
 
-        for command in self.bot.tree.walk_commands():
-            if command.extras.get("IGNORE_IN_COMMAND_LISTS"): continue
-
+        for command in self.hc.commands_list:
             category_name = helper.utils.category_name_from_cog_name(command.module)
     
             if category_name not in categories:
@@ -75,8 +70,8 @@ class Information1(commands.Cog):
             if len(commands) > 0:
                 embed.add_field(name=category_name.title(), value="`/" + ("`, `/".join(commands)) + "`", inline=False)
         
-        if str(interaction.guild.id) in customCommands and len(customCommands[str(interaction.guild.id)]) > 0:
-            embed.add_field(name="Custom commands", value="`/" + ("`, `/".join(customCommands[str(interaction.guild.id)])) + "`")
+        if len(custom_commands_raw) > 0:
+            embed.add_field(name="Custom commands", value="`/" + ("`, `/".join([c[0] for c in custom_commands_raw])) + "`")
         
         return await interaction.response.send_message(embed=embed)
     
@@ -127,25 +122,21 @@ class Information1(commands.Cog):
 [Dashboard]({var.address}/dashboard/{(str(ctx.guild.id)) if ctx.guild else ''})
             """, color=var.embed)
         await ctx.response.send_message(embed=embed)
-
-        
     
     @bot.command(name="randomcommand", description="Get a random bot command")
-    @app_commands.describe(section="Command section to get a random command from")
-    @app_commands.choices(section=[app_commands.Choice(name=x, value=x) for x in resources.commands.json])
-    async def randomcommand(self, ctx : discord.Interaction, section : str = None):
-        data = resources.commands.json
+    @app_commands.describe(category="Command category to get a random command from")
+    @app_commands.autocomplete(category=helper.autocompletes.command_category_autocomplete)
+    async def randomcommand(self, interaction : discord.Interaction, category : str = None):
+        commands = []
+        for command in self.hc.commands_list:
+            category_name = helper.utils.category_name_from_cog_name(command.module)
+            if not category or category_name==category.lower():
+                commands.append([command.qualified_name, command.description])
         
-        if section != None and section.lower() in data:
-            data = data[section.lower()]
-            choice = random.choice(list(data))
-        else:
-            section = None
-            choice = random.choice(list(data[random.choice(list(data))]))
-        
-        embed = discord.Embed(title="Here's your random command!", description=f"/{choice}", color=var.embed)
+        choice = random.choice(commands)
+        embed = helper.styling.MainEmbed("Here's your random command!", f"**/{choice[0]}** - {choice[1]}")
 
-        return await ctx.response.send_message(embed=embed)
+        return await interaction.response.send_message(embed=embed)
     
     @bot.command(name="changelogs", description="Get a history of the bot")
     async def _changelogs(self, interaction : discord.Interaction):
@@ -161,7 +152,7 @@ class Information1(commands.Cog):
                 changelogs.append(functions.format_html_basic(changelog))
         
         embed = discord.Embed(title=f"Changelogs up to {var.version}", color=var.embed)
-        p = paginator.PaginatorView(embed, "newchangelog".join(changelogs), "newchangelog", 1, -1, search=False, private=interaction.user)
+        p = helper.paginator.PaginatorView(embed, "newchangelog".join(changelogs), "newchangelog", 1, -1, search=False, private=interaction.user)
 
         return await interaction.response.send_message(embed=p.embed, view=p)
 
