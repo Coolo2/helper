@@ -87,6 +87,9 @@ See my commands with `/help`
 
         server_channel = self.bot.get_channel(var.support_guild_add_remove_channel)
 
+        if guild.name == "":
+            return
+
         em = discord.Embed(title="I Was Removed From A Server.", description=f"Server Name: **{guild.name}**", color=var.embedFail)
         em.set_thumbnail(url=guild.icon.url if guild.icon else None)
         em.add_field(name="ID: ", value= str(guild.id))

@@ -6,7 +6,7 @@ embed=0xFF8700
 embedSuccess=0x00FF00
 embedFail=0xFF0000
 
-version = "a1.3.0"
+version = "v1.3.1"
 
 address = "http://helperbot.ddns.net:35590"
 port = 35590

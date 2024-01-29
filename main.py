@@ -8,6 +8,8 @@ from webserver import main
 import helper
 import datetime
 
+from functions import customCommands
+
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -47,6 +49,7 @@ async def setup_hook():
     if var.reload_slash_commands:
         await bot.tree.sync()
         await bot.tree.sync(guild=discord.Object(var.support_guild_id))
+        bot.loop.create_task(customCommands.sync_custom_commands(hc))
     
     await hc.db.initialise()
     await hc.db.migrate_old()

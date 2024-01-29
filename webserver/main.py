@@ -289,8 +289,8 @@ def generate_app(bot : commands.Bot, hc : helper.HelperClient):
         if member.guild_permissions.manage_guild:
 
             if exists:
-                await hc.db.execute("UPDATE guildconfig_logging SET channel=?, ignore=?", (
-                    int(loggingData.get("channel")) if loggingData.get("channel") else None, ",".join(loggingData.get("ignore")) if loggingData.get("ignore") else None))
+                await hc.db.execute("UPDATE guildconfig_logging SET channel=?, ignore=? WHERE guild=?", (
+                    int(loggingData.get("channel")) if loggingData.get("channel") else None, ",".join(loggingData.get("ignore")) if loggingData.get("ignore") else None, guild.id))
             else:
                 await hc.db.execute("INSERT INTO guildconfig_logging VALUES (?, ?, ?)", (guild.id, int(loggingData.get("channel")) if loggingData.get("channel") else None, ",".join(loggingData.get("ignore")) if loggingData.get("ignore") else None))
 
@@ -340,14 +340,14 @@ def generate_app(bot : commands.Bot, hc : helper.HelperClient):
         
         if member.guild_permissions.manage_guild:
             if (channel == 0 or message.replace(" ", "") == ""):
-                await hc.db.execute(f"UPDATE guildconfig_joinleave SET {choice}_channel=?, {choice}_message=?", (None, None))
+                await hc.db.execute(f"UPDATE guildconfig_joinleave SET {choice}_channel=?, {choice}_message=? WHERE guild=?", (None, None, guild.id))
             elif len(message) > 1900:
                 return quart.jsonify({"error":"Message over 1900 characters"})
             else:
                 exists = await hc.db.fetchone("SELECT guild FROM guildconfig_joinleave WHERE guild=?", (guild.id,))
 
                 if exists:
-                    await hc.db.execute(f"UPDATE guildconfig_joinleave SET {choice}_channel=?, {choice}_message=?", (channel, message))
+                    await hc.db.execute(f"UPDATE guildconfig_joinleave SET {choice}_channel=?, {choice}_message=? WHERE guild=?", (channel, message, guild.id))
                 else:
                     await hc.db.execute(f"INSERT INTO guildconfig_joinleave (guild, {choice}_channel, {choice}_message) VALUES (?, ?, ?)", (guild.id, channel, message))
 

@@ -23,8 +23,9 @@ class Information1(commands.Cog):
     @app_commands.autocomplete(_command=helper.autocompletes.commands_autocomplete)
     @app_commands.rename(_command="command")
     async def _help(self, interaction : discord.Interaction, _command : str = None):
-
-        custom_commands_raw = await self.hc.db.fetchall("SELECT name FROM custom_commands WHERE guild=?", (interaction.guild.id,))
+        
+        if interaction.guild:
+            custom_commands_raw = await self.hc.db.fetchall("SELECT name FROM custom_commands WHERE guild=?", (interaction.guild.id,))
 
         if _command:
             _command = _command.replace("/", "")
@@ -37,7 +38,7 @@ class Information1(commands.Cog):
                 else:
                     command = command.get_command(item)
             
-            if not command or type(command) == app_commands.Group or command.extras.get("IGNORE_IN_COMMAND_LISTS"):
+            if interaction.guild and (not command or type(command) == app_commands.Group or command.extras.get("IGNORE_IN_COMMAND_LISTS")):
                 raise helper.errors.MildErr(
                     f"Command not found with name `{_command}`!" + (
                         " You cannot get extra help for custom commands." if _command in [c[0] for c in custom_commands_raw] else ""
@@ -70,7 +71,7 @@ class Information1(commands.Cog):
             if len(commands) > 0:
                 embed.add_field(name=category_name.title(), value="`/" + ("`, `/".join(commands)) + "`", inline=False)
         
-        if len(custom_commands_raw) > 0:
+        if interaction.guild and len(custom_commands_raw) > 0:
             embed.add_field(name="Custom commands", value="`/" + ("`, `/".join([c[0] for c in custom_commands_raw])) + "`")
         
         return await interaction.response.send_message(embed=embed)

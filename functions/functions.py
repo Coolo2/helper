@@ -1,12 +1,10 @@
 from discord.ext import commands 
 import discord
 
-import json, os
 from setup import var
-import asyncio, aiohttp, requests
+import aiohttp
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
-from difflib import SequenceMatcher
 
 from functions import components
 import helper
@@ -145,48 +143,6 @@ def replaceMessage(member, message):
     message = message.replace("{serverMembers}", str(len(member.guild.members)))
     return message
 
-async def read_data(fileName):
-    with open(fileName, encoding="utf-8") as f:
-        return json.load(f)
-    #async with aiohttp.ClientSession() as session:
-    #    async with session.get(f"http://helperdata.glitch.me/view{os.getenv('databaseToken')}/{fileName}") as r:
-    #        jsond = await r.json()
-    #        return jsond
-
-def read_data_sync(fileName):
-    with open(fileName, encoding="utf-8") as f:
-        return json.load(f)
-    #r = requests.get(f"http://helperdata.glitch.me/view{os.getenv('databaseToken')}/{fileName}")
-    #return r.json()
-
-
-async def save_data(fileName, data):
-    with open(fileName, "w", encoding="utf-8") as f:
-        json.dump(data, f)
-        return data
-    #async with aiohttp.ClientSession() as session:
-    #    async with session.post(f"http://helperdata.glitch.me/save{os.getenv('databaseToken')}/{fileName}", data={'data':json.dumps(data)}) as r:
-    #        return json.loads(await r.text())
-
-def save_data_sync(fileName, data):
-    with open(fileName, "w", encoding="utf-8") as f:
-        json.dump(data, f)
-        return data
-    #r = requests.post(f"http://helperdata.glitch.me/save{os.getenv('databaseToken')}/{fileName}", data={'data':json.dumps(data)})
-    #return json.loads(r.text)
-
-async def read_load(where, data=None):
-    if data == None:
-        data = await read_data(where)
-    with open(where, 'w') as f:
-        json.dump(data, f)
-
-def read_load_sync(where, data=None):
-    if data == None:
-        data = read_data_sync(where)
-    with open(where, 'w') as f:
-        json.dump(data, f)
-
 def uri_validator(x):
     try:
         result = urlparse(x)
@@ -223,25 +179,6 @@ def calculateTime(argument):
         return str(int(argument.replace("m", "").replace(" ", "").replace(":", "").replace(",", "")) * 60)
     if "s" in argument:
         return argument.replace("s", "").replace(" ", "").replace(":", "").replace(",", "")
-
-def fuzzy_search(search_key, text, strictness):
-    lines = text.split("\n")
-    for i, line in enumerate(lines):
-        words = line.split()
-        for word in words:
-            similarity = SequenceMatcher(None, word, search_key)
-            if similarity.ratio() > strictness:
-                return "*h"
-
-def checkList(iterable, check):
-    for command in iterable:
-        det = fuzzy_search(str(command), check, 0.8)
-        if det != None:
-            try:
-                return command.name
-            except Exception as e:
-                return command
-    return None
 
 async def log(hc : helper.HelperClient, type : str, guild : discord.Guild, embed : discord.Embed):
     
