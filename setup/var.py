@@ -1,6 +1,8 @@
-
 import os
 import discord
+
+from dotenv import load_dotenv
+load_dotenv()
 
 embed=0xFF8700
 embedSuccess=0x00FF00
@@ -8,10 +10,10 @@ embedFail=0xFF0000
 
 version = "v1.3.1"
 
-address = "http://helperbot.ddns.net:35590"
+address = "https://helper.matprojects.xyz"
 port = 35590
 
-client_id = 444882566529417216
+client_id = 486180321444888586
 client_secret = os.getenv("client_secret")
 encryption_key = os.getenv("encryption_key")
 invite = f"https://discord.com/api/oauth2/authorize?client_id={client_id}&permissions=0&redirect_uri={address}/invited&response_type=code&scope=bot%20applications.commands"
@@ -30,8 +32,6 @@ botAdmins = [368071242189897728, 444176530357354527, 378189620288159754]
 db_path = ".db"
 
 # Slash Commands
-production = False
+production = True
 reload_slash_commands = False
 reload_custom_commands = True
-
-    
