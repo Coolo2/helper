@@ -10,8 +10,15 @@ import asyncio
 
 from discord import app_commands
 
-from wikipya import Wikipya
-from wikipya.exceptions import NotFound
+try:
+    from wikipya import Wikipya
+    from wikipya.exceptions import NotFound
+except Exception:
+    Wikipya = None
+
+    class NotFound(Exception):
+        pass
+
 import helper
 import googlesearch
 from concurrent.futures import ThreadPoolExecutor
@@ -20,7 +27,7 @@ class Utility1(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-        self.wiki = Wikipya(lang="en").get_instance()
+        self.wiki = Wikipya(lang="en").get_instance() if Wikipya else None
 
     @app_commands.command(name="poll", description="Make a poll")
     @app_commands.describe(question="The question to ask")
@@ -89,6 +96,8 @@ Random number from **1** to **1,000,000**: {random.randint(1, 1000000)}""")
     @app_commands.command(name="wikipedia", description="Search wikipedia for an article")
     @app_commands.describe(query="The query to search wikipedia for")
     async def wikipedia(self, ctx, query : str):
+        if self.wiki is None:
+            raise helper.errors.MildErr("Wikipedia search is currently unavailable due to an incompatible wikipya install.")
         
         try:
             search = await self.wiki.search(query)
@@ -111,6 +120,9 @@ Random number from **1** to **1,000,000**: {random.randint(1, 1000000)}""")
     
     @wikipedia.autocomplete("query")
     async def _autocomplete(self, interaction : discord.Interaction, namespace : str):
+        if self.wiki is None:
+            return []
+
         pages = []
         if namespace:
             try:
@@ -222,7 +234,7 @@ Random number from **1** to **1,000,000**: {random.randint(1, 1000000)}""")
                 time1 = time.split(" ")[0]
                 time2 = time.split(" ")[1]
 
-                if True in [c in str(time) for c in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV1234567890!@#$%^&*()=+;'\[]:"]:
+                if True in [c in str(time) for c in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV1234567890!@#$%^&*()=+;'\\[]:"]:
                     amount = int(functions.calculateTime(time1)) + int(functions.calculateTime(time2))
             else:
                 amount = int(functions.calculateTime(time))
@@ -250,7 +262,7 @@ Random number from **1** to **1,000,000**: {random.randint(1, 1000000)}""")
                 time1 = time.split(" ")[0]
                 time2 = time.split(" ")[1]
 
-                if True in [c in str(time) for c in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV1234567890!@#$%^&*()=+;'\[]:"]:
+                if True in [c in str(time) for c in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV1234567890!@#$%^&*()=+;'\\[]:"]:
                     amount = int(functions.calculateTime(time1)) + int(functions.calculateTime(time2))
             else:
                 amount = int(functions.calculateTime(time))

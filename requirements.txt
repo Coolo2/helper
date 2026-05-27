@@ -7,3 +7,6 @@ emoji
 quart
 Wikipya
 googlesearch-python
+aiosqlite
+python-dotenv
+pycryptodomex

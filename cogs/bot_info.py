@@ -49,7 +49,7 @@ class Information1(commands.Cog):
 
             optionString = ""
             for option_name, option in command._params.items():
-                optionString += (" \*[" if option.required == False else " [") + f"{option_name}" + "]"
+                optionString += (" \\*[" if option.required == False else " [") + f"{option_name}" + "]"
 
             embed.add_field(name="Category", value=helper.utils.category_name_from_cog_name(command.module).title(), inline=False)
             embed.add_field(name="Usage", value="/" + command.qualified_name + optionString, inline=False)

@@ -6,6 +6,7 @@ from PIL import Image, ImageDraw, ImageFont
 import helper
 import io
 import textwrap
+from pathlib import Path
 
 from discord import app_commands
 
@@ -13,16 +14,27 @@ class Images(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-        self.font_pretty_girls_script = ImageFont.truetype("images/Pretty Girls Script Demo.ttf", 50)
-        self.font_minecraft = ImageFont.truetype("images/Minecraft.ttf", 23)
-        self.font_american_captain = ImageFont.truetype("images/American Captain.otf", 50)
+        self.assets_dir = Path(__file__).resolve().parent.parent / "Images"
+
+        self.font_pretty_girls_script = self._load_font("Pretty Girls Script Demo.ttf", 50)
+        self.font_minecraft = self._load_font("Minecraft.ttf", 23)
+        self.font_american_captain = self._load_font("American Captain.otf", 50)
+
+    def _asset_path(self, filename: str) -> Path:
+        return self.assets_dir / filename
+
+    def _load_font(self, filename: str, size: int):
+        try:
+            return ImageFont.truetype(str(self._asset_path(filename)), size)
+        except OSError:
+            return ImageFont.load_default()
 
     @app_commands.command(name="minecraft_achievement", description="Make a minecraft achievement")
     async def minecraft_achievement(self, ctx : discord.Interaction, text : str):
 
         buf = io.BytesIO()
 
-        img = Image.open("images/hqdefault.png")
+        img = Image.open(self._asset_path("hqdefault.png"))
         draw = ImageDraw.Draw(img)
         
 
@@ -38,7 +50,7 @@ class Images(commands.Cog):
         
         buf = io.BytesIO()
 
-        img = Image.open("images/Whiteboard.png")
+        img = Image.open(self._asset_path("Whiteboard.png"))
         draw = ImageDraw.Draw(img)
         
 
@@ -70,7 +82,7 @@ class Images(commands.Cog):
         
         buf = io.BytesIO()
         
-        img = Image.open("images/rip.png")
+        img = Image.open(self._asset_path("rip.png"))
         draw = ImageDraw.Draw(img)
         draw.text((img.width//2, 399), content, (0, 0, 0), font=self.font_american_captain, anchor="mm")
 
