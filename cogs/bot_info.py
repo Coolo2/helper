@@ -2,6 +2,7 @@ from discord.ext import commands
 import discord
 
 import random, os, time, json
+from pathlib import Path
 from setup import var
 from functions import functions
 import helper
@@ -10,6 +11,7 @@ from discord import app_commands
 
 start_time = time.time()
 starttime2 = time.ctime(int(time.time()))
+CHANGELOG_DIR = Path(__file__).resolve().parent.parent / "resources" / "changelogs"
 
 class Information1(commands.Cog):
     def __init__(self, bot : commands.Bot):
@@ -142,8 +144,8 @@ class Information1(commands.Cog):
     @bot.command(name="changelogs", description="Get a history of the bot")
     async def _changelogs(self, interaction : discord.Interaction):
         changelogs = []
-        for file in [f for f in os.listdir("./resources/changelogs/") if os.path.isfile(os.path.join("./resources/changelogs/", f))]:
-            with open("resources/changelogs/" + file) as f:
+        for file in [f for f in os.listdir(CHANGELOG_DIR) if os.path.isfile(CHANGELOG_DIR / f)]:
+            with open(CHANGELOG_DIR / file) as f:
                 changelog = f.read()
                 split = changelog.split("\n")
                 split[0] = "# " + split[0] 

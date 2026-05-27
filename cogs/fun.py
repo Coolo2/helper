@@ -2,6 +2,7 @@ from discord.ext import commands
 import discord
 
 import random, json
+from pathlib import Path
 from setup import var
 from functions import functions, image
 from datetime import datetime
@@ -15,6 +16,7 @@ import helper
 from discord import app_commands
 
 guilds = {}
+RESOURCES_DIR = Path(__file__).resolve().parent.parent / "resources"
 
 class Fun1(commands.Cog):
     def __init__(self, bot):
@@ -114,7 +116,7 @@ class Fun1(commands.Cog):
     
     @app_commands.command(name="randomword", description="Get random words in the English language")
     async def randomword(self, ctx : discord.Interaction):
-        with open("resources/allWords.json") as f:
+        with open(RESOURCES_DIR / "allWords.json") as f:
             words = json.load(f)
         amount = random.randint(15, 30)
         return await ctx.response.send_message(

@@ -2,6 +2,7 @@ from discord.ext import commands
 import discord
 
 import random, os, json
+from pathlib import Path
 from functions import functions, cooldowns
 from setup import var
 import helper
@@ -11,6 +12,7 @@ import datetime
 from discord import app_commands
 
 cooldown = cooldowns.Cooldowns()
+RESOURCES_DIR = Path(__file__).resolve().parent.parent / "resources"
 
 class Economy1(commands.Cog):
     def __init__(self, bot):
@@ -39,7 +41,7 @@ class Economy1(commands.Cog):
 
         await self.add_user_balance(interaction.guild, interaction.user, money)
 
-        with open(r'resources/workreplies.json') as f:
+        with open(RESOURCES_DIR / "workreplies.json") as f:
             reply = random.choice(json.load(f)).replace("{amount}", f"**{money:,}**")
 
         embed = helper.styling.MainEmbed(random.choice(["You got money!", "Your paycheck...", "You worked!"]), f"{reply}! You are now on **{initial_balance+money:,}** credits!")
@@ -152,7 +154,7 @@ class Economy1(commands.Cog):
 
         await self.add_user_balance(interaction.guild, interaction.user, money)
 
-        with open(r'resources/workreplies.json') as f:
+        with open(RESOURCES_DIR / "workreplies.json") as f:
             reply = random.choice(json.load(f)).replace("{amount}", f"**{money:,}**")
 
         embed = helper.styling.MainEmbed("You got money!", f"{reply}! You are now on **{initial_balance+money:,}** credits!")

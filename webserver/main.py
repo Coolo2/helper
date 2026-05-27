@@ -1,5 +1,6 @@
 import quart
 import os, json
+from pathlib import Path
 from setup import var
 from webserver.oauth import Oauth as oauth
 from functions import functions, encryption
@@ -15,10 +16,16 @@ from discord import app_commands
 
 loggingOptions = ["channelCreate", "channelDelete", "roleCreate", "roleDelete", "nicknameChange", "dashboardUse", "warns"]
 
+BASE_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = BASE_DIR.parent
+TEMPLATE_DIR = BASE_DIR / "HTML"
+STATIC_DIR = BASE_DIR / "Static"
+CHANGELOG_DIR = PROJECT_ROOT / "resources" / "changelogs"
+
 
 def generate_app(bot : commands.Bot, hc : helper.HelperClient):
 
-    app = quart.Quart(__name__, template_folder=os.path.abspath('./webserver/HTML'), static_folder=os.path.abspath('./webserver/static'))
+    app = quart.Quart(__name__, template_folder=str(TEMPLATE_DIR), static_folder=str(STATIC_DIR), static_url_path="/Static")
 
     if not var.production:
         app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
@@ -26,19 +33,19 @@ def generate_app(bot : commands.Bot, hc : helper.HelperClient):
 
     @app.route('/')
     async def home():
-        return await quart.render_template('index.html', last_updated=dir_last_updated('/static'))
+        return await quart.render_template('index.html', last_updated=dir_last_updated(STATIC_DIR))
 
     @app.route('/about')
     async def about():
-        return await quart.render_template('about.html', last_updated=dir_last_updated('/static'))
+        return await quart.render_template('about.html', last_updated=dir_last_updated(STATIC_DIR))
 
     @app.route('/changelogs')
     async def changelogs():
-        return await quart.render_template('changelogs.html', last_updated=dir_last_updated('/static'))
+        return await quart.render_template('changelogs.html', last_updated=dir_last_updated(STATIC_DIR))
 
     @app.route('/terms')
     async def terms():
-        return await quart.render_template('terms_and_privacy.html', last_updated=dir_last_updated('/static'))
+        return await quart.render_template('terms_and_privacy.html', last_updated=dir_last_updated(STATIC_DIR))
 
     @app.route('/invite')
     async def invite():
@@ -53,13 +60,13 @@ def generate_app(bot : commands.Bot, hc : helper.HelperClient):
         if quart.request.args.get("guild_id") == None:
             return quart.redirect("/")
         guildName = bot.get_guild(int(quart.request.args['guild_id'])) if bot.get_guild(int(quart.request.args['guild_id'])) else "None"
-        return await quart.render_template('invited.html', last_updated=dir_last_updated('/static'), guild_name=guildName)
+        return await quart.render_template('invited.html', last_updated=dir_last_updated(STATIC_DIR), guild_name=guildName)
 
     @app.route('/api/changelogs', methods=['GET'])
     async def changelogsAPI():
         changelogs = {}
-        for file in [f for f in os.listdir("./resources/changelogs/") if os.path.isfile(os.path.join("./resources/changelogs/", f))]:
-            with open("resources/changelogs/" + file) as f:
+        for file in [f for f in os.listdir(CHANGELOG_DIR) if os.path.isfile(CHANGELOG_DIR / f)]:
+            with open(CHANGELOG_DIR / file) as f:
                 changelogs[file.replace(".html", "")] = f.read()
 
         return quart.jsonify(changelogs)
@@ -141,7 +148,7 @@ def generate_app(bot : commands.Bot, hc : helper.HelperClient):
             resp = await quart.make_response(quart.redirect("/login"))
             resp.set_cookie('user', '', expires=0)
             return resp
-        return await quart.render_template('dashboard.html', last_updated=dir_last_updated('/static'))
+        return await quart.render_template('dashboard.html', last_updated=dir_last_updated(STATIC_DIR))
 
     @app.route('/dashboard/<server>')
     async def dashboardWith(server):
@@ -150,7 +157,7 @@ def generate_app(bot : commands.Bot, hc : helper.HelperClient):
             user_id = encryption.decode(user[1], var.encryption_key)
         except AttributeError:
             return quart.redirect("/login")
-        return await quart.render_template('dashboard.html', last_updated=dir_last_updated('/static'))
+        return await quart.render_template('dashboard.html', last_updated=dir_last_updated(STATIC_DIR))
 
     async def jsonifyB(data, status=200, indent=4, sort_keys=True):
         response = await quart.make_response(json.dumps(dict(data), indent=indent, sort_keys=sort_keys))
@@ -502,7 +509,8 @@ def generate_app(bot : commands.Bot, hc : helper.HelperClient):
 
     def dir_last_updated(folder):
         try:
-            return str(max(os.path.getmtime(os.path.join(root_path, f)) for root_path, dirs, files in os.walk(folder) for f in files))
+            folder_path = Path(folder)
+            return str(max(file.stat().st_mtime for file in folder_path.rglob("*") if file.is_file()))
         except ValueError:
             pass
 
